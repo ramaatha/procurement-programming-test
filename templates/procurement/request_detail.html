@@ -5,6 +5,7 @@
 {% block content %}
   <nav aria-label="Navigasi permintaan"><a href="{% url 'procurement:request_list' %}">Daftar permintaan</a></nav>
   <h1>{{ target.title|default:'Draft tanpa judul' }}</h1>
+  <p><a href="{% url 'procurement:quotation_list' target.pk %}">Penawaran dan pemilihan vendor</a></p>
   {% if message %}<p role="alert">{{ message }}</p>{% endif %}
   <dl><dt>Nomor</dt><dd>{{ target.number }}</dd><dt>Pemohon</dt><dd>{{ target.requester.username }}</dd><dt>Jenis</dt><dd>{{ target.get_kind_display }}</dd><dt>Status persetujuan</dt><dd>{{ target.get_status_display }}</dd><dt>Alasan kebutuhan</dt><dd>{{ target.reason|default:'Belum diisi'|linebreaksbr }}</dd><dt>Tujuan</dt><dd>{{ target.destination|default:'Belum diisi' }}</dd><dt>Tanggal kebutuhan</dt><dd>{{ target.needed_on|date:'d M Y'|default:'Belum diisi' }}</dd></dl>
   <h2>Rincian kebutuhan</h2>

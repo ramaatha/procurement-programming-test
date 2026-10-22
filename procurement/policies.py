@@ -29,3 +29,8 @@ def require_request_reviewer(actor: User, target: PurchaseRequest) -> None:
 def require_procurement(actor: User) -> None:
     if active_actor(actor.pk).role != Role.PROCUREMENT:
         raise PermissionDenied
+
+
+def require_vendor_manager(actor: User) -> None:
+    if active_actor(actor.pk).role not in (Role.PROCUREMENT, Role.ADMIN):
+        raise PermissionDenied

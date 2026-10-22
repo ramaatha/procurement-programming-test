@@ -1,9 +1,17 @@
 # filepath: procurement/urls.py
 from django.urls import path
 from procurement.views import requests
+from procurement.views import sourcing
 
 app_name='procurement'
 urlpatterns=[
+    path('vendors/',sourcing.vendor_list,name='vendor_list'),
+    path('vendors/new/',sourcing.vendor_create,name='vendor_create'),
+    path('vendors/<uuid:vendor_id>/edit/',sourcing.vendor_edit,name='vendor_edit'),
+    path('requests/<uuid:request_id>/quotations/',sourcing.quotation_list,name='quotation_list'),
+    path('requests/<uuid:request_id>/quotations/new/',sourcing.quotation_create,name='quotation_create'),
+    path('requests/<uuid:request_id>/quotations/select/',sourcing.quotation_select,name='quotation_select'),
+    path('requests/<uuid:request_id>/quotations/<uuid:quotation_id>/edit/',sourcing.quotation_edit,name='quotation_edit'),
     path('approvals/',requests.approval_list,name='approval_list'),
     path('requests/',requests.request_list,name='request_list'),
     path('requests/new/',requests.request_create,name='request_create'),

@@ -41,17 +41,21 @@ def approved(owner: User, approver: User, *, kind: str = Kind.GOODS) -> Purchase
 
 
 def issued(*, quantity: str = '10', kind: str = Kind.GOODS) -> PurchaseOrder:
+    from procurement.inputs import QuotationInput, QuoteLineInput
+    from procurement.services.sourcing import save_quotation, save_vendor, select_quotation
     request = _approved(user(Role.REQUESTER), user(Role.APPROVER), kind, parse_quantity(quantity))
     revision = request.revisions.get(number=1)
     revision_item = revision.items.get()
     actor = user(Role.PROCUREMENT)
-    vendor = Vendor.objects.create(name='Vendor contoh', contact='vendor@example.invalid', created_by=actor)
-    quote = Quotation.objects.create(revision=revision, vendor=vendor, reference='Q-CONTOH', quoted_on=timezone.localdate(), valid_until=timezone.localdate()+timedelta(days=7), fulfillment_days=1, total_minor=revision.estimated_total_minor, created_by=actor)
-    QuotationItem.objects.create(quotation=quote, revision_item=revision_item, unit_price_minor=1000, line_total_minor=revision.estimated_total_minor)
-    request.selected_quotation=quote
-    request.selection_reason='Sesuai kebutuhan'
-    request.single_source_reason='Satu sumber tersedia'
-    request.save()
+    vendor = save_vendor(ActionContext(actor.pk, uuid4(), None), vendor_id=None,
+                         name='Vendor contoh', contact='vendor@example.invalid', is_active=True)
+    data = QuotationInput(vendor.pk, 'Q-CONTOH', timezone.localdate(),
+                          timezone.localdate()+timedelta(days=7), 1,
+                          (QuoteLineInput(revision_item.pk, '10.00'),))
+    quote = save_quotation(context(actor, request), request_id=request.pk, quotation_id=None, data=data)
+    request.refresh_from_db()
+    request = select_quotation(context(actor, request), request_id=request.pk, quotation_id=quote.pk,
+                                reason='Sesuai kebutuhan', single_source_reason='Satu sumber tersedia')
     order=PurchaseOrder.objects.create(request=request, revision=revision, quotation=quote, vendor=vendor, vendor_name=vendor.name, vendor_contact=vendor.contact, kind=kind, destination=request.destination, total_minor=revision.estimated_total_minor, selection_reason=request.selection_reason, single_source_reason=request.single_source_reason, issued_by=actor)
     PurchaseOrderItem.objects.create(order=order, revision_item=revision_item, position=1, name=revision_item.name, unit=revision_item.unit, qty_milli=revision_item.qty_milli, unit_price_minor=1000, line_total_minor=revision.estimated_total_minor)
     return order

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load procurement_numbers %}
+{% comment %}filepath: templates/procurement/quotation_list.html{% endcomment %}
+{% block title %}Penawaran | Procurement{% endblock %}
+{% block content %}
+  <nav aria-label="Navigasi penawaran"><a href="{% url 'procurement:request_detail' target.pk %}">Detail permintaan</a></nav>
+  <h1>Penawaran: {{ target.title|default:'Draft tanpa judul' }}</h1>
+  {% if message %}<p role="alert">{{ message }}</p>{% endif %}
+  {% if revision %}<p>Revisi {{ revision.number }} · Plafon IDR {{ revision.estimated_total_minor|money_id }}. Perbandingan diurutkan menurut total dan waktu pemenuhan; harga terendah tidak otomatis dipilih.</p>{% else %}<p>Permintaan belum mempunyai revisi pengajuan.</p>{% endif %}
+  {% if editable %}<p><a href="{% url 'procurement:quotation_create' target.pk %}">Tambah penawaran</a></p>{% endif %}
+  {% if target.selected_quotation_id %}<p>Penawaran terpilih: <strong>{{ target.selected_quotation.reference }}</strong></p><p>Alasan: {{ target.selection_reason|linebreaksbr }}</p>{% if target.single_source_reason %}<p>Alasan sumber tunggal: {{ target.single_source_reason|linebreaksbr }}</p>{% endif %}{% endif %}
+  <h2>Penawaran revisi aktif</h2>
+  <ul>{% for row in page_obj %}<li><h3>{{ row.quote.vendor.name }} · {{ row.quote.reference }}{% if target.selected_quotation_id == row.quote.pk %} · Terpilih{% endif %}</h3>
+    <p>Total <strong>IDR {{ row.quote.total_minor|money_id }}</strong> · Pemenuhan {{ row.quote.fulfillment_days }} hari</p>
+    <p>Tanggal {{ row.quote.quoted_on|date:'d M Y' }} · Berlaku sampai {{ row.quote.valid_until|date:'d M Y' }}</p>
+    {% if row.issues %}<p>Belum layak dipilih:</p><ul>{% for issue in row.issues %}<li>{{ issue }}</li>{% endfor %}</ul>{% else %}<p>Memenuhi syarat tanggal, vendor, rincian dan plafon saat halaman dibuka.</p>{% endif %}
+    <ul>{% for line in row.lines %}<li>{{ line.revision_item.name }}: {{ line.revision_item.qty_milli|quantity_id }} {{ line.revision_item.unit }} × IDR {{ line.unit_price_minor|money_id }} = IDR {{ line.line_total_minor|money_id }}</li>{% endfor %}</ul>
+    {% if editable %}<p><a href="{% url 'procurement:quotation_edit' target.pk row.quote.pk %}">Ubah penawaran {{ row.quote.reference }}</a></p>{% endif %}
+  </li>{% empty %}<li>Belum ada penawaran untuk revisi aktif.</li>{% endfor %}</ul>
+  {% if page_obj.has_other_pages %}<nav aria-label="Halaman penawaran">{% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Sebelumnya</a>{% endif %} <span>Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }}</span> {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Berikutnya</a>{% endif %}</nav>{% endif %}
+  {% if selection_form %}<section aria-labelledby="selection-heading"><h2 id="selection-heading">Pilih penawaran</h2><p>Pemilihan menyimpan kandidat vendor. Penerbitan PO dilakukan terpisah. Alasan sumber tunggal diperlukan jika hanya satu vendor mempunyai penawaran yang memenuhi syarat.</p><form method="post" action="{% url 'procurement:quotation_select' target.pk %}">{% csrf_token %}{{ selection_form.as_p }}<button type="submit">Simpan pilihan vendor</button></form></section>{% endif %}
+  <h2>Penawaran revisi sebelumnya</h2>
+  <ul>{% for quote in history_page %}<li><h3>Revisi {{ quote.revision.number }} · {{ quote.vendor.name }} · {{ quote.reference }}</h3><p>IDR {{ quote.total_minor|money_id }} · {{ quote.fulfillment_days }} hari · Berlaku {{ quote.quoted_on|date:'d M Y' }} sampai {{ quote.valid_until|date:'d M Y' }}</p><ul>{% for line in quote.items.all %}<li>{{ line.revision_item.name }}: {{ line.revision_item.qty_milli|quantity_id }} {{ line.revision_item.unit }} × IDR {{ line.unit_price_minor|money_id }} = IDR {{ line.line_total_minor|money_id }}</li>{% endfor %}</ul><p>Riwayat; tidak dapat diedit atau dipilih untuk revisi aktif.</p></li>{% empty %}<li>Belum ada penawaran historis.</li>{% endfor %}</ul>
+  {% if history_page.has_other_pages %}<nav aria-label="Halaman riwayat penawaran">{% if history_page.has_previous %}<a href="?history_page={{ history_page.previous_page_number }}">Riwayat sebelumnya</a>{% endif %} <span>Halaman {{ history_page.number }} dari {{ history_page.paginator.num_pages }}</span> {% if history_page.has_next %}<a href="?history_page={{ history_page.next_page_number }}">Riwayat berikutnya</a>{% endif %}</nav>{% endif %}
+{% endblock %}

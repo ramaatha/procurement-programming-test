@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% comment %}filepath: templates/procurement/vendor_form.html{% endcomment %}
+{% block title %}Form vendor | Procurement{% endblock %}
+{% block content %}
+  <nav aria-label="Navigasi vendor"><a href="{% url 'procurement:vendor_list' %}">Daftar vendor</a></nav>
+  <h1>{% if target %}Ubah vendor{% else %}Tambah vendor{% endif %}</h1>
+  <form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Simpan vendor</button></form>
+{% endblock %}

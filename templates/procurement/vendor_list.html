@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% comment %}filepath: templates/procurement/vendor_list.html{% endcomment %}
+{% block title %}Vendor | Procurement{% endblock %}
+{% block content %}
+  <nav aria-label="Navigasi vendor"><a href="{% url 'accounts:home' %}">Beranda</a></nav>
+  <h1>Vendor</h1><p><a href="{% url 'procurement:vendor_create' %}">Tambah vendor</a></p>
+  <p>Vendor nonaktif tetap tersimpan untuk riwayat dan tidak dapat digunakan pada penawaran baru.</p>
+  <ul>{% for vendor in page_obj %}<li><h2><a href="{% url 'procurement:vendor_edit' vendor.pk %}">{{ vendor.name }}</a></h2><p>{{ vendor.contact }} · {% if vendor.is_active %}Aktif{% else %}Nonaktif{% endif %}</p></li>{% empty %}<li>Belum ada vendor.</li>{% endfor %}</ul>
+  {% if page_obj.has_other_pages %}<nav aria-label="Halaman vendor">{% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Sebelumnya</a>{% endif %} <span>Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }}</span> {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Berikutnya</a>{% endif %}</nav>{% endif %}
+{% endblock %}
