@@ -10,7 +10,7 @@ Pengerjaan mengikuti urutan tugas setelah rancangan dan rencana ditinjau. Checkl
 
 **Dokumen rancangan:** [Arsitektur](ARCHITECTURE.md), [model data](DATA_MODEL.md), [PRD](PRD.md), dan [proses bisnis](BUSINESS_PROCESS.md).
 
-Status: Tugas 1 sampai 6 selesai untuk fondasi, schema, akun, permintaan, approval dan sourcing, dengan 159 pengujian lulus. Tugas 7 sampai 11 belum dikerjakan. Django telah dipilih; keputusan lanjutan tetap mengikuti rancangan terkait. Pengerjaan dilakukan berurutan, satu tugas sampai hasilnya terverifikasi. Arah visual ditinjau sebelum styling pada tugas 10. HTML semantik pada tugas awal adalah prototipe fungsional untuk menguji alur, belum UI final.
+Status: Tugas 1 sampai 7 selesai untuk fondasi, schema, akun, permintaan, approval, sourcing dan PO, dengan 180 pengujian lulus. Tugas 8 sampai 11 belum dikerjakan. Django telah dipilih; keputusan lanjutan tetap mengikuti rancangan terkait. Pengerjaan dilakukan berurutan, satu tugas sampai hasilnya terverifikasi. Arah visual ditinjau sebelum styling pada tugas 10. HTML semantik pada tugas awal adalah prototipe fungsional untuk menguji alur, belum UI final.
 
 ## Batas yang berlaku pada semua tugas
 
@@ -157,11 +157,13 @@ Bukti tahap: [TESTING](TESTING.md). Sebanyak 28 test baru mencakup vendor, penaw
 
 **Kontrak:** `issue_order(ctx: ActionContext, *, request_id: UUID) -> PurchaseOrder`. expected_version adalah versi request. Cetak PO hanya GET snapshot, tanpa mutasi atau pengiriman eksternal.
 
-- [ ] Tulis TC-11 approval/revisi salah, vendor nonaktif, quote masa depan/kedaluwarsa, plafon terlewati, kandidat kosong, alasan tunggal yang belum ada, serta payload manipulasi. Assert satu PO, seluruh item/header snapshot, satu audit, dan replay mengembalikan PO sama.
-- [ ] Tulis TC-11/TC-15 concurrency dengan dua koneksi terpisah pada SQLite file: dua issue dengan token berbeda; cancel request vs issue; vendor deactivate vs issue. Assert hasil mengikuti transaksi yang menang, tidak ada PO ganda atau request CANCELLED dengan PO aktif.
-- [ ] Jalankan `python manage.py test procurement.tests.test_orders procurement.tests.test_order_concurrency -v 2` untuk red, implementasikan, lalu green. Pakai `TransactionTestCase`, koneksi per thread, timeout/join terbatas; jangan menaruh barrier sesudah memperoleh write lock. Test harus menegaskan aksi apa yang sukses dan error apa yang terjadi, bukan hanya jumlah row akhir.
-- [ ] Uji snapshot tidak berubah sesudah vendor diedit. Pastikan request tetap APPROVED, revisi/cancel request pasca-PO ditolak, dan PO terminal tidak membuka kesempatan PO kedua.
-- [ ] Siapkan commit pengguna: `feat: issue immutable purchase orders with concurrency guards`.
+- [x] Tulis TC-11 approval/revisi salah, vendor nonaktif, quote masa depan/kedaluwarsa, plafon terlewati, kandidat kosong, alasan tunggal yang belum ada, serta payload manipulasi. Assert satu PO, seluruh item/header snapshot, satu audit, dan replay mengembalikan PO sama.
+- [x] Tulis TC-11/TC-15 concurrency dengan dua koneksi terpisah pada SQLite file: dua issue dengan token berbeda; cancel request vs issue; vendor deactivate vs issue. Assert hasil mengikuti transaksi yang menang, tidak ada PO ganda atau request CANCELLED dengan PO aktif.
+- [x] Jalankan `python manage.py test procurement.tests.test_orders procurement.tests.test_order_concurrency -v 2` untuk red, implementasikan, lalu green. Pakai `TransactionTestCase`, koneksi per thread, timeout/join terbatas; jangan menaruh barrier sesudah memperoleh write lock. Test harus menegaskan aksi apa yang sukses dan error apa yang terjadi, bukan hanya jumlah row akhir.
+- [x] Uji snapshot tidak berubah sesudah vendor diedit. Pastikan request tetap APPROVED, revisi/cancel request pasca-PO ditolak, dan PO terminal tidak membuka kesempatan PO kedua.
+- [x] Siapkan commit pengguna: `feat: issue immutable purchase orders with concurrency guards`.
+
+Bukti tahap: [TESTING](TESTING.md). Sebanyak 21 test baru mencakup service/HTTP, tiga skenario race dan batas waktu harness. Race dua koneksi berjalan dalam subprocess dengan penghentian proses dan join terbatas; regresi worker macet lulus. Alur browser serta snapshot detail/cetak diperiksa. Dialog printer/ekspor PDF belum diuji. Tidak ada migrasi atau dependency baru.
 
 ## Tugas 8: Penerimaan dan penutupan PO
 
@@ -243,4 +245,4 @@ Tugas 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11. Pengujian server me
 
 Setelah satu tugas, laporkan perubahan, perintah/hasil pengujian, batas yang belum diuji, dan file untuk commit pengguna. Kegagalan test atau kontrak harus diselesaikan sebelum memperluas fitur. Kekurangan waktu dilaporkan; kebutuhan wajib tidak dihapus diam-diam.
 
-Tugas 1 sampai 6 sudah diverifikasi. Langkah berikutnya adalah Tugas 7: penerbitan PO dan snapshot pesanan. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.
+Tugas 1 sampai 7 sudah diverifikasi. Langkah berikutnya adalah Tugas 8: penerimaan dan penutupan PO. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.

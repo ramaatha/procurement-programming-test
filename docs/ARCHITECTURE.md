@@ -22,7 +22,7 @@ Django dengan frontend terpisah membutuhkan kontrak API, pengelolaan state, dan 
 
 ## Pembagian modul dan file
 
-Struktur berikut adalah target implementasi. Konfigurasi Django, akun, template dasar, 14 model Procurement beserta migrasi, parser angka, serta helper token/replay sudah tersedia. Service akun dan permintaan, policy objek permintaan, serta halaman draft/detail/revisi sudah tersedia. Antrean dan keputusan approval serta pengembalian untuk revisi juga sudah tersedia. Vendor, penawaran dan pemilihan juga sudah tersedia. PO, penerimaan dan tracking mengikuti tugas berikutnya.
+Struktur berikut adalah target implementasi. Konfigurasi Django, akun, template dasar, 14 model Procurement beserta migrasi, parser angka, serta helper token/replay sudah tersedia. Service akun dan permintaan, policy objek permintaan, serta halaman draft/detail/revisi sudah tersedia. Antrean dan keputusan approval serta pengembalian untuk revisi juga sudah tersedia. Vendor, penawaran dan pemilihan juga sudah tersedia. Penerbitan PO, daftar/detail dan halaman cetak juga tersedia. Penerimaan, penutupan PO dan tracking mengikuti tugas berikutnya.
 
 ```text
 manage.py
@@ -165,7 +165,7 @@ Daftar memakai paginasi 25 baris dan query dalam scope akses. Gunakan `select_re
 
 ## Batas dan keputusan sebelum coding
 
-Django sudah disepakati. SQLite, struktur modul, protokol aksi, model angka, dan route di atas merupakan rancangan untuk ditinjau. Fondasi autentikasi, model pengadaan, helper angka/transaksi, pengelolaan akun dan pengajuan permintaan sudah tersedia. Keputusan approval dan pengembalian untuk revisi sudah tersedia. Vendor, penawaran dan pemilihan sudah tersedia. Implementasi berikutnya menambahkan penerbitan PO dan snapshot pesanan. Fitur AI, stok, pembayaran, unggah berkas, frontend terpisah, serta dukungan PostgreSQL belum menjadi pekerjaan versi awal. Rancangan ini belum membuktikan keamanan atau correctness runtime; pengujian pada rencana implementasi menjadi syarat pembuktiannya.
+Django sudah disepakati. SQLite, struktur modul, protokol aksi, model angka, dan route di atas merupakan rancangan untuk ditinjau. Fondasi autentikasi, model pengadaan, helper angka/transaksi, pengelolaan akun dan pengajuan permintaan sudah tersedia. Keputusan approval dan pengembalian untuk revisi sudah tersedia. Vendor, penawaran dan pemilihan sudah tersedia. Penerbitan PO dan snapshot pesanan sudah tersedia. Implementasi berikutnya menambahkan penerimaan dan penutupan PO. Fitur AI, stok, pembayaran, unggah berkas, frontend terpisah, serta dukungan PostgreSQL belum menjadi pekerjaan versi awal. Rancangan ini belum membuktikan keamanan atau correctness runtime; pengujian pada rencana implementasi menjadi syarat pembuktiannya.
 
 ## Jalur permintaan yang tersedia
 
@@ -190,3 +190,11 @@ Procurement/admin mengelola vendor melalui service `save_vendor`; tidak ada endp
 `procurement/quotations.py` memeriksa tanggal WIB, vendor aktif, kesesuaian rincian/total dan plafon. `select_quotation` mengulang pemeriksaan dalam transaksi, menghitung vendor unik yang layak dan mewajibkan alasan sumber tunggal bila hanya satu. Pilihan tidak otomatis mengikuti harga terendah. Edit penawaran terpilih membersihkan pointer serta kedua alasan; audit mempertahankan alasan sebelumnya.
 
 Halaman perbandingan mengikuti scope pembaca request dan memisahkan revisi aktif dari riwayat. Hanya procurement mempunyai kontrol mutasi. Token quote create/edit/select berada pada scope REQUEST; digest edit juga memuat ID quotation. Replay berhasil dapat dikembalikan setelah vendor dinonaktifkan, sementara aksi baru tetap ditolak. Error, CSRF, redaksi token dan variabel lokal mengikuti pola akun/permintaan.
+
+## Penerbitan dan pembacaan PO
+
+`issue_order` membaca aktor aktif dengan peran PROCUREMENT dan parent dalam scope sebelum replay. Versi yang dikirim adalah versi request. Untuk aksi baru, service memeriksa ulang persetujuan revisi aktif, kandidat, vendor, tanggal WIB, rincian/total, plafon dan jumlah sumber vendor yang layak. Jika alternatif berubah menjadi satu sumber tanpa alasan yang sesuai, pengguna perlu memilih kembali penawaran. Keberadaan PO, termasuk terminal, menolak penerbitan kedua.
+
+Header dan item PO, kenaikan versi request, AuditEvent serta ActionReceipt ditulis bersama pada transaksi IMMEDIATE. Request tetap APPROVED; PO dimulai ISSUED/version 1. Harga, jumlah, unit, nama/kontak vendor, tujuan dan alasan berasal dari data yang divalidasi server. Caller tidak memasok total, status, vendor, item atau issuer pada endpoint penerbitan.
+
+`visible_orders` mengikuti scope parent request. Daftar memakai paginasi 25 baris. Detail dan cetak memakai salinan field PO/item; nama penerbit historis diambil dari audit penerbitan agar perubahan username tidak mengganti identitas pada tampilan dokumen. Status PO tetap merupakan keadaan terkini. Halaman cetak berupa GET dengan stylesheet cetak A4; tidak menyimpan file, memanggil printer, atau mengirim pesan ke vendor. Cetak fisik dan ekspor PDF melalui browser belum diverifikasi.

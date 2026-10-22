@@ -4,7 +4,7 @@ Diperbarui: 22 Oktober 2026
 
 ## Lingkup yang telah diverifikasi
 
-Verifikasi mencakup akun, autentikasi, session, konfigurasi environment, 14 model Procurement, migrasi SQLite, parser angka, helper token/replay dan versi, service/form pengelolaan akun admin, draft, pengajuan, snapshot revisi dan pembatalan permintaan sebelum PO, keputusan approval dan pengembalian untuk revisi, serta vendor, penawaran dan pemilihan. Ini belum menjadi hasil pengujian seluruh aplikasi Procurement.
+Verifikasi mencakup akun, autentikasi, session, konfigurasi environment, 14 model Procurement, migrasi SQLite, parser angka, helper token/replay dan versi, service/form pengelolaan akun admin, draft, pengajuan, snapshot revisi dan pembatalan permintaan sebelum PO, keputusan approval dan pengembalian untuk revisi, vendor, penawaran dan pemilihan, serta penerbitan PO dan snapshot detail/cetak. Ini belum menjadi hasil pengujian seluruh aplikasi Procurement.
 
 Lingkungan pemeriksaan: Python 3.12.14, Django 5.2.18, SQLite 3.53.1, dan JSON1 tersedia. Dependensi terpasang: asgiref 3.12.1, sqlparse 0.6.0, dan tzdata 2026.5. `pip check` tidak menemukan dependensi yang rusak.
 
@@ -31,8 +31,11 @@ Lingkungan pemeriksaan: Python 3.12.14, Django 5.2.18, SQLite 3.53.1, dan JSON1 
 | Vendor | 6 | Create/edit/nonaktif, izin terkini, validasi, replay/versi, rollback, CSRF dan form |
 | Penawaran dan pemilihan | 21 | Item/harga/tanggal/total, status/izin/PO, sumber tunggal, revisi, pilihan, rollback, HTTP/token/CSRF, label dan replay setelah vendor nonaktif |
 | Dua penulis penawaran | 1 | Dua penawaran bersamaan memakai versi request; nonce sama replay, nonce berbeda konflik |
+| Service PO | 11 | Snapshot header/item, replay, izin terkini, status/revisi/kandidat, vendor/tanggal/plafon/sumber, rollback, terminal dan overflow |
+| HTTP PO | 6 | POST-only, parameter server, scope daftar/detail/cetak, snapshot setelah rename, CSRF/token/versi, 503 dan redaksi POST |
+| Race PO dan harness | 4 | Dua issue, cancel vs issue, vendor nonaktif vs issue, dan penghentian proses yang macet |
 
-Total: **159 test lulus**. Subtest beberapa input/peran tidak dihitung sebagai method test tambahan.
+Total: **180 test lulus**. Subtest beberapa input/peran tidak dihitung sebagai method test tambahan.
 
 Perintah yang dijalankan:
 
@@ -81,7 +84,7 @@ Form edit tidak melampaui viewport 390/768/1440; Tab mencapai tautan daftar akun
 
 ## Batas verifikasi
 
-Pengelolaan akun dan permintaan melalui UI/service sudah diuji, termasuk scope objek, replay, snapshot, rollback serta pengajuan serentak. Keputusan approval dan pengembalian ke CHANGES_REQUESTED sudah tersedia dan diuji melalui service serta browser. Sourcing sudah tersedia dan diuji. Penerbitan PO dan penerimaan belum diimplementasikan atau diuji. Keberadaan PO memakai fixture untuk menguji guard; perjalanan penerbitan dan persaingan cancel/issue sebenarnya menunggu tugas terkait.
+Pengelolaan akun dan permintaan melalui UI/service sudah diuji, termasuk scope objek, replay, snapshot, rollback serta pengajuan serentak. Keputusan approval dan pengembalian ke CHANGES_REQUESTED sudah tersedia dan diuji melalui service serta browser. Sourcing sudah tersedia dan diuji. Penerbitan PO, snapshot dan persaingan cancel/issue sudah tersedia serta diuji. Factory PO memakai service penerbitan. Penerimaan dan penutupan PO belum diimplementasikan atau diuji.
 
 Tampilan masih prototipe HTML fungsional. Form edit akun sudah diperiksa pada lebar 390/768/1440. Pemeriksaan aksesibilitas menyeluruh serta arah visual final menunggu tahap UI. Mode non-debug diperiksa melalui konfigurasi; hosting, reverse proxy, HTTPS nyata, dan kapasitas produksi belum diverifikasi.
 
@@ -130,3 +133,19 @@ Browser memakai `var/sourcing-browser-check`. Procurement membuat vendor dan pen
 Form penawaran dan perbandingan tidak melampaui viewport 390/768/1440. Tab mencapai tautan dengan outline terlihat; screenshot mobile diperiksa. Label final menampilkan harga, estimasi hari dan tanggal berlaku. Database akhir memuat dua vendor (satu nonaktif), dua penawaran, satu pilihan aktif, dua belas audit dan dua belas receipt termasuk tiga aksi persiapan request/approval. Tidak ada PO. Akun sintetis tidak masuk database kerja; server dihentikan setelah pemeriksaan. Respons 400 dan favicon 404 merupakan skenario yang diketahui. Ini belum UI final atau audit aksesibilitas seluruh aplikasi.
 
 Review independen menilai kode dan log 158 test sebelum perbaikan label, tanpa eksekusi suite/DB. Label diperbaiki melalui RED ke GREEN dan diverifikasi suite akhir 159 test. Dua catatan minor ditunda ke tugas 10: bangun comparison rows setelah paginasi queryset; muat snapshot item sekali saat mengevaluasi seluruh kandidat agar query berulang dalam transaksi berkurang. Kapasitas produksi belum diukur. Tidak ada perubahan migration, dependency, diagram atau workbook.
+
+## Penerbitan PO dan snapshot pesanan
+
+Sebanyak 20 test awal gagal karena service/route penerbitan belum tersedia, kemudian lulus setelah implementasi. Review menemukan batas `ThreadPoolExecutor.map(timeout=15)` tidak membatasi shutdown/join jika worker macet. Regresi tambahan terlebih dahulu gagal; race workers kini berjalan di subprocess terpisah yang dapat diterminasi/dihentikan dengan join terbatas. Suite akhir lulus 180 test, termasuk 21 test PO baru. Tidak ada migrasi atau dependensi baru.
+
+Service diuji untuk snapshot header/item/issuer, status request tetap APPROVED, PO ISSUED/version 1, kenaikan versi request, audit dan receipt. Replay mengembalikan PO yang sama setelah vendor nonaktif; perubahan payload/versi atau role/akun nonaktif ditolak. Validasi mengulang persetujuan revisi, kandidat/parent, alasan pemilihan/sumber tunggal, vendor aktif, tanggal berlaku, item/total/plafon dan batas versi. Kegagalan audit membatalkan PO/item, versi request dan receipt. Vendor yang diedit sesudah terbit tidak mengganti snapshot. PO terminal tetap menolak penerbitan kedua, revisi dan pembatalan request sebelum PO.
+
+HTTP memeriksa input total/status/vendor/quotation yang diabaikan, POST-only, redirect 303, replay, scope pemohon/approver/procurement/admin/penerima, objek di luar scope 404, CSRF, token aktor lain, versi lama, busy 503 dan error database tidak dikenal. Nama vendor/kontak serta nama penerbit pada cetak tetap historis sesudah rename. Parameter POST token/CSRF diperiksa redaksinya pada exception report; helper bertanda variabel sensitif diperiksa melalui kode, belum melalui pengujian exception runtime menyeluruh.
+
+Tiga skenario race memakai TransactionTestCase dan dua koneksi SQLite dalam subprocess: issue bersamaan dengan nonce berbeda menghasilkan satu sukses/satu konflik; nonce sama menghasilkan replay dengan satu PO; cancel melawan issue tidak dapat sama-sama berhasil; penonaktifan vendor selalu tersimpan dan issue hanya berhasil jika lebih dahulu tervalidasi. Barrier ditempatkan sebelum transaksi. Parent memakai deadline proses 15 detik dan terminate/kill dengan join terbatas. Regresi worker tidur lima detik dengan deadline 0,2 detik membuktikan penghentian sebelum batas empat detik, termasuk cleanup. Harness menolak database yang bukan file test terpisah. Ini pemeriksaan transaksi SQLite, bukan pengukuran kapasitas produksi.
+
+Browser memakai `var/order-browser-check`: procurement menerbitkan PO IDR 80,00 dari revisi dengan plafon IDR 100,00. Detail menunjukkan satu item dan alasan pemilihan/sumber tunggal. Halaman cetak tidak memuat form dan tidak melampaui viewport 390/768/1440; keyboard focus terlihat pada tautan kembali, screenshot mobile diperiksa. Nama/kontak vendor lalu diubah dan vendor dinonaktifkan; cetak tetap menampilkan salinan awal. Permintaan masih Disetujui, menampilkan tautan PO dan tidak lagi menawarkan penerbitan/revisi. Penerima dapat melihat PO pada daftar.
+
+Database akhir berisi satu PO ISSUED, satu item, request APPROVED dengan versi 6, delapan audit dan delapan receipt termasuk enam aksi persiapan serta satu edit vendor setelah penerbitan. Vendor saat ini nonaktif, tetapi snapshot PO tetap memuat nama/kontak awal. Akun sintetis tidak ada dalam database kerja; server dihentikan setelah pemeriksaan. Console hanya mencatat favicon 404. Halaman cetak dibuka di browser; dialog printer, hasil cetak fisik, pagination kertas dan ekspor PDF belum diverifikasi.
+
+Review independen tidak menemukan defect penting pada jalur aplikasi berdasarkan kode dan log suite 179 test. Catatan batas join harness diselesaikan melalui RED ke GREEN dan suite akhir 180 test; tidak ada review putaran kedua. UI final, deployment, PostgreSQL dan performa produksi belum dinilai.

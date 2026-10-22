@@ -211,3 +211,43 @@ Pilih 8 berkas:
 - `docs/WORKFLOW.md`
 
 Sesudah kedua commit, jalankan `git status -sb` dan pastikan tidak ada perubahan tersisa. Jika tidak ada commit lain, branch menunjukkan ahead 2. Jalankan `git push origin main`, lalu `git status -sb`; hasil yang diharapkan `## main...origin/main` tanpa ahead/behind. Jangan stage environment, database, cache, log, screenshot atau tmp. Migrasi, dependency, diagram dan workbook tidak berubah.
+
+## Penerbitan PO dan snapshot pesanan
+
+Buat dua commit, kemudian push sekali setelah keduanya selesai.
+
+Pesan kode: `feat: issue immutable purchase orders with concurrency guards`
+
+Pilih 16 berkas:
+
+- `procurement/forms/orders.py`
+- `procurement/selectors.py`
+- `procurement/services/orders.py`
+- `procurement/tests/factories.py`
+- `procurement/tests/order_workers.py`
+- `procurement/tests/test_orders.py`
+- `procurement/tests/test_order_concurrency.py`
+- `procurement/urls.py`
+- `procurement/views/orders.py`
+- `procurement/views/requests.py`
+- `templates/accounts/home.html`
+- `templates/procurement/_order_snapshot.html`
+- `templates/procurement/order_list.html`
+- `templates/procurement/order_detail.html`
+- `templates/procurement/order_print.html`
+- `templates/procurement/request_detail.html`
+
+Pesan dokumentasi: `docs: document purchase orders and verification results`
+
+Pilih 8 berkas:
+
+- `AGENTS.md`
+- `README.md`
+- `docs/ARCHITECTURE.md`
+- `docs/COMMIT_GUIDE.md`
+- `docs/DATA_MODEL.md`
+- `docs/IMPLEMENTATION_PLAN.md`
+- `docs/TESTING.md`
+- `docs/WORKFLOW.md`
+
+Setelah kedua commit, jalankan `git status -sb` dan pastikan tidak ada perubahan tersisa. Jika tidak ada commit lain, branch menunjukkan ahead 2. Jalankan `git push origin main`, lalu periksa `git status -sb`; hasil yang diharapkan `## main...origin/main` tanpa ahead/behind. Jangan stage database, environment, cache, log, screenshot atau tmp. Migrasi, dependency, diagram dan workbook tidak berubah.

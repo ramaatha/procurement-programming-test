@@ -139,7 +139,7 @@ Implementasi schema belum menyatakan FR-01 sampai FR-13 selesai dan tidak mengub
 
 Service `save_draft`, `submit_request` dan `cancel_request` sudah tersedia. Submit menyimpan header, item, total baris dan total revisi dalam satu transaksi; pengeditan working copy berikutnya tidak menimpa revisi lama. Pembatalan sebelum PO mempertahankan riwayat dan mengosongkan pilihan penawaran. Status terminal PO tetap memblokir mutasi permintaan. Tidak ada perubahan schema pada tahap ini.
 
-Pengujian memakai dua koneksi SQLite berbasis file untuk pengajuan serentak: hanya satu snapshot terbentuk, baik memakai nonce sama maupun berbeda. Transisi approval dan pengembalian untuk revisi sudah memakai service. Factory request disetujui memakai create/submit/review melalui service; vendor, penawaran dan pemilihan juga memakai service. Hanya data PO yang masih menjadi fixture sampai service terkait tersedia.
+Pengujian memakai dua koneksi SQLite berbasis file untuk pengajuan serentak: hanya satu snapshot terbentuk, baik memakai nonce sama maupun berbeda. Transisi approval dan pengembalian untuk revisi sudah memakai service. Factory request disetujui memakai create/submit/review melalui service; vendor, penawaran dan pemilihan juga memakai service. Factory issued kini memakai service penerbitan PO. Fixture constraint tetap dapat menulis row minimum langsung untuk menguji batas database.
 
 `review_request` menulis tepat satu ApprovalDecision pada RequestRevision aktif. Status request menjadi APPROVED, CHANGES_REQUESTED atau REJECTED; versi aggregate naik satu. Keputusan, status, AuditEvent dan ActionReceipt rollback bersama bila penulisan gagal. Dua reviewer pada versi yang sama tidak dapat menghasilkan dua keputusan.
 
@@ -147,4 +147,8 @@ Pengujian memakai dua koneksi SQLite berbasis file untuk pengajuan serentak: han
 
 Service vendor, penawaran dan pemilihan sudah tersedia tanpa perubahan schema. Mutasi vendor menaikkan versi vendor; mutasi penawaran/pemilihan menaikkan versi request. Header dan seluruh item penawaran disimpan bersama audit dan ActionReceipt dalam transaksi IMMEDIATE. Harga diperiksa dengan parser yang sama seperti estimasi request; total berasal dari jumlah snapshot, bukan form.
 
-Kelayakan pemilihan memeriksa isi item dan total tersimpan terhadap perhitungan ulang. Satu vendor dengan beberapa penawaran tetap satu sumber. Penawaran lama tetap tersimpan dan tidak dapat diedit/dipilih setelah revisi baru; riwayat disajikan terpisah. Penerbitan PO harus memakai pemeriksaan ulang yang sama pada tugas berikutnya.
+Kelayakan pemilihan memeriksa isi item dan total tersimpan terhadap perhitungan ulang. Satu vendor dengan beberapa penawaran tetap satu sumber. Penawaran lama tetap tersimpan dan tidak dapat diedit/dipilih setelah revisi baru; riwayat disajikan terpisah. Penerbitan PO memakai pemeriksaan ulang yang sama, termasuk perhitungan sumber tunggal dan plafon di dalam transaksi.
+
+Service `issue_order` sudah tersedia tanpa perubahan schema. Request version naik satu; status request tetap APPROVED dan PO baru ISSUED/version 1. PO menyimpan header vendor/tujuan/alasan dan seluruh item revisi dengan harga penawaran terpilih. Relasi request, revision, quotation dan vendor tetap mengikat asal dokumen; field snapshot menjadi isi detail/cetak.
+
+Satu PO sepanjang riwayat dijaga oleh transaksi dan constraint one-to-one. Replay memakai target REQUEST tetapi mengembalikan hasil ORDER. Penerbitan serentak dengan pembatalan atau penonaktifan vendor diuji pada dua koneksi SQLite berbasis file. Perubahan vendor setelah PO terbit tidak mengubah snapshot; request dengan PO terminal tetap terkunci terhadap penerbitan kedua, revisi dan pembatalan sebelum PO.
