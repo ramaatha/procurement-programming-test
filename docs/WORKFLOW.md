@@ -17,11 +17,12 @@ Versi awal menggunakan Django dengan halaman HTML dan SQLite. Pengelolaan stok, 
 | Diagram BPMN dan WBS | Tersedia di outputs dan telah diperiksa |
 | Framework | Django dipilih |
 | Arsitektur, model data, dan rencana implementasi | Rancangan v1.0 tersedia untuk review |
-| Arah visual dan antarmuka | Prototipe HTML autentikasi/pengelolaan akun tersedia; desain final belum dikerjakan |
+| Arah visual dan antarmuka | Prototipe HTML autentikasi, akun dan permintaan tersedia; desain final belum dikerjakan |
 | Fondasi Django, migrasi akun, dan autentikasi | Tugas 1 selesai; 23 pengujian lulus |
 | Schema, angka, audit, dan protokol aksi | Tugas 2 selesai; suite keseluruhan 48 pengujian lulus |
 | Pengelolaan akun dan policy peran | Tugas 3 selesai; suite keseluruhan 80 pengujian lulus |
-| Service, izin objek, dan halaman proses pengadaan | Belum dikerjakan |
+| Draft, pengajuan, snapshot dan pembatalan sebelum PO | Tugas 4 selesai; suite keseluruhan 108 pengujian lulus |
+| Approval, sourcing, PO, penerimaan dan tracking | Belum dikerjakan |
 
 Keberadaan rancangan tidak menyatakan fitur sudah dibangun. Status implementasi hanya berubah setelah kode, validasi, dan pengujian yang terkait selesai.
 
@@ -38,7 +39,7 @@ Keberadaan rancangan tidak menyatakan fitur sudah dibangun. Status implementasi 
 | [Panduan commit](COMMIT_GUIDE.md) | Pengelompokan berkas dan pesan commit |
 | [README](../README.md) | Ringkasan aplikasi, struktur repo, hasil pekerjaan, dan petunjuk menjalankan saat tersedia |
 
-Arah visual akan dicatat pada DESIGN_SYSTEM saat rancangan antarmuka ditinjau. Hasil pengujian akan dicatat pada TESTING setelah aplikasi dapat dijalankan. Jangan menulis petunjuk setup atau hasil pengujian yang belum dibuktikan.
+Arah visual akan dicatat pada DESIGN_SYSTEM saat rancangan antarmuka ditinjau. Hasil pengujian dan batas verifikasi dicatat pada TESTING. Jangan menulis petunjuk setup atau hasil pengujian yang belum dibuktikan.
 
 ## Urutan pengerjaan
 
@@ -102,4 +103,4 @@ Sebelum serah terima, pastikan petunjuk instalasi sudah dijalankan, pengujian re
 
 Konfigurasi Django, custom User lima peran, login/logout, pembatasan akses halaman akun, CSRF, redirect aman, dan migrasi SQLite tersedia. Suite fondasi berisi 23 test. Setelah penambahan schema, parser angka, audit, dan helper token/replay, suite mencapai 48 test. Penambahan service, policy dan halaman akun membuat suite keseluruhan menjadi 80 test lulus; system check bersih dan tidak ada migrasi model yang tertinggal. Pemeriksaan browser memakai database sintetis terpisah, mencakup login/logout, pesan gagal, keyboard, dan overflow pada viewport 1280.
 
-Rincian bukti dan batas verifikasi berada pada [TESTING](TESTING.md). Pengelolaan akun sudah tersedia. Izin objek, transaksi pengadaan, data contoh lengkap, dan UI final belum selesai. FR-01/FR-13 baru diterapkan sebagian; WBS tidak dinaikkan menjadi selesai hanya karena fondasi sudah tersedia.
+Rincian bukti dan batas verifikasi berada pada [TESTING](TESTING.md). Pengelolaan akun dan permintaan sudah tersedia, dengan 108 pengujian lulus. Scope objek, snapshot, replay dan pengajuan serentak sudah diperiksa. Approval, sourcing, PO, penerimaan, data contoh lengkap dan UI final belum selesai. Langkah berikutnya adalah tugas 5: keputusan approval dan pengembalian untuk revisi. FR-01/FR-13 baru diterapkan sebagian; WBS tidak dinaikkan menjadi selesai hanya karena fondasi sudah tersedia.

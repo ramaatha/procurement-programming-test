@@ -86,3 +86,52 @@ Pilih `accounts/forms.py`, `accounts/policies.py`, `accounts/services.py`, `acco
 Pesan dokumentasi: `docs: document account management and verification results`
 
 Pilih `AGENTS.md`, `README.md`, `docs/ARCHITECTURE.md`, `docs/DATA_MODEL.md`, `docs/IMPLEMENTATION_PLAN.md`, `docs/TESTING.md`, `docs/WORKFLOW.md`, dan panduan ini. Database sintetis, screenshot, log dan isi tmp tidak disertakan. Tidak ada perubahan migrasi, dependency, diagram, atau workbook pada tahap ini.
+
+## Draft, pengajuan dan pembatalan permintaan
+
+Pisahkan menjadi dua commit, lalu push satu kali setelah keduanya selesai.
+
+Pesan kode: `feat: add purchase requests and submitted revisions`
+
+Pilih 25 berkas:
+
+- `accounts/forms.py`
+- `accounts/views.py`
+- `common/forms.py`
+- `common/http.py`
+- `config/urls.py`
+- `procurement/forms/__init__.py`
+- `procurement/forms/requests.py`
+- `procurement/policies.py`
+- `procurement/selectors.py`
+- `procurement/services/__init__.py`
+- `procurement/services/requests.py`
+- `procurement/templatetags/__init__.py`
+- `procurement/templatetags/procurement_numbers.py`
+- `procurement/tests/factories.py`
+- `procurement/tests/test_actions.py`
+- `procurement/tests/test_requests.py`
+- `procurement/urls.py`
+- `procurement/views/__init__.py`
+- `procurement/views/requests.py`
+- `templates/accounts/home.html`
+- `templates/base.html`
+- `templates/procurement/request_detail.html`
+- `templates/procurement/request_form.html`
+- `templates/procurement/request_list.html`
+- `templates/procurement/request_revision.html`
+
+Pesan dokumentasi: `docs: document request workflow and verification results`
+
+Pilih 8 berkas:
+
+- `AGENTS.md`
+- `README.md`
+- `docs/ARCHITECTURE.md`
+- `docs/COMMIT_GUIDE.md`
+- `docs/DATA_MODEL.md`
+- `docs/IMPLEMENTATION_PLAN.md`
+- `docs/TESTING.md`
+- `docs/WORKFLOW.md`
+
+Setelah kedua commit dibuat, jalankan `git status -sb` dan pastikan tidak ada perubahan yang tertinggal. Kemudian `git push origin main`, dilanjutkan `git status -sb`; hasil yang diharapkan `## main...origin/main` tanpa ahead/behind. Jangan sertakan `.env`, `.venv`, `var`, database, cache, screenshot, log atau isi `tmp`. Tidak ada perubahan migration, dependency, diagram atau workbook pada tahap ini.

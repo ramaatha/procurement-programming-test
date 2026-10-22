@@ -10,7 +10,7 @@ Pengerjaan mengikuti urutan tugas setelah rancangan dan rencana ditinjau. Checkl
 
 **Dokumen rancangan:** [Arsitektur](ARCHITECTURE.md), [model data](DATA_MODEL.md), [PRD](PRD.md), dan [proses bisnis](BUSINESS_PROCESS.md).
 
-Status: Tugas 1 sampai 3 selesai untuk fondasi, schema dan pengelolaan akun, dengan 80 pengujian lulus. Tugas 4 sampai 11 belum dikerjakan. Django telah dipilih; keputusan lanjutan tetap mengikuti rancangan terkait. Pengerjaan dilakukan berurutan, satu tugas sampai hasilnya terverifikasi. Arah visual ditinjau sebelum styling pada tugas 10. HTML semantik pada tugas awal adalah prototipe fungsional untuk menguji alur, belum UI final.
+Status: Tugas 1 sampai 4 selesai untuk fondasi, schema, pengelolaan akun dan permintaan, dengan 108 pengujian lulus. Tugas 5 sampai 11 belum dikerjakan. Django telah dipilih; keputusan lanjutan tetap mengikuti rancangan terkait. Pengerjaan dilakukan berurutan, satu tugas sampai hasilnya terverifikasi. Arah visual ditinjau sebelum styling pada tugas 10. HTML semantik pada tugas awal adalah prototipe fungsional untuk menguji alur, belum UI final.
 
 ## Batas yang berlaku pada semua tugas
 
@@ -111,11 +111,13 @@ Bukti tahap: [TESTING](TESTING.md). Halaman akun memakai HTML fungsional. Admin 
 
 **Kontrak:** `save_draft(ctx: ActionContext, *, request_id: UUID | None, data: DraftInput) -> PurchaseRequest`; `submit_request(ctx: ActionContext, *, request_id: UUID) -> PurchaseRequest`; `cancel_request(ctx: ActionContext, *, request_id: UUID, reason: str) -> PurchaseRequest`. Selector `visible_requests(actor: User) -> QuerySet[PurchaseRequest]` menjadi dasar daftar maupun detail.
 
-- [ ] Tulis TC-03: draft boleh header belum lengkap dan belum ada item; submit wajib semua field/item serta tanggal kebutuhan >= hari WIB saat submit. Baris yang ditambahkan harus lengkap/positif; blank extra form tidak dianggap item. Pemilik dari session, total dari server.
-- [ ] Tulis TC-04: contoh pembulatan pada DATA_MODEL konsisten; submit membuat snapshot lengkap. TC-15: hanya pemilik, status yang diizinkan, alasan wajib; terminal tidak aktif ulang. Form invalid tidak menambah revisi/audit sukses.
-- [ ] Tulis replay create/save/submit/cancel dan stale-version; token create sama tidak membuat dua draft. Uji ID request pengguna lain melalui URL dan form (TC-02).
-- [ ] Jalankan `python manage.py test procurement.tests.test_requests -v 2` untuk red, implementasikan service/route/form, lalu green. Uji HTTP menggunakan CSRF checks dan verify database sesudah POST.
-- [ ] Siapkan commit pengguna: `feat: add purchase requests and submitted revisions`.
+- [x] Tulis TC-03: draft boleh header belum lengkap dan belum ada item; submit wajib semua field/item serta tanggal kebutuhan >= hari WIB saat submit. Baris yang ditambahkan harus lengkap/positif; blank extra form tidak dianggap item. Pemilik dari session, total dari server.
+- [x] Tulis TC-04: contoh pembulatan pada DATA_MODEL konsisten; submit membuat snapshot lengkap. TC-15: hanya pemilik, status yang diizinkan, alasan wajib; terminal tidak aktif ulang. Form invalid tidak menambah revisi/audit sukses.
+- [x] Tulis replay create/save/submit/cancel dan stale-version; token create sama tidak membuat dua draft. Uji ID request pengguna lain melalui URL dan form (TC-02).
+- [x] Jalankan `python manage.py test procurement.tests.test_requests -v 2` untuk red, implementasikan service/route/form, lalu green. Uji HTTP menggunakan CSRF checks dan verify database sesudah POST.
+- [x] Siapkan commit pengguna: `feat: add purchase requests and submitted revisions`.
+
+Bukti tahap: [TESTING](TESTING.md). Sebanyak 28 pengujian baru mencakup service, HTTP dan pengajuan serentak. Alur browser memakai database terpisah; styling final dan keputusan approval belum tersedia.
 
 ## Tugas 5: Review approval dan kembali ke revisi
 
@@ -237,4 +239,4 @@ Tugas 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11. Pengujian server me
 
 Setelah satu tugas, laporkan perubahan, perintah/hasil pengujian, batas yang belum diuji, dan file untuk commit pengguna. Kegagalan test atau kontrak harus diselesaikan sebelum memperluas fitur. Kekurangan waktu dilaporkan; kebutuhan wajib tidak dihapus diam-diam.
 
-Tugas 1 sampai 3 sudah diverifikasi. Langkah berikutnya adalah Tugas 4: draft permintaan, revisi pengajuan, dan pembatalan sebelum PO. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.
+Tugas 1 sampai 4 sudah diverifikasi. Langkah berikutnya adalah Tugas 5: keputusan approval dan pengembalian untuk revisi. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.

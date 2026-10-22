@@ -22,7 +22,7 @@ Django dengan frontend terpisah membutuhkan kontrak API, pengelolaan state, dan 
 
 ## Pembagian modul dan file
 
-Struktur berikut adalah target implementasi. Konfigurasi Django, akun, template dasar, 14 model Procurement beserta migrasi, parser angka, serta helper token/replay sudah tersedia. Service bisnis, policy objek, dan halaman pengadaan masih mengikuti urutan implementasi berikutnya.
+Struktur berikut adalah target implementasi. Konfigurasi Django, akun, template dasar, 14 model Procurement beserta migrasi, parser angka, serta helper token/replay sudah tersedia. Service akun dan permintaan, policy objek permintaan, serta halaman draft/detail/revisi sudah tersedia. Service approval, sourcing, PO, penerimaan dan tracking mengikuti tugas berikutnya.
 
 ```text
 manage.py
@@ -30,7 +30,7 @@ requirements.txt
 requirements-dev.txt
 .env.example
 config/                    settings.py, urls.py, wsgi.py, asgi.py
-common/                    actions.py, errors.py, numbers.py, tests/
+common/                    actions.py, errors.py, forms.py, http.py, numbers.py, tests/
 accounts/                  models.py, forms.py, policies.py, services.py, views.py, urls.py, tests/
 procurement/
   models/                  requests.py, sourcing.py, orders.py, receipts.py, audit.py
@@ -165,4 +165,12 @@ Daftar memakai paginasi 25 baris dan query dalam scope akses. Gunakan `select_re
 
 ## Batas dan keputusan sebelum coding
 
-Django sudah disepakati. SQLite, struktur modul, protokol aksi, model angka, dan route di atas merupakan rancangan untuk ditinjau. Fondasi autentikasi sudah tersedia. Implementasi berikutnya menyiapkan model pengadaan, helper angka/transaksi, lalu pengajuan permintaan. Fitur AI, stok, pembayaran, unggah berkas, frontend terpisah, serta dukungan PostgreSQL belum menjadi pekerjaan versi awal. Rancangan ini belum membuktikan keamanan atau correctness runtime; pengujian pada rencana implementasi menjadi syarat pembuktiannya.
+Django sudah disepakati. SQLite, struktur modul, protokol aksi, model angka, dan route di atas merupakan rancangan untuk ditinjau. Fondasi autentikasi, model pengadaan, helper angka/transaksi, pengelolaan akun dan pengajuan permintaan sudah tersedia. Implementasi berikutnya menambahkan keputusan approval dan pengembalian untuk revisi. Fitur AI, stok, pembayaran, unggah berkas, frontend terpisah, serta dukungan PostgreSQL belum menjadi pekerjaan versi awal. Rancangan ini belum membuktikan keamanan atau correctness runtime; pengujian pada rencana implementasi menjadi syarat pembuktiannya.
+
+## Jalur permintaan yang tersedia
+
+GET daftar/detail/revisi memakai `visible_requests`: pemohon melihat miliknya, approver/procurement/admin melihat permintaan sesuai fungsi, dan penerima melihat permintaan yang sudah memiliki PO. Objek di luar scope menghasilkan 404. Mutasi memeriksa kembali pemilik dengan peran REQUESTER yang masih aktif di dalam transaksi.
+
+POST draft melewati form dan formset, kemudian input dataclass kanonik ke `save_draft`. Tombol Tambah baris item merender ulang form tanpa menyimpan data dan tidak membutuhkan JavaScript. Baris kosong diabaikan; baris parsial ditolak. Total dihitung server. Submit dan cancel memakai service terpisah dengan token, versi, audit dan receipt atomik. Snapshot hanya dapat dibaca melalui halaman revisi. Form aksi bersama berada pada `common/forms.py`; pemetaan validasi dan SQLite busy/locked berada pada `common/http.py`.
+
+Regresi service/HTTP serta dua koneksi SQLite sudah memeriksa replay dan pengajuan serentak. Bukti beserta batas pemeriksaan berada pada TESTING; ini belum pembuktian seluruh alur pengadaan.

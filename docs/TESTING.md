@@ -4,7 +4,7 @@ Diperbarui: 22 Oktober 2026
 
 ## Lingkup yang telah diverifikasi
 
-Verifikasi mencakup akun, autentikasi, session, konfigurasi environment, 14 model Procurement, migrasi SQLite, parser angka, helper token/replay dan versi, serta service/form pengelolaan akun admin. Ini belum menjadi hasil pengujian seluruh aplikasi Procurement.
+Verifikasi mencakup akun, autentikasi, session, konfigurasi environment, 14 model Procurement, migrasi SQLite, parser angka, helper token/replay dan versi, service/form pengelolaan akun admin, serta draft, pengajuan, snapshot revisi dan pembatalan permintaan sebelum PO. Ini belum menjadi hasil pengujian seluruh aplikasi Procurement.
 
 Lingkungan pemeriksaan: Python 3.12.14, Django 5.2.18, SQLite 3.53.1, dan JSON1 tersedia. Dependensi terpasang: asgiref 3.12.1, sqlparse 0.6.0, dan tzdata 2026.5. `pip check` tidak menemukan dependensi yang rusak.
 
@@ -22,8 +22,11 @@ Lingkungan pemeriksaan: Python 3.12.14, Django 5.2.18, SQLite 3.53.1, dan JSON1 
 | Service akun | 17 | Pembuatan/edit/reset, validasi username/role/password, admin terakhir, otorisasi terkini, nonce sekali, versi, batas int64 dan rollback |
 | HTTP dan perlindungan form akun | 14 | Izin empat peran, CSRF, parameter privilege, token lintas aktor/target, 400/409/503, sesi dicabut, dan redaksi token/password pada exception report |
 | Dua penulis akun | 1 | Dua admin menurunkan peran sendiri secara bersamaan; tepat satu perubahan berhasil dan satu admin aktif tetap tersedia |
+| Service permintaan | 15 | Draft tidak lengkap, validasi item/tanggal, pembulatan, snapshot/revisi, replay, versi, izin terkini, pembatalan, guard PO, overflow dan rollback |
+| HTTP permintaan | 12 | Formset, tambah/hapus baris, data server-only, CSRF, akses objek, token lintas aktor, stale form, escaping dan redaksi exception report |
+| Dua penulis permintaan | 1 | Dua submit bersamaan dengan nonce sama atau berbeda menghasilkan tepat satu snapshot |
 
-Total: **80 test lulus**. Subtest beberapa input/peran tidak dihitung sebagai method test tambahan.
+Total: **108 test lulus**. Subtest beberapa input/peran tidak dihitung sebagai method test tambahan.
 
 Perintah yang dijalankan:
 
@@ -72,7 +75,7 @@ Form edit tidak melampaui viewport 390/768/1440; Tab mencapai tautan daftar akun
 
 ## Batas verifikasi
 
-Pengelolaan akun melalui UI dan service sudah diuji. Izin per objek Procurement, keputusan approval, penerbitan PO, dan penerimaan belum diimplementasikan atau diuji. Parser angka, token, replay, versi dan rollback sudah diuji sebagai helper dan pada mutasi akun; alur transaksi pengadaan belum tersedia. Service harus membaca ulang akun/izin sebelum replay dan memeriksa seluruh relasi serta jumlah dalam transaksi. Concurrency dua penulis pada aksi pengadaan belum dibuktikan oleh tahap ini.
+Pengelolaan akun dan permintaan melalui UI/service sudah diuji, termasuk scope objek, replay, snapshot, rollback serta pengajuan serentak. Keputusan approval, sourcing, penerbitan PO dan penerimaan belum diimplementasikan atau diuji. Status CHANGES_REQUESTED dan keberadaan PO memakai fixture untuk menguji guard; perjalanan dari approval sampai PO sebenarnya menunggu tugas terkait.
 
 Tampilan masih prototipe HTML fungsional. Form edit akun sudah diperiksa pada lebar 390/768/1440. Pemeriksaan aksesibilitas menyeluruh serta arah visual final menunggu tahap UI. Mode non-debug diperiksa melalui konfigurasi; hosting, reverse proxy, HTTPS nyata, dan kapasitas produksi belum diverifikasi.
 
@@ -81,3 +84,15 @@ Pembuatan virtual environment dan pemasangan requirements dilakukan dari lingkun
 Data contoh lintas peran serta perjalanan pengadaan lengkap belum tersedia. FR-01 dan FR-13 baru diterapkan sebagian; status penerimaan keseluruhan kebutuhan tersebut belum dinaikkan menjadi selesai.
 
 Regresi otomatis `account.create` dan `account.password` memakai opsi replay bawaan, memeriksa payload hash kosong dan penolakan digest nonkosong. Kedua service juga diuji saat nonce dikirim ulang dengan password atau metadata berbeda.
+
+## Draft, pengajuan dan pembatalan permintaan
+
+Pengujian awal gagal karena service dan route belum tersedia. Regresi tambah baris kemudian menangkap alert validasi yang tampil meskipun setiap form valid; template kini memeriksa jumlah error sebenarnya. Suite keseluruhan lulus 108 test, termasuk 28 test permintaan. Tidak ada perubahan migrasi atau dependensi.
+
+Pengujian mencakup draft kosong, item lengkap/positif, tanggal hari WIB, angka kanonik dan pembulatan half-up per baris, snapshot lama setelah pengajuan ulang, replay create/edit/submit/cancel, payload berbeda, versi lama, role/akun terkini, pemilik, akses per objek dan PO terminal. Kegagalan audit membatalkan snapshot/status. Versi, nomor revisi, total dan nilai baris diperiksa terhadap batas int64. Pengujian HTTP memeriksa CSRF, escaping, pengabaian parameter pemilik/status/total, form invalid, dan redaksi token pada exception report. Pengajuan serentak memakai TransactionTestCase dan dua koneksi SQLite berbasis file.
+
+Browser memakai `var/request-browser-check`. Alur: simpan draft kosong, submit ditolak 400, lengkapi dua item, tambah baris tanpa menyimpan dan tanpa kehilangan input, simpan, ajukan, baca snapshot revisi 1, lalu batalkan dengan alasan. Dua baris masing-masing 0.5 × IDR 0.01 menghasilkan IDR 0,01 per baris dan total IDR 0,02. Database akhirnya memuat satu permintaan CANCELLED, satu revisi dengan dua item, serta empat audit dan empat receipt aksi. Akun pemohon lain tidak melihat permintaan pada daftar dan mendapat 404 saat membuka URL detailnya.
+
+Form dua item tidak melampaui viewport 390/768/1440; keyboard Tab mencapai kontrol Hapus dengan outline terlihat. Screenshot mobile diperiksa. Pemeriksaan ini memakai HTML fungsional, belum audit aksesibilitas atau UI final. Respons 400 dan 404 merupakan skenario yang sengaja diuji; tidak ada JavaScript aplikasi pada form ini. Server dihentikan setelah pemeriksaan dan data sintetis tidak masuk database kerja.
+
+Review kode tidak menemukan masalah Critical/Important. Saran minor: memperketat management counts formset agar nilai negatif atau urutan initial/total yang rusak ditolak eksplisit. Perilaku bawaan saat ini dapat memperlakukan total negatif sebagai nol baris; pemilik memang diizinkan menyimpan draft kosong, sehingga ini bukan perubahan hak akses. Penguatan beserta regresi penolakan tanpa mutasi dijadwalkan pada pemeriksaan form tugas 10.
