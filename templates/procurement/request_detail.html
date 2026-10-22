@@ -13,6 +13,20 @@
   {% if editable %}<p><a href="{% url 'procurement:request_edit' target.pk %}">Ubah draft</a></p>{% endif %}
   {% if submit_form %}<section aria-labelledby="submit-heading"><h2 id="submit-heading">Ajukan permintaan</h2><p>Pengajuan menyimpan salinan revisi untuk review. Isinya tidak dapat diedit sampai diminta revisi.</p><form method="post" action="{% url 'procurement:request_submit' target.pk %}">{% csrf_token %}{{ submit_form.as_p }}<button type="submit">Ajukan permintaan</button></form></section>{% endif %}
   {% if cancel_form %}<section aria-labelledby="cancel-heading"><h2 id="cancel-heading">Batalkan permintaan</h2><p>Pembatalan bersifat akhir. Riwayat tetap disimpan; kebutuhan lanjutan harus dibuat sebagai permintaan baru.</p><form method="post" action="{% url 'procurement:request_cancel' target.pk %}">{% csrf_token %}{{ cancel_form.as_p }}<button type="submit">Batalkan permintaan</button></form></section>{% endif %}
+  {% if review_form %}
+    <section aria-labelledby="review-heading">
+      <h2 id="review-heading">Review pengajuan</h2>
+      {% if active_revision %}<p>Keputusan berlaku untuk <a href="{% url 'procurement:request_revision' target.pk active_revision.number %}">revisi {{ active_revision.number }}</a>, dengan plafon <strong>IDR {{ active_revision.estimated_total_minor|money_id }}</strong>. Periksa salinan pengajuan sebelum memutuskan.</p>{% endif %}
+      <form method="post" action="{% url 'procurement:request_review' target.pk %}">{% csrf_token %}{{ review_form.as_p }}<button type="submit">Simpan keputusan</button></form>
+    </section>
+  {% endif %}
+  {% if revision_form %}
+    <section aria-labelledby="revision-heading">
+      <h2 id="revision-heading">Kembalikan untuk revisi</h2>
+      <p>Pemohon perlu memperbarui kebutuhan lalu mengajukan kembali. Pilihan penawaran dikosongkan; revisi dan keputusan sebelumnya tetap tersimpan.</p>
+      <form method="post" action="{% url 'procurement:request_return_revision' target.pk %}">{% csrf_token %}{{ revision_form.as_p }}<button type="submit">Minta revisi kebutuhan</button></form>
+    </section>
+  {% endif %}
   <h2>Revisi pengajuan</h2><ul>{% for revision in revisions %}<li><a href="{% url 'procurement:request_revision' target.pk revision.number %}">Revisi {{ revision.number }}</a> · IDR {{ revision.estimated_total_minor|money_id }}</li>{% empty %}<li>Belum pernah diajukan.</li>{% endfor %}</ul>
   <h2>Riwayat</h2><ol>{% for event in events %}<li>{{ event.label }} oleh {{ event.actor }} · {{ event.time|date:'d M Y H:i' }} WIB{% if event.reason %}<p>{{ event.reason|linebreaksbr }}</p>{% endif %}</li>{% empty %}<li>Belum ada riwayat.</li>{% endfor %}</ol>
 {% endblock %}

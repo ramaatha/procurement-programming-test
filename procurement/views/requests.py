@@ -14,11 +14,11 @@ from common.errors import ConflictError
 from common.forms import ActionForm
 from common.http import database_busy,validation_errors
 from common.numbers import document_total,format_money,format_quantity,line_total
-from procurement.forms.requests import CancelForm,DraftForm,RequestLineFormSet
-from procurement.models import PurchaseOrder,RequestStatus
-from procurement.policies import active_actor,require_request_owner
-from procurement.selectors import visible_requests
-from procurement.services.requests import cancel_request,save_draft,submit_request
+from procurement.forms.requests import CancelForm,DraftForm,RequestLineFormSet,ReviewForm,RevisionForm
+from procurement.models import ApprovalDecision,Decision,PurchaseOrder,RequestStatus
+from procurement.policies import active_actor,require_procurement,require_request_owner,require_request_reviewer
+from procurement.selectors import approval_queue,visible_requests
+from procurement.services.requests import cancel_request,save_draft,submit_request,review_request,request_revision as return_for_revision
 
 
 def _visible(request,request_id):
@@ -46,7 +46,7 @@ def _initial_action(request,target,action):
 
 
 @sensitive_variables()
-def _render_detail(request,target,*,submit_form=None,cancel_form=None,status=200,message=''):
+def _render_detail(request,target,*,submit_form=None,cancel_form=None,review_form=None,revision_form=None,status=200,message=''):
     editable=_can_edit(request.user,target)
     cancellable=_can_cancel(request.user,target)
     if submit_form is None and editable:
@@ -54,10 +54,21 @@ def _render_detail(request,target,*,submit_form=None,cancel_form=None,status=200
         submit_form.fields['expected_version'].required=True
     if cancel_form is None and cancellable:
         cancel_form=CancelForm(initial=_initial_action(request,target,'request.cancel'))
+    active_revision = target.revisions.filter(number=target.current_revision_number).select_related('approval__actor').first()
+    unissued = not PurchaseOrder.objects.filter(request=target).exists()
+    if (review_form is None and request.user.role == Role.APPROVER and target.requester_id != request.user.pk
+            and target.status == RequestStatus.SUBMITTED and active_revision is not None and unissued
+            and not ApprovalDecision.objects.filter(revision=active_revision).exists()):
+        review_form = ReviewForm(initial=_initial_action(request,target,'request.review'))
+    if (revision_form is None and request.user.role == Role.PROCUREMENT and target.status == RequestStatus.APPROVED
+            and active_revision is not None and unissued
+            and ApprovalDecision.objects.filter(revision=active_revision,decision=Decision.APPROVE).exists()):
+        revision_form = RevisionForm(initial=_initial_action(request,target,'request.revision'))
     rows=_rows(target.items.all())
-    labels={'request.create':'Draft dibuat','request.edit':'Draft diperbarui','request.submit':'Permintaan diajukan','request.cancel':'Permintaan dibatalkan'}
-    events=[dict(label=labels.get(event.action,'Perubahan permintaan'),actor=event.actor_name,time=event.created_at,reason=event.reason) for event in target.audit_events.order_by('-created_at','-pk')]
-    response=render(request,'procurement/request_detail.html',dict(target=target,rows=rows,total_minor=document_total(row['line_total_minor'] for row in rows),editable=editable,submit_form=submit_form,cancel_form=cancel_form,revisions=target.revisions.order_by('-number'),events=events,message=message),status=status)
+    labels={'request.create':'Draft dibuat','request.edit':'Draft diperbarui','request.submit':'Permintaan diajukan','request.cancel':'Permintaan dibatalkan','request.revision':'Dikembalikan untuk revisi'}
+    decisions={'APPROVE':'Disetujui','REQUEST_CHANGES':'Diminta revisi','REJECT':'Ditolak'}
+    events=[dict(label=decisions.get(event.changes.get('decision'),'Keputusan review') if event.action=='request.review' else labels.get(event.action,'Perubahan permintaan'),actor=event.actor_name,time=event.created_at,reason=event.reason) for event in target.audit_events.order_by('-created_at','-pk')]
+    response=render(request,'procurement/request_detail.html',dict(target=target,rows=rows,total_minor=document_total(row['line_total_minor'] for row in rows),editable=editable,submit_form=submit_form,cancel_form=cancel_form,review_form=review_form,revision_form=revision_form,active_revision=active_revision,revisions=target.revisions.select_related('approval__actor').order_by('-number'),events=events,message=message),status=status)
     if status==503:response['Retry-After']='1'
     return response
 
@@ -77,9 +88,16 @@ def request_detail(request,request_id):
 
 @login_required
 @require_safe
+def approval_list(request):
+    page = Paginator(approval_queue(request.user).order_by('created_at','pk'),25).get_page(request.GET.get('page'))
+    return render(request,'procurement/approval_list.html',dict(page_obj=page))
+
+
+@login_required
+@require_safe
 def request_revision(request,request_id,number):
     target=_visible(request,request_id)
-    revision=get_object_or_404(target.revisions,number=number)
+    revision=get_object_or_404(target.revisions.select_related('approval__actor'),number=number)
     return render(request,'procurement/request_revision.html',dict(target=target,revision=revision,rows=_rows(revision.items.all(),snapshot=True)))
 
 
@@ -186,3 +204,56 @@ def request_submit(request,request_id):return _transition(request,request_id)
 @login_required
 @require_POST
 def request_cancel(request,request_id):return _transition(request,request_id,cancel=True)
+
+
+@sensitive_variables()
+def _decision_transition(request, request_id, *, return_revision=False):
+    target = _visible(request, request_id)
+    if return_revision:
+        require_procurement(request.user)
+    else:
+        require_request_reviewer(request.user, target)
+    action = 'request.revision' if return_revision else 'request.review'
+    form = RevisionForm(request.POST) if return_revision else ReviewForm(request.POST)
+    status = 400
+    if form.is_valid():
+        try:
+            nonce = load_action_token(form.cleaned_data['action_token'], **_scope(request, target, action))
+            ctx = ActionContext(request.user.pk, nonce, form.cleaned_data['expected_version'])
+            if return_revision:
+                result = return_for_revision(ctx, request_id=target.pk, reason=form.cleaned_data['reason'])
+            else:
+                result = review_request(ctx, request_id=target.pk,
+                                        decision=form.cleaned_data['decision'], reason=form.cleaned_data['reason'])
+        except ValidationError as error:
+            validation_errors(form, error)
+        except ConflictError:
+            form.add_error(None, 'Data atau status sudah berubah. Muat ulang sebelum melanjutkan.')
+            status = 409
+        except OperationalError as error:
+            if not database_busy(error):
+                raise
+            form.add_error(None, 'Penyimpanan sedang sibuk. Coba kembali sebentar lagi.')
+            status = 503
+        else:
+            messages.success(request, 'Permintaan dikembalikan untuk revisi.' if return_revision else 'Keputusan berhasil disimpan.')
+            response = redirect('procurement:request_detail', request_id=result.pk)
+            response.status_code = 303
+            return response
+    target.refresh_from_db()
+    return _render_detail(request, target, review_form=None if return_revision else form,
+                          revision_form=form if return_revision else None, status=status)
+
+
+@sensitive_post_parameters('action_token', 'csrfmiddlewaretoken')
+@login_required
+@require_POST
+def request_review(request, request_id):
+    return _decision_transition(request, request_id)
+
+
+@sensitive_post_parameters('action_token', 'csrfmiddlewaretoken')
+@login_required
+@require_POST
+def request_return_revision(request, request_id):
+    return _decision_transition(request, request_id, return_revision=True)

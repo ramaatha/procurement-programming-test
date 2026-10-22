@@ -1,5 +1,5 @@
 # filepath: procurement/tests/factories.py
-"""Drafts use services; approval/order rows remain fixtures until their services exist."""
+"""Requests and approvals use services; order rows remain fixtures until available."""
 from datetime import timedelta
 from uuid import UUID, uuid4
 
@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from accounts.models import Role, User
 from common.actions import ActionContext
-from common.numbers import line_total, parse_quantity
+from common.numbers import format_quantity, parse_quantity
 from procurement.models import (
     ApprovalDecision, Kind, PurchaseOrder, PurchaseOrderItem, PurchaseRequest,
     Quotation, QuotationItem, RequestItem, RequestRevision, RevisionItem, Vendor,
@@ -26,20 +26,14 @@ def draft(owner: User, *, kind: str = Kind.GOODS) -> PurchaseRequest:
 
 
 def _approved(owner: User, approver: User, kind: str, qty_milli: int) -> PurchaseRequest:
-    request = draft(owner, kind=kind)
-    request.title = 'Kebutuhan contoh'
-    request.reason = 'Pengadaan operasional'
-    request.destination = 'Kantor'
-    request.needed_on = timezone.localdate() + timedelta(days=3)
-    request.status = 'APPROVED'
-    request.current_revision_number = 1
-    request.save()
-    total = line_total(qty_milli, 1000)
-    RequestItem.objects.create(request=request, position=1, name='Item contoh', unit='unit', qty_milli=qty_milli, estimated_unit_price_minor=1000)
-    revision = RequestRevision.objects.create(request=request, number=1, kind=kind, title=request.title, reason=request.reason, destination=request.destination, needed_on=request.needed_on, estimated_total_minor=total, submitted_by=owner)
-    RevisionItem.objects.create(revision=revision, position=1, name='Item contoh', unit='unit', qty_milli=qty_milli, estimated_unit_price_minor=1000, line_total_minor=total)
-    ApprovalDecision.objects.create(revision=revision, actor=approver, requester_at_decision=owner, decision='APPROVE')
-    return request
+    from procurement.inputs import DraftInput, RequestLineInput
+    from procurement.services.requests import review_request, save_draft, submit_request
+    data = DraftInput(str(kind), 'Kebutuhan contoh', 'Pengadaan operasional', 'Kantor',
+                      timezone.localdate() + timedelta(days=3),
+                      (RequestLineInput('Item contoh', 'unit', format_quantity(qty_milli), '10.00'),))
+    request = save_draft(ActionContext(owner.pk, uuid4(), None), request_id=None, data=data)
+    request = submit_request(context(owner, request), request_id=request.pk)
+    return review_request(context(approver, request), request_id=request.pk, decision='APPROVE', reason='')
 
 
 def approved(owner: User, approver: User, *, kind: str = Kind.GOODS) -> PurchaseRequest:

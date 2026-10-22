@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% comment %}filepath: templates/procurement/approval_list.html{% endcomment %}
+{% block title %}Antrean persetujuan | Procurement{% endblock %}
+{% block content %}
+  <nav aria-label="Navigasi persetujuan"><a href="{% url 'accounts:home' %}">Beranda</a> · <a href="{% url 'procurement:request_list' %}">Semua permintaan</a></nav>
+  <h1>Antrean persetujuan</h1>
+  <p>Permintaan yang menunggu keputusan Anda, diurutkan dari yang dibuat lebih dahulu. Permintaan milik sendiri tidak ditampilkan.</p>
+  <ul>{% for target in page_obj %}<li><h2><a href="{% url 'procurement:request_detail' target.pk %}">{{ target.title }}</a></h2><p>{{ target.number }} · {{ target.requester.username }} · Revisi {{ target.current_revision_number }}</p></li>{% empty %}<li>Tidak ada permintaan yang menunggu keputusan Anda.</li>{% endfor %}</ul>
+  {% if page_obj.has_other_pages %}<nav aria-label="Halaman antrean">{% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Sebelumnya</a>{% endif %} <span>Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }}</span> {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Berikutnya</a>{% endif %}</nav>{% endif %}
+{% endblock %}

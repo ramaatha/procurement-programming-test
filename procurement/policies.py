@@ -18,3 +18,14 @@ def require_request_owner(actor: User, target: PurchaseRequest) -> None:
     current=active_actor(actor.pk)
     if current.role != Role.REQUESTER or target.requester_id != current.pk:
         raise PermissionDenied
+
+
+def require_request_reviewer(actor: User, target: PurchaseRequest) -> None:
+    current = active_actor(actor.pk)
+    if current.role != Role.APPROVER or target.requester_id == current.pk:
+        raise PermissionDenied
+
+
+def require_procurement(actor: User) -> None:
+    if active_actor(actor.pk).role != Role.PROCUREMENT:
+        raise PermissionDenied

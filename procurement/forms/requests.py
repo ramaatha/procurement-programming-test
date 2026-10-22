@@ -5,7 +5,7 @@ from django.forms import formset_factory
 from common.forms import ActionForm
 from common.numbers import format_money,format_quantity,parse_money,parse_quantity
 from procurement.inputs import DraftInput,RequestLineInput
-from procurement.models import Kind
+from procurement.models import Decision, Kind
 
 
 class DraftForm(ActionForm):
@@ -44,3 +44,29 @@ class CancelForm(ActionForm):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self.fields['expected_version'].required=True
+
+
+class ReviewForm(ActionForm):
+    decision = forms.ChoiceField(label='Keputusan', choices=[('', 'Pilih keputusan'), *Decision.choices])
+    reason = forms.CharField(label='Alasan keputusan', max_length=4000, required=False,
+                             widget=forms.Textarea(attrs={'rows': 3}),
+                             help_text='Wajib untuk meminta revisi atau menolak permintaan.')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['expected_version'].required = True
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get('decision') in (Decision.REQUEST_CHANGES, Decision.REJECT) and not cleaned.get('reason'):
+            self.add_error('reason', 'Isi alasan untuk keputusan ini.')
+        return cleaned
+
+
+class RevisionForm(ActionForm):
+    reason = forms.CharField(label='Alasan revisi', max_length=4000,
+                             widget=forms.Textarea(attrs={'rows': 3}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['expected_version'].required = True

@@ -4,6 +4,7 @@
   <h1>Procurement</h1>
   {% if user.role == "ADMIN" %}<p><a href="{% url 'accounts:user_list' %}">Kelola akun</a></p>{% endif %}
   <p><a href="{% url 'procurement:request_list' %}">Permintaan pengadaan</a></p>
+  {% if user.role == "APPROVER" %}<p><a href="{% url 'procurement:approval_list' %}">Antrean persetujuan</a></p>{% endif %}
   <h2>Akun Anda</h2>
   <dl>
     <dt>Username</dt><dd>{{ user.username }}</dd>

@@ -13,8 +13,8 @@ from common.actions import ActionContext, check_version, find_replay, payload_ha
 from common.errors import ConflictError
 from common.numbers import MAX_INT64, document_total, format_money, format_quantity, line_total, parse_money, parse_quantity
 from procurement.inputs import DraftInput, RequestLineInput
-from procurement.models import AuditEvent, Kind, PurchaseOrder, PurchaseRequest, RequestItem, RequestRevision, RequestStatus, RevisionItem
-from procurement.policies import active_actor, require_request_owner
+from procurement.models import ApprovalDecision, AuditEvent, Decision, Kind, PurchaseOrder, PurchaseRequest, RequestItem, RequestRevision, RequestStatus, RevisionItem
+from procurement.policies import active_actor, require_procurement, require_request_owner, require_request_reviewer
 from procurement.selectors import visible_requests
 
 
@@ -76,10 +76,12 @@ def _clear_selection(target: PurchaseRequest) -> None:
     target.single_source_reason=''
 
 
-def _record(ctx: ActionContext, actor: User, target: PurchaseRequest, action: str, key: str, digest: str, *, reason: str = '', total: int | None = None) -> None:
+def _record(ctx: ActionContext, actor: User, target: PurchaseRequest, action: str, key: str, digest: str, *, reason: str = '', total: int | None = None, decision: str | None = None) -> None:
     changes=dict(status=target.status,version=target.version,revision_number=target.current_revision_number)
     if total is not None:
         changes['estimated_total']=format_money(total)
+    if decision is not None:
+        changes['decision'] = decision
     AuditEvent.objects.create(request=target,actor=actor,actor_name=actor.username,actor_role=actor.role,action=action,target_type='REQUEST',target_id=str(target.pk),reason=reason,changes=changes)
     record_action(ctx,action=action,target_type='REQUEST',target_key=key,digest=digest,result=target)
 
@@ -165,4 +167,69 @@ def cancel_request(ctx: ActionContext, *, request_id: UUID, reason: str) -> Purc
         _clear_selection(target)
         target.save()
         _record(ctx,actor,target,'request.cancel',str(target.pk),digest,reason=reason)
+        return target
+
+
+def _current_revision(target: PurchaseRequest) -> RequestRevision:
+    revision = target.revisions.filter(number=target.current_revision_number).first()
+    if revision is None or not revision.items.exists():
+        raise ConflictError('Revisi pengajuan tidak tersedia. Muat ulang permintaan.')
+    return revision
+
+
+def review_request(ctx: ActionContext, *, request_id: UUID, decision: str, reason: str) -> PurchaseRequest:
+    with transaction.atomic():
+        actor = active_actor(ctx.actor_id)
+        target = get_object_or_404(visible_requests(actor), pk=request_id)
+        require_request_reviewer(actor, target)
+        if decision not in Decision.values:
+            raise ValidationError('Keputusan tidak valid.')
+        reason = _text(reason, 4000, 'Alasan keputusan', required=decision != Decision.APPROVE)
+        digest = payload_hash(dict(decision=decision, reason=reason, expected_version=ctx.expected_version))
+        replay = find_replay(ctx, action='request.review', target_type='REQUEST', target_key=str(target.pk), digest=digest)
+        if replay is not None:
+            return resolve_result(replay)
+        check_version(target, ctx.expected_version)
+        _unissued(target)
+        if target.status != RequestStatus.SUBMITTED:
+            raise ConflictError()
+        revision = _current_revision(target)
+        if ApprovalDecision.objects.filter(revision=revision).exists():
+            raise ConflictError('Revisi ini sudah memiliki keputusan.')
+        _advance(target)
+        ApprovalDecision.objects.create(revision=revision, actor=actor, requester_at_decision=target.requester,
+                                        decision=decision, reason=reason)
+        target.status = {
+            Decision.APPROVE: RequestStatus.APPROVED,
+            Decision.REQUEST_CHANGES: RequestStatus.CHANGES_REQUESTED,
+            Decision.REJECT: RequestStatus.REJECTED,
+        }[decision]
+        _clear_selection(target)
+        target.save()
+        _record(ctx, actor, target, 'request.review', str(target.pk), digest, reason=reason, decision=decision)
+        return target
+
+
+def request_revision(ctx: ActionContext, *, request_id: UUID, reason: str) -> PurchaseRequest:
+    with transaction.atomic():
+        actor = active_actor(ctx.actor_id)
+        require_procurement(actor)
+        target = get_object_or_404(visible_requests(actor), pk=request_id)
+        reason = _text(reason, 4000, 'Alasan revisi', required=True)
+        digest = payload_hash(dict(reason=reason, expected_version=ctx.expected_version))
+        replay = find_replay(ctx, action='request.revision', target_type='REQUEST', target_key=str(target.pk), digest=digest)
+        if replay is not None:
+            return resolve_result(replay)
+        check_version(target, ctx.expected_version)
+        _unissued(target)
+        if target.status != RequestStatus.APPROVED:
+            raise ConflictError()
+        revision = _current_revision(target)
+        if not ApprovalDecision.objects.filter(revision=revision, decision=Decision.APPROVE).exists():
+            raise ConflictError('Revisi aktif belum memiliki persetujuan yang sesuai.')
+        _advance(target)
+        _clear_selection(target)
+        target.status = RequestStatus.CHANGES_REQUESTED
+        target.save()
+        _record(ctx, actor, target, 'request.revision', str(target.pk), digest, reason=reason)
         return target
