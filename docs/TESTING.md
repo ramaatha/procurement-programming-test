@@ -4,7 +4,7 @@ Diperbarui: 22 Oktober 2026
 
 ## Lingkup yang telah diverifikasi
 
-Verifikasi mencakup akun, autentikasi, session, konfigurasi environment, 14 model Procurement, migrasi SQLite, parser angka, serta helper token/replay dan versi. Ini belum menjadi hasil pengujian seluruh aplikasi Procurement.
+Verifikasi mencakup akun, autentikasi, session, konfigurasi environment, 14 model Procurement, migrasi SQLite, parser angka, helper token/replay dan versi, serta service/form pengelolaan akun admin. Ini belum menjadi hasil pengujian seluruh aplikasi Procurement.
 
 Lingkungan pemeriksaan: Python 3.12.14, Django 5.2.18, SQLite 3.53.1, dan JSON1 tersedia. Dependensi terpasang: asgiref 3.12.1, sqlparse 0.6.0, dan tzdata 2026.5. `pip check` tidak menemukan dependensi yang rusak.
 
@@ -19,8 +19,11 @@ Lingkungan pemeriksaan: Python 3.12.14, Django 5.2.18, SQLite 3.53.1, dan JSON1 
 | Constraint pengadaan | 10 | Header draft, nilai/status valid, keunikan revisi/keputusan/PO/item, kelengkapan metadata penutupan, periode bukti, parent yang tidak ada, dan FK historis |
 | Token dan payload | 3 | Scope tepat, tanda tangan, TTL 24 jam, hash kanonik, urutan baris, serta penolakan field sensitif/float |
 | Transaksi aksi | 7 | Replay sebelum pemeriksaan versi, konflik nonce/payload/scope, nonce sekali untuk password, resolver allowlist, kewajiban atomic, serta rollback dokumen/audit/hasil aksi |
+| Service akun | 17 | Pembuatan/edit/reset, validasi username/role/password, admin terakhir, otorisasi terkini, nonce sekali, versi, batas int64 dan rollback |
+| HTTP dan perlindungan form akun | 14 | Izin empat peran, CSRF, parameter privilege, token lintas aktor/target, 400/409/503, sesi dicabut, dan redaksi token/password pada exception report |
+| Dua penulis akun | 1 | Dua admin menurunkan peran sendiri secara bersamaan; tepat satu perubahan berhasil dan satu admin aktif tetap tersedia |
 
-Total: **48 test lulus**. Subtest beberapa input/peran tidak dihitung sebagai method test tambahan.
+Total: **80 test lulus**. Subtest beberapa input/peran tidak dihitung sebagai method test tambahan.
 
 Perintah yang dijalankan:
 
@@ -57,14 +60,24 @@ Server dijalankan pada loopback dengan database sintetis terpisah di var/browser
 
 Bukti tampilan dan log berada pada tmp dan diabaikan Git. Server pemeriksaan dihentikan setelah alur selesai.
 
+## Pengelolaan akun
+
+Service membaca ulang admin aktif sebelum memeriksa replay, lalu memvalidasi input dan versi dalam transaksi IMMEDIATE. Akun, AuditEvent dan ActionReceipt rollback bersama jika salah satu penulisan gagal. Create/reset memakai nonce sekali dan payload hash kosong; metadata edit dapat direplay dengan payload sama. Admin aktif terakhir tidak dapat dinonaktifkan atau diturunkan perannya.
+
+Pengujian batas versi menemukan overflow integer sebelum guard ditambahkan; regresinya kini lulus. Pengujian exception report juga terlebih dahulu membuktikan token belum tersamarkan, lalu lulus setelah redaksi parameter POST dan variabel lokal form diterapkan pada mode non-debug.
+
+Browser memakai database terpisah `var/account-browser-check`. Alur yang diperiksa: login admin, buat akun dengan password invalid/valid, ubah peran, nonaktif/aktifkan, reset password, logout, login akun hasil reset, dan penolakan akses `/users/` untuk penerima. Input aman dipertahankan saat 400 dan password dikosongkan. Lima perubahan menghasilkan tepat lima audit dan lima receipt aksi.
+
+Form edit tidak melampaui viewport 390/768/1440; Tab mencapai tautan daftar akun dengan focus terlihat. Ini pemeriksaan form fungsional, belum audit visual/aksesibilitas seluruh aplikasi. Console mencatat respons 400/403 yang sengaja diuji serta favicon 404; tidak ditemukan error JavaScript aplikasi. Server pemeriksaan dihentikan setelah selesai.
+
 ## Batas verifikasi
 
-Pengelolaan akun melalui UI, izin per objek Procurement, keputusan approval melalui service, penerbitan PO, dan penerimaan belum diimplementasikan atau diuji. Parser angka, token, replay, versi dan rollback sudah diuji sebagai helper, belum sebagai alur mutasi bisnis lengkap. Service harus membaca ulang akun/izin sebelum replay dan memeriksa seluruh relasi serta jumlah dalam transaksi. Concurrency dua penulis pada aksi pengadaan belum dibuktikan oleh tahap ini.
+Pengelolaan akun melalui UI dan service sudah diuji. Izin per objek Procurement, keputusan approval, penerbitan PO, dan penerimaan belum diimplementasikan atau diuji. Parser angka, token, replay, versi dan rollback sudah diuji sebagai helper dan pada mutasi akun; alur transaksi pengadaan belum tersedia. Service harus membaca ulang akun/izin sebelum replay dan memeriksa seluruh relasi serta jumlah dalam transaksi. Concurrency dua penulis pada aksi pengadaan belum dibuktikan oleh tahap ini.
 
-Tampilan masih prototipe HTML fungsional. Lebar 390/768/1440, pemeriksaan aksesibilitas menyeluruh, dan arah visual final menunggu tahap UI. Mode non-debug diperiksa melalui konfigurasi; hosting, reverse proxy, HTTPS nyata, dan kapasitas produksi belum diverifikasi.
+Tampilan masih prototipe HTML fungsional. Form edit akun sudah diperiksa pada lebar 390/768/1440. Pemeriksaan aksesibilitas menyeluruh serta arah visual final menunggu tahap UI. Mode non-debug diperiksa melalui konfigurasi; hosting, reverse proxy, HTTPS nyata, dan kapasitas produksi belum diverifikasi.
 
 Pembuatan virtual environment dan pemasangan requirements dilakukan dari lingkungan Python 3.12 yang tersedia. Launcher sistem pada mesin pemeriksaan belum mempunyai runtime Python 3.12 yang terdaftar; checkout lokal menggunakan interpreter pada .venv. Setup lintas mesin tetap mensyaratkan Python 3.12 tersedia.
 
 Data contoh lintas peran serta perjalanan pengadaan lengkap belum tersedia. FR-01 dan FR-13 baru diterapkan sebagian; status penerimaan keseluruhan kebutuhan tersebut belum dinaikkan menjadi selesai.
 
-Catatan cakupan regresi: penolakan replay password sudah diuji dengan `replayable=False`. Guard bawaan `account.create` dan `account.password`, hash kosong, serta penolakan digest nonkosong lulus probe terpisah. Pengujian otomatis kedua aksi dengan opsi replay bawaan akan dilengkapi bersama service pengelolaan akun pada Tugas 3.
+Regresi otomatis `account.create` dan `account.password` memakai opsi replay bawaan, memeriksa payload hash kosong dan penolakan digest nonkosong. Kedua service juga diuji saat nonce dikirim ulang dengan password atau metadata berbeda.

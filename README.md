@@ -2,7 +2,7 @@
 
 Aplikasi web internal untuk mengelola pengadaan barang dan jasa dari pengajuan kebutuhan sampai penerimaan pesanan.
 
-Fondasi Django sudah tersedia: akun dengan lima peran, login/logout, halaman akun yang memerlukan autentikasi, konfigurasi environment, dan migrasi SQLite. Schema untuk 14 entitas pengadaan, migrasi awal, parser angka, audit, dan helper token/replay sudah tersedia. Service dan halaman untuk permintaan, approval, vendor, penawaran, PO, serta penerimaan belum diimplementasikan. Tampilan awal masih berupa HTML fungsional untuk memeriksa autentikasi.
+Fondasi Django sudah tersedia: akun dengan lima peran, login/logout, halaman akun yang memerlukan autentikasi, konfigurasi environment, dan migrasi SQLite. Schema untuk 14 entitas pengadaan, migrasi awal, parser angka, audit, dan helper token/replay sudah tersedia. Service dan halaman untuk permintaan, approval, vendor, penawaran, PO, serta penerimaan belum diimplementasikan. Admin sudah dapat membuat akun, mengubah peran/keaktifan, serta mereset password melalui halaman akun. Tampilan masih HTML fungsional; desain antarmuka final belum dikerjakan.
 
 ## Environment
 
@@ -46,7 +46,7 @@ Pada environment kerja yang telah disiapkan, Python tersedia melalui `.venv`. Ke
 & $python manage.py createsuperuser --role ADMIN
 ```
 
-Isi username dan password saat diminta. Akun ini memakai peran aplikasi ADMIN. Route `/admin/` tidak diaktifkan, dan status superuser tidak memberi pengecualian pada aturan bisnis. Halaman pengelolaan akun belum tersedia pada tahap ini; pembuatan akun pertama memakai command line.
+Isi username dan password saat diminta. Akun ini memakai peran aplikasi ADMIN. Route `/admin/` tidak diaktifkan, dan status superuser tidak memberi pengecualian pada aturan bisnis. Pembuatan akun pertama memakai command line. Setelah login sebagai ADMIN, gunakan tautan Kelola akun pada beranda atau buka `/users/` untuk mengelola akun berikutnya. Admin aktif terakhir tidak dapat dinonaktifkan atau diubah perannya.
 
 Jangan memakai password produksi untuk pengujian. Data contoh untuk seluruh alur pengadaan akan ditambahkan pada tahap berikutnya.
 
@@ -56,7 +56,7 @@ Jangan memakai password produksi untuk pengujian. Data contoh untuk seluruh alur
 & $python manage.py runserver 127.0.0.1:8000
 ```
 
-Buka [halaman login lokal](http://127.0.0.1:8000/login/). Setelah login, halaman akun menampilkan username dan peran. Tombol Keluar mengakhiri sesi. Hentikan server dengan Ctrl+C.
+Buka [halaman login lokal](http://127.0.0.1:8000/login/). Setelah login, halaman akun menampilkan username dan peran. Tombol Keluar mengakhiri sesi. Admin dapat membuka daftar akun, membuat akun, mengubah peran/status aktif, dan mereset password. Reset password mencabut sesi lama akun terkait; reset password sendiri mengakhiri sesi saat ini. Hentikan server dengan Ctrl+C.
 
 Server pengembangan hanya untuk penggunaan lokal. Mode `DEBUG=false` mewajibkan hostname eksplisit dan mengaktifkan HTTPS redirect serta Secure cookie. Deployment dan HTTPS pada lingkungan hosting belum diuji.
 
@@ -93,7 +93,7 @@ Versi awal dirancang untuk satu tingkat approval, satu vendor dan maksimal satu 
 - [Diagram yang dapat diedit](outputs/Procurement_BPMN.drawio).
 - [WBS](outputs/Procurement_WBS.xlsx), dengan tujuh modul dan 27 paket pekerjaan.
 
-Dokumen analisis tidak menyatakan seluruh fitur sudah tersedia. Status paket autentikasi penuh tetap menunggu pengelolaan akun dan izin objek pada tahap terkait. BPMN/WBS tidak diubah pada tahap fondasi ini.
+Dokumen analisis tidak menyatakan seluruh fitur sudah tersedia. Pengelolaan akun sudah tersedia; penerimaan FR-01 tetap menunggu izin objek pada modul pengadaan dan pengujian alur lengkap. BPMN/WBS tidak diubah pada tahap fondasi ini.
 
 ## Struktur repository
 

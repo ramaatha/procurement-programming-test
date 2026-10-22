@@ -74,3 +74,15 @@ Pesan: `feat: add procurement data model and transaction primitives`
 Pilih berkas baru pada `common/` dan `procurement/`, termasuk pengujian, fixture, serta migrasi awal. Sertakan perubahan `config/settings.py`, `README.md`, `AGENTS.md`, dan dokumen yang diperbarui: ARCHITECTURE, DATA_MODEL, IMPLEMENTATION_PLAN, WORKFLOW, TESTING, serta panduan ini.
 
 Jangan memasukkan database kerja/test, cadangan database, cache, log, atau isi `tmp/`. Diagram dan workbook tidak berubah pada tahap schema.
+
+## Pengelolaan akun dan policy peran
+
+Pisahkan implementasi dan dokumentasi menjadi dua commit.
+
+Pesan kode: `feat: add admin account management and role policies`
+
+Pilih `accounts/forms.py`, `accounts/policies.py`, `accounts/services.py`, `accounts/urls.py`, `accounts/views.py`, `accounts/tests/test_management.py`, `accounts/tests/test_permissions.py`, `procurement/tests/test_actions.py`, `templates/base.html`, serta `templates/accounts/home.html`, `user_list.html`, `user_form.html`, dan `user_password.html`.
+
+Pesan dokumentasi: `docs: document account management and verification results`
+
+Pilih `AGENTS.md`, `README.md`, `docs/ARCHITECTURE.md`, `docs/DATA_MODEL.md`, `docs/IMPLEMENTATION_PLAN.md`, `docs/TESTING.md`, `docs/WORKFLOW.md`, dan panduan ini. Database sintetis, screenshot, log dan isi tmp tidak disertakan. Tidak ada perubahan migrasi, dependency, diagram, atau workbook pada tahap ini.

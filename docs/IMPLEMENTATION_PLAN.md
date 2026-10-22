@@ -10,7 +10,7 @@ Pengerjaan mengikuti urutan tugas setelah rancangan dan rencana ditinjau. Checkl
 
 **Dokumen rancangan:** [Arsitektur](ARCHITECTURE.md), [model data](DATA_MODEL.md), [PRD](PRD.md), dan [proses bisnis](BUSINESS_PROCESS.md).
 
-Status: Tugas 1 dan 2 selesai untuk fondasi lokal dan schema, dengan 48 pengujian lulus. Tugas 3 sampai 11 belum dikerjakan. Django telah dipilih; keputusan lanjutan tetap mengikuti rancangan terkait. Pengerjaan dilakukan berurutan, satu tugas sampai hasilnya terverifikasi. Arah visual ditinjau sebelum styling pada tugas 10. HTML semantik pada tugas awal adalah prototipe fungsional untuk menguji alur, belum UI final.
+Status: Tugas 1 sampai 3 selesai untuk fondasi, schema dan pengelolaan akun, dengan 80 pengujian lulus. Tugas 4 sampai 11 belum dikerjakan. Django telah dipilih; keputusan lanjutan tetap mengikuti rancangan terkait. Pengerjaan dilakukan berurutan, satu tugas sampai hasilnya terverifikasi. Arah visual ditinjau sebelum styling pada tugas 10. HTML semantik pada tugas awal adalah prototipe fungsional untuk menguji alur, belum UI final.
 
 ## Batas yang berlaku pada semua tugas
 
@@ -96,10 +96,12 @@ Bukti tahap: [TESTING](TESTING.md). Migrasi awal memuat 14 model; siklus migrasi
 
 **Kontrak:** `save_user(ctx: ActionContext, *, user_id: int | None, username: str, role: str, is_active: bool, initial_password: str | None = None) -> User`; `reset_password(ctx: ActionContext, *, user_id: int, new_password: str) -> User`. Pembuatan user memerlukan password valid; edit biasa tidak mengubah password. Policy `require_role(actor: User, *roles: str) -> None` tidak menerima role browser atau bypass superuser.
 
-- [ ] Tulis TC-02: admin dapat mengelola akun; empat role lain mendapat 403; nonaktif kehilangan akses; perubahan role dari tab lain terbaca ulang; username duplikat/role invalid ditolak; password tersimpan hashed dan tidak muncul dalam audit/log.
-- [ ] Tulis create akun dengan password awal dan reset password dengan nonce sama dua kali: pertama sukses, kedua 409, tanpa menyimpan hash payload password. Uji stale version dan token yang milik admin lain.
-- [ ] Jalankan `python manage.py test accounts.tests -v 2` untuk red, implementasikan service/form/policy dan POST handler, lalu green. Form tidak memaparkan is_superuser/is_staff sebagai field editable.
-- [ ] Siapkan commit pengguna: `feat: add role based account management`.
+- [x] Tulis TC-02: admin dapat mengelola akun; empat role lain mendapat 403; nonaktif kehilangan akses; perubahan role dari tab lain terbaca ulang; username duplikat/role invalid ditolak; password tersimpan hashed dan tidak muncul dalam audit/log.
+- [x] Tulis create akun dengan password awal dan reset password dengan nonce sama dua kali: pertama sukses, kedua 409, tanpa menyimpan hash payload password. Uji stale version dan token yang milik admin lain.
+- [x] Jalankan `python manage.py test accounts.tests -v 2` untuk red, implementasikan service/form/policy dan POST handler, lalu green. Form tidak memaparkan is_superuser/is_staff sebagai field editable.
+- [x] Siapkan commit pengguna: `feat: add role based account management`.
+
+Bukti tahap: [TESTING](TESTING.md). Halaman akun memakai HTML fungsional. Admin terakhir dijaga oleh transaksi IMMEDIATE; perubahan serentak diuji dengan dua koneksi SQLite berbasis file. Tidak ada migrasi baru pada tahap ini.
 
 ## Tugas 4: Draft, revisi pengajuan, dan pembatalan sebelum PO
 
@@ -235,4 +237,4 @@ Tugas 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11. Pengujian server me
 
 Setelah satu tugas, laporkan perubahan, perintah/hasil pengujian, batas yang belum diuji, dan file untuk commit pengguna. Kegagalan test atau kontrak harus diselesaikan sebelum memperluas fitur. Kekurangan waktu dilaporkan; kebutuhan wajib tidak dihapus diam-diam.
 
-Tugas 1 dan 2 sudah diverifikasi. Langkah berikutnya adalah Tugas 3: pengelolaan akun dan policy akses. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.
+Tugas 1 sampai 3 sudah diverifikasi. Langkah berikutnya adalah Tugas 4: draft permintaan, revisi pengajuan, dan pembatalan sebelum PO. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.

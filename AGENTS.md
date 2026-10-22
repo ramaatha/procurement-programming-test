@@ -5,7 +5,7 @@
 - Gunakan Python dan Django. Rancangan awal memakai Django templates, CSS/JavaScript lokal, dan SQLite.
 - Ikuti cakupan pada [PRD](docs/PRD.md) dan transisi pada [proses bisnis](docs/BUSINESS_PROCESS.md).
 - Baca [arsitektur](docs/ARCHITECTURE.md), [model data](docs/DATA_MODEL.md), dan [rencana implementasi](docs/IMPLEMENTATION_PLAN.md) sebelum mengubah fitur terkait.
-- Django sudah dipilih. Fondasi akun/autentikasi serta schema pengadaan dan helper transaksi tersedia dan teruji. Service, izin objek, dan halaman alur pengadaan belum diimplementasikan. Jangan menyamakan rancangan dengan fitur yang sudah dibangun atau teruji.
+- Django sudah dipilih. Fondasi akun/autentikasi serta schema pengadaan dan helper transaksi tersedia dan teruji. Pengelolaan akun admin dan policy peran sudah tersedia; izin objek dan service alur pengadaan belum diimplementasikan. Jangan menyamakan rancangan dengan fitur yang sudah dibangun atau teruji.
 
 ## Implementasi
 
@@ -34,4 +34,4 @@
 - Selesaikan perubahan rutin dalam cakupan yang sudah ditinjau tanpa meminta persetujuan untuk setiap edit. Tinjau kembali bila cakupan atau keputusan penting berubah.
 - Jangan mengirim pesan, membuat percakapan baru, atau mengubah layanan eksternal tanpa instruksi pengguna.
 - Bedakan hasil lokal, ter-commit, ter-push, ter-deploy, dan teruji produksi.
-- Staging, commit, dan push hanya dilakukan pengguna. Siapkan pembagian berkas dan saran pesan commit; jangan menjalankan tindakan Git tersebut.
+- Staging, commit, dan push hanya dilakukan pengguna. Di akhir saran commit, sertakan daftar lengkap berkas dan pesan commit. Pisahkan kode dan dokumentasi bila masing-masing dapat ditinjau sendiri; jangan menjalankan tindakan Git tersebut.
