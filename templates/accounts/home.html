@@ -2,6 +2,7 @@
 {% comment %}filepath: templates/accounts/home.html{% endcomment %}
 {% block content %}
   <h1>Procurement</h1>
+  {% if user.role == "ADMIN" %}<p><a href="{% url 'accounts:user_list' %}">Kelola akun</a></p>{% endif %}
   <h2>Akun Anda</h2>
   <dl>
     <dt>Username</dt><dd>{{ user.username }}</dd>

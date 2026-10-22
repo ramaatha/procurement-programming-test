@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% comment %}filepath: templates/accounts/user_list.html{% endcomment %}
+{% block title %}Kelola akun | Procurement{% endblock %}
+{% block content %}
+  <nav aria-label="Navigasi akun"><a href="{% url 'accounts:home' %}">Beranda</a></nav>
+  <h1>Kelola akun</h1>
+  <p>Buat akun internal, atur peran, dan aktifkan atau nonaktifkan aksesnya.</p>
+  <p><a href="{% url 'accounts:user_create' %}">Buat akun</a></p>
+  <ul>
+    {% for account in page_obj %}
+      <li>
+        <h2>{{ account.username }}{% if account.pk == user.pk %} (Anda){% endif %}</h2>
+        <p>{{ account.get_role_display }} · {% if account.is_active %}Aktif{% else %}Nonaktif{% endif %}</p>
+        <p><a href="{% url 'accounts:user_edit' account.pk %}">Ubah akun {{ account.username }}</a> · <a href="{% url 'accounts:user_password' account.pk %}">Reset password {{ account.username }}</a></p>
+      </li>
+    {% empty %}
+      <li>Belum ada akun yang dapat ditampilkan.</li>
+    {% endfor %}
+  </ul>
+  {% if page_obj.has_other_pages %}
+    <nav aria-label="Halaman daftar akun">
+      {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Sebelumnya</a>{% endif %}
+      <span>Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Berikutnya</a>{% endif %}
+    </nav>
+  {% endif %}
+{% endblock %}

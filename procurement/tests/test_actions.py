@@ -90,11 +90,17 @@ class ActionTransactionTests(TransactionTestCase):
             with self.subTest(changes=changes),transaction.atomic(),self.assertRaises(self.ConflictError):
                 self.actions.find_replay(self.ctx,**args)
 
-    def test_TC18_non_replayable_password_action_rejects_nonce_reuse(self):
-        with transaction.atomic():
-            self.actions.record_action(self.ctx,action='account.password',target_type='USER',target_key=str(self.actor.pk),digest='',result=self.actor)
-        with transaction.atomic(),self.assertRaises(self.ConflictError):
-            self.actions.find_replay(self.ctx,action='account.password',target_type='USER',target_key=str(self.actor.pk),digest='',replayable=False)
+    def test_TC18_password_actions_are_single_use_without_payload_hash(self):
+        for action in ['account.create','account.password']:
+            ctx=self.actions.ActionContext(actor_id=self.actor.pk,nonce=uuid4(),expected_version=1)
+            scope=dict(action=action,target_type='USER',target_key=str(self.actor.pk))
+            with self.subTest(action=action),transaction.atomic():
+                with self.assertRaises(ValidationError):
+                    self.actions.record_action(ctx,**scope,digest='a'*64,result=self.actor)
+                receipt=self.actions.record_action(ctx,**scope,digest='',result=self.actor)
+                self.assertEqual(receipt.payload_hash,'')
+                with self.assertRaises(self.ConflictError):
+                    self.actions.find_replay(ctx,**scope,digest='')
 
     def test_TC06_new_nonce_with_stale_version_does_not_write(self):
         self.fixture_action()
