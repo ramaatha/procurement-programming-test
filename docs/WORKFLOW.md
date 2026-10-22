@@ -23,7 +23,8 @@ Versi awal menggunakan Django dengan halaman HTML dan SQLite. Pengelolaan stok, 
 | Pengelolaan akun dan policy peran | Tugas 3 selesai; suite keseluruhan 80 pengujian lulus |
 | Draft, pengajuan, snapshot dan pembatalan sebelum PO | Tugas 4 selesai; suite keseluruhan 108 pengujian lulus |
 | Keputusan approval dan pengembalian untuk revisi | Tugas 5 selesai; suite keseluruhan 131 pengujian lulus |
-| Sourcing, PO, penerimaan dan tracking | Belum dikerjakan |
+| Vendor, penawaran, perbandingan dan pemilihan | Tugas 6 selesai; suite keseluruhan 159 pengujian lulus |
+| PO, penerimaan dan tracking | Belum dikerjakan |
 
 Keberadaan rancangan tidak menyatakan fitur sudah dibangun. Status implementasi hanya berubah setelah kode, validasi, dan pengujian yang terkait selesai.
 
@@ -104,4 +105,4 @@ Sebelum serah terima, pastikan petunjuk instalasi sudah dijalankan, pengujian re
 
 Konfigurasi Django, custom User lima peran, login/logout, pembatasan akses halaman akun, CSRF, redirect aman, dan migrasi SQLite tersedia. Suite fondasi berisi 23 test. Setelah penambahan schema, parser angka, audit, dan helper token/replay, suite mencapai 48 test. Penambahan service, policy dan halaman akun membuat suite keseluruhan menjadi 80 test lulus; system check bersih dan tidak ada migrasi model yang tertinggal. Pemeriksaan browser memakai database sintetis terpisah, mencakup login/logout, pesan gagal, keyboard, dan overflow pada viewport 1280.
 
-Rincian bukti dan batas verifikasi berada pada [TESTING](TESTING.md). Pengelolaan akun, permintaan, keputusan approval dan pengembalian untuk revisi sudah tersedia, dengan 131 pengujian lulus. Scope objek, snapshot, replay, pengajuan dan keputusan serentak sudah diperiksa. Sourcing, PO, penerimaan, data contoh lengkap dan UI final belum selesai. Langkah berikutnya adalah tugas 6: vendor, penawaran dan pemilihan. FR-01/FR-13 baru diterapkan sebagian; WBS tidak dinaikkan menjadi selesai hanya karena fondasi sudah tersedia.
+Rincian bukti dan batas verifikasi berada pada [TESTING](TESTING.md). Pengelolaan akun, permintaan, approval dan sourcing sudah tersedia, dengan 159 pengujian lulus. Scope objek, snapshot, replay, penawaran/pemilihan dan penulisan serentak sudah diperiksa. PO, penerimaan, data contoh lengkap dan UI final belum selesai. Langkah berikutnya adalah tugas 7: penerbitan PO dan snapshot pesanan. FR-01/FR-13 baru diterapkan sebagian; WBS tidak dinaikkan menjadi selesai hanya karena fondasi sudah tersedia.

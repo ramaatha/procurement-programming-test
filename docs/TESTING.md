@@ -4,7 +4,7 @@ Diperbarui: 22 Oktober 2026
 
 ## Lingkup yang telah diverifikasi
 
-Verifikasi mencakup akun, autentikasi, session, konfigurasi environment, 14 model Procurement, migrasi SQLite, parser angka, helper token/replay dan versi, service/form pengelolaan akun admin, draft, pengajuan, snapshot revisi dan pembatalan permintaan sebelum PO, serta keputusan approval dan pengembalian untuk revisi. Ini belum menjadi hasil pengujian seluruh aplikasi Procurement.
+Verifikasi mencakup akun, autentikasi, session, konfigurasi environment, 14 model Procurement, migrasi SQLite, parser angka, helper token/replay dan versi, service/form pengelolaan akun admin, draft, pengajuan, snapshot revisi dan pembatalan permintaan sebelum PO, keputusan approval dan pengembalian untuk revisi, serta vendor, penawaran dan pemilihan. Ini belum menjadi hasil pengujian seluruh aplikasi Procurement.
 
 Lingkungan pemeriksaan: Python 3.12.14, Django 5.2.18, SQLite 3.53.1, dan JSON1 tersedia. Dependensi terpasang: asgiref 3.12.1, sqlparse 0.6.0, dan tzdata 2026.5. `pip check` tidak menemukan dependensi yang rusak.
 
@@ -28,8 +28,11 @@ Lingkungan pemeriksaan: Python 3.12.14, Django 5.2.18, SQLite 3.53.1, dan JSON1 
 | Service approval | 13 | Setuju/revisi/tolak, alasan, self-review, role terkini, replay, status/versi/snapshot, rollback, return procurement dan overflow |
 | HTTP approval | 9 | Antrean, paginasi, form keputusan, akses/CSRF/token, konflik, escaping, busy 503 dan redaksi POST pada exception report |
 | Dua reviewer | 1 | Dua keputusan bersamaan menghasilkan satu keputusan/audit; replay nonce sama tidak menggandakan hasil |
+| Vendor | 6 | Create/edit/nonaktif, izin terkini, validasi, replay/versi, rollback, CSRF dan form |
+| Penawaran dan pemilihan | 21 | Item/harga/tanggal/total, status/izin/PO, sumber tunggal, revisi, pilihan, rollback, HTTP/token/CSRF, label dan replay setelah vendor nonaktif |
+| Dua penulis penawaran | 1 | Dua penawaran bersamaan memakai versi request; nonce sama replay, nonce berbeda konflik |
 
-Total: **131 test lulus**. Subtest beberapa input/peran tidak dihitung sebagai method test tambahan.
+Total: **159 test lulus**. Subtest beberapa input/peran tidak dihitung sebagai method test tambahan.
 
 Perintah yang dijalankan:
 
@@ -78,7 +81,7 @@ Form edit tidak melampaui viewport 390/768/1440; Tab mencapai tautan daftar akun
 
 ## Batas verifikasi
 
-Pengelolaan akun dan permintaan melalui UI/service sudah diuji, termasuk scope objek, replay, snapshot, rollback serta pengajuan serentak. Keputusan approval dan pengembalian ke CHANGES_REQUESTED sudah tersedia dan diuji melalui service serta browser. Sourcing, penerbitan PO dan penerimaan belum diimplementasikan atau diuji. Keberadaan PO memakai fixture untuk menguji guard; perjalanan penerbitan dan persaingan cancel/issue sebenarnya menunggu tugas terkait.
+Pengelolaan akun dan permintaan melalui UI/service sudah diuji, termasuk scope objek, replay, snapshot, rollback serta pengajuan serentak. Keputusan approval dan pengembalian ke CHANGES_REQUESTED sudah tersedia dan diuji melalui service serta browser. Sourcing sudah tersedia dan diuji. Penerbitan PO dan penerimaan belum diimplementasikan atau diuji. Keberadaan PO memakai fixture untuk menguji guard; perjalanan penerbitan dan persaingan cancel/issue sebenarnya menunggu tugas terkait.
 
 Tampilan masih prototipe HTML fungsional. Form edit akun sudah diperiksa pada lebar 390/768/1440. Pemeriksaan aksesibilitas menyeluruh serta arah visual final menunggu tahap UI. Mode non-debug diperiksa melalui konfigurasi; hosting, reverse proxy, HTTPS nyata, dan kapasitas produksi belum diverifikasi.
 
@@ -113,3 +116,17 @@ Browser memakai `var/approval-browser-check`: antrean menampilkan dua permintaan
 Form keputusan tidak melampaui viewport 390/768/1440. Tab mencapai tombol Simpan keputusan dengan outline terlihat; screenshot mobile diperiksa. Data akhir: tiga request, empat revisi, tiga keputusan, dua belas audit dan dua belas receipt aksi, termasuk enam aksi persiapan data. Satu request CHANGES_REQUESTED, satu REJECTED dan satu milik approver tetap SUBMITTED. Ini belum UI final atau audit aksesibilitas menyeluruh. Respons 400 dan favicon 404 tercatat; form tidak memuat JavaScript aplikasi. Server dihentikan setelah pemeriksaan; akun sintetis tidak masuk database kerja.
 
 Review kode independen tidak menemukan defect pada perubahan tahap ini. Reviewer menilai kode dan log suite, tanpa menjalankan suite atau mengakses database. Validasi browser dilakukan terpisah. Tidak ada migrasi, dependensi, diagram atau workbook yang berubah.
+
+## Vendor, penawaran dan pemilihan
+
+Pengujian awal memuat 26 test yang gagal karena modul sourcing belum tersedia. Regresi tambahan menangkap replay HTTP yang tertolak setelah vendor dinonaktifkan: validasi status aktif kini berada di service sesudah pencarian receipt. Aksi baru tetap menolak vendor nonaktif. Regresi lain menangkap label dua penawaran yang sama nama vendor/referensinya; label pilihan kini memuat total, waktu pemenuhan dan masa berlaku. Suite akhir lulus 159 test, termasuk 28 test baru.
+
+Vendor diuji untuk procurement/admin, penolakan peran lain/superuser, field wajib, status boolean, versi, replay dan rollback. Penawaran diuji terhadap exact item set, duplikat/ID tak sesuai, harga/presisi/overflow, tanggal, hari pemenuhan, vendor aktif, revisi/status/PO, peran sebelum replay dan total server. Pemilihan menguji tanggal berlaku, plafon, total yang tidak konsisten, alasan, beberapa penawaran vendor sama, alternatif tidak layak, dan pemilihan selain harga terendah. Edit kandidat membersihkan pilihan; penawaran revisi lama tetap tersimpan namun terkunci.
+
+HTTP memeriksa form invalid, management counts negatif/nol, CSRF, parameter jumlah/total yang diabaikan, token aktor lain, versi lama, peran, escaping kontak, replay dan redaksi parameter POST token/CSRF. Helper form bertanda variabel sensitif diperiksa melalui kode; jalur exception runtime belum diperiksa menyeluruh. Dua koneksi SQLite berbasis file membuktikan hanya satu penawaran dibuat pada versi yang sama; nonce sama menghasilkan replay tanpa duplikasi.
+
+Browser memakai `var/sourcing-browser-check`. Procurement membuat vendor dan penawaran IDR 80,00; pemilihan tanpa alasan sumber tunggal ditolak 400 lalu berhasil sesudah diisi. Edit harga menjadi IDR 70,00 menghapus pilihan sebelumnya. Vendor kedua mempunyai penawaran IDR 60,00 dengan waktu lima hari; procurement tetap dapat memilih IDR 70,00 dengan alasan pemenuhan dua hari. Sesudah vendor alternatif dinonaktifkan, pemilihan ulang kembali mewajibkan alasan sumber tunggal. Pemohon pemilik dapat membaca perbandingan tanpa form/tombol mutasi.
+
+Form penawaran dan perbandingan tidak melampaui viewport 390/768/1440. Tab mencapai tautan dengan outline terlihat; screenshot mobile diperiksa. Label final menampilkan harga, estimasi hari dan tanggal berlaku. Database akhir memuat dua vendor (satu nonaktif), dua penawaran, satu pilihan aktif, dua belas audit dan dua belas receipt termasuk tiga aksi persiapan request/approval. Tidak ada PO. Akun sintetis tidak masuk database kerja; server dihentikan setelah pemeriksaan. Respons 400 dan favicon 404 merupakan skenario yang diketahui. Ini belum UI final atau audit aksesibilitas seluruh aplikasi.
+
+Review independen menilai kode dan log 158 test sebelum perbaikan label, tanpa eksekusi suite/DB. Label diperbaiki melalui RED ke GREEN dan diverifikasi suite akhir 159 test. Dua catatan minor ditunda ke tugas 10: bangun comparison rows setelah paginasi queryset; muat snapshot item sekali saat mengevaluasi seluruh kandidat agar query berulang dalam transaksi berkurang. Kapasitas produksi belum diukur. Tidak ada perubahan migration, dependency, diagram atau workbook.

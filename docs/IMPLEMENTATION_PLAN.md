@@ -10,7 +10,7 @@ Pengerjaan mengikuti urutan tugas setelah rancangan dan rencana ditinjau. Checkl
 
 **Dokumen rancangan:** [Arsitektur](ARCHITECTURE.md), [model data](DATA_MODEL.md), [PRD](PRD.md), dan [proses bisnis](BUSINESS_PROCESS.md).
 
-Status: Tugas 1 sampai 5 selesai untuk fondasi, schema, akun, permintaan dan approval, dengan 131 pengujian lulus. Tugas 6 sampai 11 belum dikerjakan. Django telah dipilih; keputusan lanjutan tetap mengikuti rancangan terkait. Pengerjaan dilakukan berurutan, satu tugas sampai hasilnya terverifikasi. Arah visual ditinjau sebelum styling pada tugas 10. HTML semantik pada tugas awal adalah prototipe fungsional untuk menguji alur, belum UI final.
+Status: Tugas 1 sampai 6 selesai untuk fondasi, schema, akun, permintaan, approval dan sourcing, dengan 159 pengujian lulus. Tugas 7 sampai 11 belum dikerjakan. Django telah dipilih; keputusan lanjutan tetap mengikuti rancangan terkait. Pengerjaan dilakukan berurutan, satu tugas sampai hasilnya terverifikasi. Arah visual ditinjau sebelum styling pada tugas 10. HTML semantik pada tugas awal adalah prototipe fungsional untuk menguji alur, belum UI final.
 
 ## Batas yang berlaku pada semua tugas
 
@@ -142,10 +142,12 @@ Bukti tahap: [TESTING](TESTING.md). Sebanyak 23 test baru memeriksa service, HTT
 
 **Kontrak:** `save_vendor(ctx: ActionContext, *, vendor_id: UUID | None, name: str, contact: str, is_active: bool) -> Vendor`; `save_quotation(ctx: ActionContext, *, request_id: UUID, quotation_id: UUID | None, data: QuotationInput) -> Quotation`; `select_quotation(ctx: ActionContext, *, request_id: UUID, quotation_id: UUID, reason: str, single_source_reason: str) -> PurchaseRequest`. Quotation mutation memakai expected_version request, bukan version quote terpisah.
 
-- [ ] Tulis TC-07 izin vendor aktif/nonaktif dan riwayat. TC-08 menolak item hilang/duplikat/revisi asing, harga invalid, tanggal terbalik, request belum APPROVED, dan tampered qty/unit.
-- [ ] Tulis TC-09 satu sumber memerlukan alasan, harga terendah tidak otomatis dipilih, kandidat aktif hanya satu. Mengedit kandidat menghapus pemilihan/alasan; penawaran lama tidak dapat dipakai setelah revisi baru (TC-10).
-- [ ] Jalankan `python manage.py test procurement.tests.test_vendors procurement.tests.test_quotations -v 2` untuk red, implementasikan, lalu green. Pastikan perbandingan menampilkan total dan waktu pemenuhan dari baris/revisi yang sama, termasuk keadaan belum ada penawaran.
-- [ ] Siapkan commit pengguna: `feat: add vendors quotations and vendor selection`.
+- [x] Tulis TC-07 izin vendor aktif/nonaktif dan riwayat. TC-08 menolak item hilang/duplikat/revisi asing, harga invalid, tanggal terbalik, request belum APPROVED, dan tampered qty/unit.
+- [x] Tulis TC-09 satu sumber memerlukan alasan, harga terendah tidak otomatis dipilih, kandidat aktif hanya satu. Mengedit kandidat menghapus pemilihan/alasan; penawaran lama tidak dapat dipakai setelah revisi baru (TC-10).
+- [x] Jalankan `python manage.py test procurement.tests.test_vendors procurement.tests.test_quotations -v 2` untuk red, implementasikan, lalu green. Pastikan perbandingan menampilkan total dan waktu pemenuhan dari baris/revisi yang sama, termasuk keadaan belum ada penawaran.
+- [x] Siapkan commit pengguna: `feat: add vendors quotations and vendor selection`.
+
+Bukti tahap: [TESTING](TESTING.md). Sebanyak 28 test baru mencakup vendor, penawaran, pemilihan, HTTP/replay dan dua penulis. Alur browser memakai database terpisah. Label pilihan diperjelas dengan total/waktu/masa berlaku setelah regresi; dua optimasi query daftar besar dicatat untuk tugas 10. Tidak ada migrasi atau dependency baru.
 
 ## Tugas 7: Penerbitan PO dan snapshot
 
@@ -241,4 +243,4 @@ Tugas 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11. Pengujian server me
 
 Setelah satu tugas, laporkan perubahan, perintah/hasil pengujian, batas yang belum diuji, dan file untuk commit pengguna. Kegagalan test atau kontrak harus diselesaikan sebelum memperluas fitur. Kekurangan waktu dilaporkan; kebutuhan wajib tidak dihapus diam-diam.
 
-Tugas 1 sampai 5 sudah diverifikasi. Langkah berikutnya adalah Tugas 6: vendor, penawaran dan pemilihan. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.
+Tugas 1 sampai 6 sudah diverifikasi. Langkah berikutnya adalah Tugas 7: penerbitan PO dan snapshot pesanan. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.

@@ -171,3 +171,43 @@ Pilih 8 berkas:
 - `docs/WORKFLOW.md`
 
 Setelah kedua commit, periksa `git status -sb`: tidak ada perubahan tersisa dan branch menunjukkan dua commit di depan origin/main jika tidak ada commit lain. Jalankan `git push origin main`, lalu periksa kembali `git status -sb`; hasil yang diharapkan `## main...origin/main` tanpa ahead/behind. Jangan stage database, environment, cache, screenshot, log atau tmp. Migrasi, dependency, diagram dan workbook tidak berubah.
+
+## Vendor, penawaran dan pemilihan
+
+Buat dua commit, lalu push sekali setelah keduanya selesai.
+
+Pesan kode: `feat: add vendors quotations and vendor selection`
+
+Pilih 16 berkas:
+
+- `procurement/forms/sourcing.py`
+- `procurement/policies.py`
+- `procurement/quotations.py`
+- `procurement/selectors.py`
+- `procurement/services/sourcing.py`
+- `procurement/tests/factories.py`
+- `procurement/tests/test_quotations.py`
+- `procurement/tests/test_vendors.py`
+- `procurement/urls.py`
+- `procurement/views/sourcing.py`
+- `templates/accounts/home.html`
+- `templates/procurement/quotation_form.html`
+- `templates/procurement/quotation_list.html`
+- `templates/procurement/request_detail.html`
+- `templates/procurement/vendor_form.html`
+- `templates/procurement/vendor_list.html`
+
+Pesan dokumentasi: `docs: document sourcing workflow and verification results`
+
+Pilih 8 berkas:
+
+- `AGENTS.md`
+- `README.md`
+- `docs/ARCHITECTURE.md`
+- `docs/COMMIT_GUIDE.md`
+- `docs/DATA_MODEL.md`
+- `docs/IMPLEMENTATION_PLAN.md`
+- `docs/TESTING.md`
+- `docs/WORKFLOW.md`
+
+Sesudah kedua commit, jalankan `git status -sb` dan pastikan tidak ada perubahan tersisa. Jika tidak ada commit lain, branch menunjukkan ahead 2. Jalankan `git push origin main`, lalu `git status -sb`; hasil yang diharapkan `## main...origin/main` tanpa ahead/behind. Jangan stage environment, database, cache, log, screenshot atau tmp. Migrasi, dependency, diagram dan workbook tidak berubah.
