@@ -135,3 +135,39 @@ Pilih 8 berkas:
 - `docs/WORKFLOW.md`
 
 Setelah kedua commit dibuat, jalankan `git status -sb` dan pastikan tidak ada perubahan yang tertinggal. Kemudian `git push origin main`, dilanjutkan `git status -sb`; hasil yang diharapkan `## main...origin/main` tanpa ahead/behind. Jangan sertakan `.env`, `.venv`, `var`, database, cache, screenshot, log atau isi `tmp`. Tidak ada perubahan migration, dependency, diagram atau workbook pada tahap ini.
+
+## Approval dan pengembalian untuk revisi
+
+Buat dua commit berikut, kemudian push satu kali.
+
+Pesan kode: `feat: add approval decisions and revision workflow`
+
+Pilih 12 berkas:
+
+- `procurement/forms/requests.py`
+- `procurement/policies.py`
+- `procurement/selectors.py`
+- `procurement/services/requests.py`
+- `procurement/tests/factories.py`
+- `procurement/tests/test_approvals.py`
+- `procurement/urls.py`
+- `procurement/views/requests.py`
+- `templates/accounts/home.html`
+- `templates/procurement/approval_list.html`
+- `templates/procurement/request_detail.html`
+- `templates/procurement/request_revision.html`
+
+Pesan dokumentasi: `docs: document approval workflow and verification results`
+
+Pilih 8 berkas:
+
+- `AGENTS.md`
+- `README.md`
+- `docs/ARCHITECTURE.md`
+- `docs/COMMIT_GUIDE.md`
+- `docs/DATA_MODEL.md`
+- `docs/IMPLEMENTATION_PLAN.md`
+- `docs/TESTING.md`
+- `docs/WORKFLOW.md`
+
+Setelah kedua commit, periksa `git status -sb`: tidak ada perubahan tersisa dan branch menunjukkan dua commit di depan origin/main jika tidak ada commit lain. Jalankan `git push origin main`, lalu periksa kembali `git status -sb`; hasil yang diharapkan `## main...origin/main` tanpa ahead/behind. Jangan stage database, environment, cache, screenshot, log atau tmp. Migrasi, dependency, diagram dan workbook tidak berubah.

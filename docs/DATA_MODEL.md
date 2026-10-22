@@ -139,4 +139,8 @@ Implementasi schema belum menyatakan FR-01 sampai FR-13 selesai dan tidak mengub
 
 Service `save_draft`, `submit_request` dan `cancel_request` sudah tersedia. Submit menyimpan header, item, total baris dan total revisi dalam satu transaksi; pengeditan working copy berikutnya tidak menimpa revisi lama. Pembatalan sebelum PO mempertahankan riwayat dan mengosongkan pilihan penawaran. Status terminal PO tetap memblokir mutasi permintaan. Tidak ada perubahan schema pada tahap ini.
 
-Pengujian memakai dua koneksi SQLite berbasis file untuk pengajuan serentak: hanya satu snapshot terbentuk, baik memakai nonce sama maupun berbeda. Pengembalian ke revisi masih memakai fixture status pada pengujian; transisi approval sebenarnya menunggu tugas berikutnya.
+Pengujian memakai dua koneksi SQLite berbasis file untuk pengajuan serentak: hanya satu snapshot terbentuk, baik memakai nonce sama maupun berbeda. Transisi approval dan pengembalian untuk revisi sudah memakai service. Factory request disetujui memakai create/submit/review melalui service; hanya data PO yang masih menjadi fixture sampai service terkait tersedia.
+
+`review_request` menulis tepat satu ApprovalDecision pada RequestRevision aktif. Status request menjadi APPROVED, CHANGES_REQUESTED atau REJECTED; versi aggregate naik satu. Keputusan, status, AuditEvent dan ActionReceipt rollback bersama bila penulisan gagal. Dua reviewer pada versi yang sama tidak dapat menghasilkan dua keputusan.
+
+`request_revision` mempertahankan persetujuan lama sebagai sejarah dan tidak membuat ApprovalDecision kedua pada revisi tersebut. Pengajuan ulang membentuk revisi baru; persetujuan baru mengikat revisi baru. Tidak ada migrasi schema pada tahap approval.

@@ -2,7 +2,7 @@
 
 Aplikasi web internal untuk mengelola pengadaan barang dan jasa dari pengajuan kebutuhan sampai penerimaan pesanan.
 
-Fondasi Django sudah tersedia: akun dengan lima peran, login/logout, halaman akun yang memerlukan autentikasi, konfigurasi environment, dan migrasi SQLite. Schema untuk 14 entitas pengadaan, migrasi awal, parser angka, audit, dan helper token/replay sudah tersedia. Pemohon sudah dapat membuat dan mengubah draft, mengajukan permintaan dengan snapshot revisi, melihat riwayat, serta membatalkan permintaan sebelum ada PO. Approval, vendor, penawaran, PO, serta penerimaan belum diimplementasikan. Admin sudah dapat membuat akun, mengubah peran/keaktifan, serta mereset password melalui halaman akun. Tampilan masih HTML fungsional; desain antarmuka final belum dikerjakan.
+Fondasi Django sudah tersedia: akun dengan lima peran, login/logout, halaman akun yang memerlukan autentikasi, konfigurasi environment, dan migrasi SQLite. Schema untuk 14 entitas pengadaan, migrasi awal, parser angka, audit, dan helper token/replay sudah tersedia. Pemohon sudah dapat membuat dan mengubah draft, mengajukan permintaan dengan snapshot revisi, melihat riwayat, serta membatalkan permintaan sebelum ada PO. Approver sudah dapat menyetujui, meminta revisi, atau menolak revisi aktif. Procurement dapat mengembalikan permintaan disetujui untuk revisi sebelum ada PO. Vendor, penawaran, PO, serta penerimaan belum diimplementasikan. Admin sudah dapat membuat akun, mengubah peran/keaktifan, serta mereset password melalui halaman akun. Tampilan masih HTML fungsional; desain antarmuka final belum dikerjakan.
 
 ## Environment
 
@@ -56,7 +56,7 @@ Jangan memakai password produksi untuk pengujian. Data contoh untuk seluruh alur
 & $python manage.py runserver 127.0.0.1:8000
 ```
 
-Buka [halaman login lokal](http://127.0.0.1:8000/login/). Setelah login, halaman akun menampilkan username dan peran. Tombol Keluar mengakhiri sesi. Admin dapat membuka daftar akun, membuat akun, mengubah peran/status aktif, dan mereset password. Reset password mencabut sesi lama akun terkait; reset password sendiri mengakhiri sesi saat ini. Buka Daftar permintaan dari beranda untuk melihat data sesuai peran. Pemohon dapat membuat draft melalui `/requests/new/`. Draft boleh belum lengkap; setiap baris yang diisi harus lengkap, dengan jumlah dan harga positif. Simpan terlebih dahulu sebelum mengajukan. Pengajuan memerlukan header lengkap, tanggal kebutuhan hari ini atau setelahnya dalam WIB, serta minimal satu item. Setiap pengajuan menyimpan revisi yang tidak dapat diedit. Pembatalan memerlukan alasan dan hanya tersedia bagi pemilik sebelum ada PO. Hentikan server dengan Ctrl+C.
+Buka [halaman login lokal](http://127.0.0.1:8000/login/). Setelah login, halaman akun menampilkan username dan peran. Tombol Keluar mengakhiri sesi. Admin dapat membuka daftar akun, membuat akun, mengubah peran/status aktif, dan mereset password. Reset password mencabut sesi lama akun terkait; reset password sendiri mengakhiri sesi saat ini. Buka Daftar permintaan dari beranda untuk melihat data sesuai peran. Pemohon dapat membuat draft melalui `/requests/new/`. Draft boleh belum lengkap; setiap baris yang diisi harus lengkap, dengan jumlah dan harga positif. Simpan terlebih dahulu sebelum mengajukan. Pengajuan memerlukan header lengkap, tanggal kebutuhan hari ini atau setelahnya dalam WIB, serta minimal satu item. Setiap pengajuan menyimpan revisi yang tidak dapat diedit. Pembatalan memerlukan alasan dan hanya tersedia bagi pemilik sebelum ada PO. Approver membuka Antrean persetujuan pada `/approvals/`; permintaan sendiri tidak masuk antrean dan tidak boleh diputuskan sendiri setelah berganti peran. Review berlaku untuk revisi pengajuan aktif beserta plafonnya. Alasan wajib untuk meminta revisi atau menolak. Procurement dapat mengembalikan permintaan APPROVED sebelum ada PO dengan alasan; pemohon mengubah draft lalu mengajukan revisi berikutnya. Keputusan dan snapshot sebelumnya tetap dapat dibaca pada halaman revisi. Hentikan server dengan Ctrl+C.
 
 Server pengembangan hanya untuk penggunaan lokal. Mode `DEBUG=false` mewajibkan hostname eksplisit dan mengaktifkan HTTPS redirect serta Secure cookie. Deployment dan HTTPS pada lingkungan hosting belum diuji.
 
@@ -100,8 +100,8 @@ Dokumen analisis tidak menyatakan seluruh fitur sudah tersedia. Pengelolaan akun
 - `accounts/`: model akun, form, view, route, migrasi, dan pengujian autentikasi.
 - `config/`: konfigurasi Django dan pengujian environment.
 - `common/`: parser/formatter angka, token aksi, pemeriksaan versi, replay, serta helper form dan respons error.
-- `procurement/`: model data, migrasi, kontrak input, policy, selector, service/form/view permintaan, dan pengujian.
-- `templates/`: HTML fungsional login, pengelolaan akun, daftar/form/detail permintaan, dan snapshot revisi.
+- `procurement/`: model data, migrasi, kontrak input, policy, selector, service/form/view permintaan dan approval, serta pengujian.
+- `templates/`: HTML fungsional login, pengelolaan akun, daftar/form/detail permintaan, antrean persetujuan, dan snapshot revisi beserta keputusan.
 - `docs/`: kebutuhan, proses, rancangan, dan hasil verifikasi.
 - `outputs/`: hasil analisis.
 - `var/`: database lokal yang diabaikan Git.

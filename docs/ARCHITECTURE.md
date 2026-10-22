@@ -22,7 +22,7 @@ Django dengan frontend terpisah membutuhkan kontrak API, pengelolaan state, dan 
 
 ## Pembagian modul dan file
 
-Struktur berikut adalah target implementasi. Konfigurasi Django, akun, template dasar, 14 model Procurement beserta migrasi, parser angka, serta helper token/replay sudah tersedia. Service akun dan permintaan, policy objek permintaan, serta halaman draft/detail/revisi sudah tersedia. Service approval, sourcing, PO, penerimaan dan tracking mengikuti tugas berikutnya.
+Struktur berikut adalah target implementasi. Konfigurasi Django, akun, template dasar, 14 model Procurement beserta migrasi, parser angka, serta helper token/replay sudah tersedia. Service akun dan permintaan, policy objek permintaan, serta halaman draft/detail/revisi sudah tersedia. Antrean dan keputusan approval serta pengembalian untuk revisi juga sudah tersedia. Sourcing, PO, penerimaan dan tracking mengikuti tugas berikutnya.
 
 ```text
 manage.py
@@ -165,12 +165,18 @@ Daftar memakai paginasi 25 baris dan query dalam scope akses. Gunakan `select_re
 
 ## Batas dan keputusan sebelum coding
 
-Django sudah disepakati. SQLite, struktur modul, protokol aksi, model angka, dan route di atas merupakan rancangan untuk ditinjau. Fondasi autentikasi, model pengadaan, helper angka/transaksi, pengelolaan akun dan pengajuan permintaan sudah tersedia. Implementasi berikutnya menambahkan keputusan approval dan pengembalian untuk revisi. Fitur AI, stok, pembayaran, unggah berkas, frontend terpisah, serta dukungan PostgreSQL belum menjadi pekerjaan versi awal. Rancangan ini belum membuktikan keamanan atau correctness runtime; pengujian pada rencana implementasi menjadi syarat pembuktiannya.
+Django sudah disepakati. SQLite, struktur modul, protokol aksi, model angka, dan route di atas merupakan rancangan untuk ditinjau. Fondasi autentikasi, model pengadaan, helper angka/transaksi, pengelolaan akun dan pengajuan permintaan sudah tersedia. Keputusan approval dan pengembalian untuk revisi sudah tersedia. Implementasi berikutnya menambahkan vendor, penawaran dan pemilihan. Fitur AI, stok, pembayaran, unggah berkas, frontend terpisah, serta dukungan PostgreSQL belum menjadi pekerjaan versi awal. Rancangan ini belum membuktikan keamanan atau correctness runtime; pengujian pada rencana implementasi menjadi syarat pembuktiannya.
 
 ## Jalur permintaan yang tersedia
 
-GET daftar/detail/revisi memakai `visible_requests`: pemohon melihat miliknya, approver/procurement/admin melihat permintaan sesuai fungsi, dan penerima melihat permintaan yang sudah memiliki PO. Objek di luar scope menghasilkan 404. Mutasi memeriksa kembali pemilik dengan peran REQUESTER yang masih aktif di dalam transaksi.
+GET daftar/detail/revisi memakai `visible_requests`: pemohon melihat miliknya, approver/procurement/admin melihat permintaan sesuai fungsi, dan penerima melihat permintaan yang sudah memiliki PO. Objek di luar scope menghasilkan 404. Mutasi draft/submit/cancel memeriksa kembali pemilik dengan peran REQUESTER yang masih aktif di dalam transaksi. Review memerlukan APPROVER selain pemilik; pengembalian ke revisi memerlukan PROCUREMENT.
 
 POST draft melewati form dan formset, kemudian input dataclass kanonik ke `save_draft`. Tombol Tambah baris item merender ulang form tanpa menyimpan data dan tidak membutuhkan JavaScript. Baris kosong diabaikan; baris parsial ditolak. Total dihitung server. Submit dan cancel memakai service terpisah dengan token, versi, audit dan receipt atomik. Snapshot hanya dapat dibaca melalui halaman revisi. Form aksi bersama berada pada `common/forms.py`; pemetaan validasi dan SQLite busy/locked berada pada `common/http.py`.
 
 Regresi service/HTTP serta dua koneksi SQLite sudah memeriksa replay dan pengajuan serentak. Bukti beserta batas pemeriksaan berada pada TESTING; ini belum pembuktian seluruh alur pengadaan.
+
+## Review dan pengembalian untuk revisi
+
+GET `/approvals/` hanya untuk APPROVER, menampilkan request SUBMITTED selain milik sendiri dengan paginasi 25 baris. Halaman detail menautkan snapshot aktif dan plafonnya sebelum form keputusan. POST review memeriksa ulang akun, role dan larangan self-review sebelum replay; versi, status, snapshot aktif dan keputusan tunggal diperiksa sebelum mutasi.
+
+`review_request` menyimpan ApprovalDecision untuk revisi aktif, menaikkan versi request dan mengubah status sesuai keputusan. REQUEST_CHANGES dan REJECT memerlukan alasan; APPROVE boleh tanpa catatan. `request_revision` hanya menerima PROCUREMENT pada APPROVED, dengan persetujuan revisi aktif dan tanpa PO sepanjang riwayat. Aksi ini mengosongkan kandidat/alasan pemilihan dan menulis audit tanpa mengganti keputusan approver sebelumnya. Snapshot dan penawaran historis tetap tersimpan. Semua hasil ditulis bersama audit dan ActionReceipt dalam satu transaksi IMMEDIATE.

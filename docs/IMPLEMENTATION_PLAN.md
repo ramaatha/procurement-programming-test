@@ -10,7 +10,7 @@ Pengerjaan mengikuti urutan tugas setelah rancangan dan rencana ditinjau. Checkl
 
 **Dokumen rancangan:** [Arsitektur](ARCHITECTURE.md), [model data](DATA_MODEL.md), [PRD](PRD.md), dan [proses bisnis](BUSINESS_PROCESS.md).
 
-Status: Tugas 1 sampai 4 selesai untuk fondasi, schema, pengelolaan akun dan permintaan, dengan 108 pengujian lulus. Tugas 5 sampai 11 belum dikerjakan. Django telah dipilih; keputusan lanjutan tetap mengikuti rancangan terkait. Pengerjaan dilakukan berurutan, satu tugas sampai hasilnya terverifikasi. Arah visual ditinjau sebelum styling pada tugas 10. HTML semantik pada tugas awal adalah prototipe fungsional untuk menguji alur, belum UI final.
+Status: Tugas 1 sampai 5 selesai untuk fondasi, schema, akun, permintaan dan approval, dengan 131 pengujian lulus. Tugas 6 sampai 11 belum dikerjakan. Django telah dipilih; keputusan lanjutan tetap mengikuti rancangan terkait. Pengerjaan dilakukan berurutan, satu tugas sampai hasilnya terverifikasi. Arah visual ditinjau sebelum styling pada tugas 10. HTML semantik pada tugas awal adalah prototipe fungsional untuk menguji alur, belum UI final.
 
 ## Batas yang berlaku pada semua tugas
 
@@ -127,10 +127,12 @@ Bukti tahap: [TESTING](TESTING.md). Sebanyak 28 pengujian baru mencakup service,
 
 **Kontrak:** `review_request(ctx: ActionContext, *, request_id: UUID, decision: str, reason: str) -> PurchaseRequest`; `request_revision(ctx: ActionContext, *, request_id: UUID, reason: str) -> PurchaseRequest`. Decision menerima hanya APPROVE/REQUEST_CHANGES/REJECT. Request_revision hanya procurement, APPROVED, belum ada PO.
 
-- [ ] Tulis TC-05 semua cabang gateway dan alasan wajib. TC-06: pemohon yang berganti role APPROVER tetap dilarang review; keputusan dua kali, versi lama, serta user yang baru dinonaktifkan ditolak.
-- [ ] Tulis TC-10: APPROVED dikembalikan procurement, kandidat terhapus, working copy boleh berubah, submit menaikkan revisi, snapshot/keputusan lama tetap sama. Revisi yang sudah memiliki PO ditolak pada tugas 7.
-- [ ] Jalankan `python manage.py test procurement.tests.test_approvals -v 2` untuk red, implementasikan, lalu green. Uji antrean tidak menyertakan request milik approver sendiri dan keputusan tidak tersedia pada status lain.
-- [ ] Siapkan commit pengguna: `feat: add approval decisions and revision workflow`.
+- [x] Tulis TC-05 semua cabang gateway dan alasan wajib. TC-06: pemohon yang berganti role APPROVER tetap dilarang review; keputusan dua kali, versi lama, serta user yang baru dinonaktifkan ditolak.
+- [x] Tulis TC-10: APPROVED dikembalikan procurement, kandidat terhapus, working copy boleh berubah, submit menaikkan revisi, snapshot/keputusan lama tetap sama. Revisi yang sudah memiliki PO ditolak pada tugas 7.
+- [x] Jalankan `python manage.py test procurement.tests.test_approvals -v 2` untuk red, implementasikan, lalu green. Uji antrean tidak menyertakan request milik approver sendiri dan keputusan tidak tersedia pada status lain.
+- [x] Siapkan commit pengguna: `feat: add approval decisions and revision workflow`.
+
+Bukti tahap: [TESTING](TESTING.md). Sebanyak 23 test baru memeriksa service, HTTP dan keputusan serentak; alur revisi lintas peran diperiksa pada browser dengan database terpisah. Guard PO diuji memakai fixture, termasuk PO terminal. Tidak ada migrasi atau dependency baru.
 
 ## Tugas 6: Vendor, penawaran, dan pemilihan
 
@@ -239,4 +241,4 @@ Tugas 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11. Pengujian server me
 
 Setelah satu tugas, laporkan perubahan, perintah/hasil pengujian, batas yang belum diuji, dan file untuk commit pengguna. Kegagalan test atau kontrak harus diselesaikan sebelum memperluas fitur. Kekurangan waktu dilaporkan; kebutuhan wajib tidak dihapus diam-diam.
 
-Tugas 1 sampai 4 sudah diverifikasi. Langkah berikutnya adalah Tugas 5: keputusan approval dan pengembalian untuk revisi. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.
+Tugas 1 sampai 5 sudah diverifikasi. Langkah berikutnya adalah Tugas 6: vendor, penawaran dan pemilihan. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.

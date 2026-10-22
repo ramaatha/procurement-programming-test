@@ -4,7 +4,7 @@ Diperbarui: 22 Oktober 2026
 
 ## Lingkup yang telah diverifikasi
 
-Verifikasi mencakup akun, autentikasi, session, konfigurasi environment, 14 model Procurement, migrasi SQLite, parser angka, helper token/replay dan versi, service/form pengelolaan akun admin, serta draft, pengajuan, snapshot revisi dan pembatalan permintaan sebelum PO. Ini belum menjadi hasil pengujian seluruh aplikasi Procurement.
+Verifikasi mencakup akun, autentikasi, session, konfigurasi environment, 14 model Procurement, migrasi SQLite, parser angka, helper token/replay dan versi, service/form pengelolaan akun admin, draft, pengajuan, snapshot revisi dan pembatalan permintaan sebelum PO, serta keputusan approval dan pengembalian untuk revisi. Ini belum menjadi hasil pengujian seluruh aplikasi Procurement.
 
 Lingkungan pemeriksaan: Python 3.12.14, Django 5.2.18, SQLite 3.53.1, dan JSON1 tersedia. Dependensi terpasang: asgiref 3.12.1, sqlparse 0.6.0, dan tzdata 2026.5. `pip check` tidak menemukan dependensi yang rusak.
 
@@ -25,8 +25,11 @@ Lingkungan pemeriksaan: Python 3.12.14, Django 5.2.18, SQLite 3.53.1, dan JSON1 
 | Service permintaan | 15 | Draft tidak lengkap, validasi item/tanggal, pembulatan, snapshot/revisi, replay, versi, izin terkini, pembatalan, guard PO, overflow dan rollback |
 | HTTP permintaan | 12 | Formset, tambah/hapus baris, data server-only, CSRF, akses objek, token lintas aktor, stale form, escaping dan redaksi exception report |
 | Dua penulis permintaan | 1 | Dua submit bersamaan dengan nonce sama atau berbeda menghasilkan tepat satu snapshot |
+| Service approval | 13 | Setuju/revisi/tolak, alasan, self-review, role terkini, replay, status/versi/snapshot, rollback, return procurement dan overflow |
+| HTTP approval | 9 | Antrean, paginasi, form keputusan, akses/CSRF/token, konflik, escaping, busy 503 dan redaksi POST pada exception report |
+| Dua reviewer | 1 | Dua keputusan bersamaan menghasilkan satu keputusan/audit; replay nonce sama tidak menggandakan hasil |
 
-Total: **108 test lulus**. Subtest beberapa input/peran tidak dihitung sebagai method test tambahan.
+Total: **131 test lulus**. Subtest beberapa input/peran tidak dihitung sebagai method test tambahan.
 
 Perintah yang dijalankan:
 
@@ -75,7 +78,7 @@ Form edit tidak melampaui viewport 390/768/1440; Tab mencapai tautan daftar akun
 
 ## Batas verifikasi
 
-Pengelolaan akun dan permintaan melalui UI/service sudah diuji, termasuk scope objek, replay, snapshot, rollback serta pengajuan serentak. Keputusan approval, sourcing, penerbitan PO dan penerimaan belum diimplementasikan atau diuji. Status CHANGES_REQUESTED dan keberadaan PO memakai fixture untuk menguji guard; perjalanan dari approval sampai PO sebenarnya menunggu tugas terkait.
+Pengelolaan akun dan permintaan melalui UI/service sudah diuji, termasuk scope objek, replay, snapshot, rollback serta pengajuan serentak. Keputusan approval dan pengembalian ke CHANGES_REQUESTED sudah tersedia dan diuji melalui service serta browser. Sourcing, penerbitan PO dan penerimaan belum diimplementasikan atau diuji. Keberadaan PO memakai fixture untuk menguji guard; perjalanan penerbitan dan persaingan cancel/issue sebenarnya menunggu tugas terkait.
 
 Tampilan masih prototipe HTML fungsional. Form edit akun sudah diperiksa pada lebar 390/768/1440. Pemeriksaan aksesibilitas menyeluruh serta arah visual final menunggu tahap UI. Mode non-debug diperiksa melalui konfigurasi; hosting, reverse proxy, HTTPS nyata, dan kapasitas produksi belum diverifikasi.
 
@@ -96,3 +99,17 @@ Browser memakai `var/request-browser-check`. Alur: simpan draft kosong, submit d
 Form dua item tidak melampaui viewport 390/768/1440; keyboard Tab mencapai kontrol Hapus dengan outline terlihat. Screenshot mobile diperiksa. Pemeriksaan ini memakai HTML fungsional, belum audit aksesibilitas atau UI final. Respons 400 dan 404 merupakan skenario yang sengaja diuji; tidak ada JavaScript aplikasi pada form ini. Server dihentikan setelah pemeriksaan dan data sintetis tidak masuk database kerja.
 
 Review kode tidak menemukan masalah Critical/Important. Saran minor: memperketat management counts formset agar nilai negatif atau urutan initial/total yang rusak ditolak eksplisit. Perilaku bawaan saat ini dapat memperlakukan total negatif sebagai nol baris; pemilik memang diizinkan menyimpan draft kosong, sehingga ini bukan perubahan hak akses. Penguatan beserta regresi penolakan tanpa mutasi dijadwalkan pada pemeriksaan form tugas 10.
+
+## Approval dan pengembalian untuk revisi
+
+Sebelum implementasi, 23 test baru gagal karena service dan endpoint belum tersedia. Setelah implementasi, seluruh 131 test lulus. Pengujian service mencakup tiga keputusan, alasan, snapshot aktif, larangan self-review setelah pergantian role/superuser, akun nonaktif, role terkini sebelum replay, payload berbeda, versi lama, keputusan berulang, batas versi serta rollback keputusan/status/audit/receipt. Return procurement memerlukan persetujuan revisi aktif, alasan dan belum adanya PO, termasuk PO terminal. Kandidat dibersihkan dan snapshot/keputusan/penawaran lama tetap ada setelah submit ulang.
+
+Pengujian HTTP mencakup antrean yang tidak menampilkan permintaan sendiri, paginasi 25 baris, POST-only, input aman dipertahankan saat invalid, parameter aktor/status diabaikan, CSRF, token aktor lain, konflik versi, escaping alasan, SQLite busy 503 dan error database yang tidak dikenal tetap diteruskan. Redaksi parameter POST token/CSRF diperiksa pada exception report non-debug; variabel lokal helper ditandai sensitif dan diperiksa melalui kode, belum melalui exception runtime khusus jalur approval.
+
+TransactionTestCase memakai dua koneksi SQLite berbasis file. Dua approver dengan nonce berbeda menghasilkan satu sukses dan satu konflik; pengiriman ulang nonce/payload sama oleh aktor sama menghasilkan dua respons sukses dengan satu keputusan dan satu audit.
+
+Browser memakai `var/approval-browser-check`: antrean menampilkan dua permintaan pengguna lain dan menyembunyikan permintaan milik approver. Minta revisi tanpa alasan ditolak 400; pilihan tetap tersimpan. Sesudah alasan diisi, pemohon mengedit lalu submit revisi 2. Approver menyetujui revisi 2 dan menolak permintaan lain. Procurement kemudian mengembalikan permintaan APPROVED untuk revisi dengan alasan. Snapshot revisi 1 tetap memuat judul awal dan keputusan REQUEST_CHANGES; revisi 2 memuat judul baru dan keputusan APPROVE, keduanya tanpa kontrol edit.
+
+Form keputusan tidak melampaui viewport 390/768/1440. Tab mencapai tombol Simpan keputusan dengan outline terlihat; screenshot mobile diperiksa. Data akhir: tiga request, empat revisi, tiga keputusan, dua belas audit dan dua belas receipt aksi, termasuk enam aksi persiapan data. Satu request CHANGES_REQUESTED, satu REJECTED dan satu milik approver tetap SUBMITTED. Ini belum UI final atau audit aksesibilitas menyeluruh. Respons 400 dan favicon 404 tercatat; form tidak memuat JavaScript aplikasi. Server dihentikan setelah pemeriksaan; akun sintetis tidak masuk database kerja.
+
+Review kode independen tidak menemukan defect pada perubahan tahap ini. Reviewer menilai kode dan log suite, tanpa menjalankan suite atau mengakses database. Validasi browser dilakukan terpisah. Tidak ada migrasi, dependensi, diagram atau workbook yang berubah.
