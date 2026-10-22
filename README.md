@@ -2,9 +2,9 @@
 
 Aplikasi web internal untuk mengelola pengadaan barang dan jasa dari pengajuan kebutuhan sampai penerimaan pesanan.
 
-Fondasi Django sudah tersedia: akun dengan lima peran, login/logout, halaman akun yang memerlukan autentikasi, konfigurasi environment, dan migrasi SQLite. Modul permintaan, approval, vendor, penawaran, PO, serta penerimaan belum diimplementasikan. Tampilan awal masih berupa HTML fungsional untuk memeriksa autentikasi.
+Fondasi Django sudah tersedia: akun dengan lima peran, login/logout, halaman akun yang memerlukan autentikasi, konfigurasi environment, dan migrasi SQLite. Schema untuk 14 entitas pengadaan, migrasi awal, parser angka, audit, dan helper token/replay sudah tersedia. Service dan halaman untuk permintaan, approval, vendor, penawaran, PO, serta penerimaan belum diimplementasikan. Tampilan awal masih berupa HTML fungsional untuk memeriksa autentikasi.
 
-## Kebutuhan lingkungan
+## Environment
 
 - Python 3.12 dengan pip dan dukungan SQLite.
 - Windows PowerShell untuk perintah di bawah.
@@ -77,15 +77,15 @@ Database kerja berada pada `var/db.sqlite3`; test runner memakai `var/test.sqlit
 
 Versi awal dirancang untuk satu tingkat approval, satu vendor dan maksimal satu PO per permintaan, penerimaan barang/jasa bertahap, serta riwayat keputusan dan perubahan. Stok gudang, invoice, dan pembayaran tidak termasuk. Bantuan input AI/Computer Vision tetap ditunda.
 
-| Dokumen | Isi |
-| --- | --- |
-| [PRD](docs/PRD.md) | Kebutuhan dan kriteria penerimaan |
-| [Proses bisnis](docs/BUSINESS_PROCESS.md) | Aktivitas, keputusan, dan transisi status |
-| [Arsitektur](docs/ARCHITECTURE.md) | Modul, akses, transaksi, dan peta halaman |
-| [Model data](docs/DATA_MODEL.md) | Entitas, snapshot, dan perhitungan |
-| [Rencana implementasi](docs/IMPLEMENTATION_PLAN.md) | Tugas, kontrak, dan pengujian |
-| [Alur kerja](docs/WORKFLOW.md) | Urutan pengerjaan dan kriteria selesai |
-| [Pedoman kualitas](docs/QUALITY_GUIDELINES.md) | Kriteria kode, keamanan, dan antarmuka |
+| Dokumen                                             | Isi                                       |
+| --------------------------------------------------- | ----------------------------------------- |
+| [PRD](docs/PRD.md)                                  | Kebutuhan dan kriteria penerimaan         |
+| [Proses bisnis](docs/BUSINESS_PROCESS.md)           | Aktivitas, keputusan, dan transisi status |
+| [Arsitektur](docs/ARCHITECTURE.md)                  | Modul, akses, transaksi, dan peta halaman |
+| [Model data](docs/DATA_MODEL.md)                    | Entitas, snapshot, dan perhitungan        |
+| [Rencana implementasi](docs/IMPLEMENTATION_PLAN.md) | Tugas, kontrak, dan pengujian             |
+| [Alur kerja](docs/WORKFLOW.md)                      | Urutan pengerjaan dan kriteria selesai    |
+| [Pedoman kualitas](docs/QUALITY_GUIDELINES.md)      | Kriteria kode, keamanan, dan antarmuka    |
 
 ## Hasil analisis
 
@@ -99,6 +99,8 @@ Dokumen analisis tidak menyatakan seluruh fitur sudah tersedia. Status paket aut
 
 - `accounts/`: model akun, form, view, route, migrasi, dan pengujian autentikasi.
 - `config/`: konfigurasi Django dan pengujian environment.
+- `common/`: parser/formatter angka, token aksi, pemeriksaan versi, dan helper replay.
+- `procurement/`: model data, migrasi, kontrak input, fixture, dan pengujian schema/aksi.
 - `templates/`: HTML fungsional login dan halaman akun.
 - `docs/`: kebutuhan, proses, rancangan, dan hasil verifikasi.
 - `outputs/`: hasil analisis.

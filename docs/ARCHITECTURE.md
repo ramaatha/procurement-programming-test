@@ -22,7 +22,7 @@ Django dengan frontend terpisah membutuhkan kontrak API, pengelolaan state, dan 
 
 ## Pembagian modul dan file
 
-Struktur berikut adalah target implementasi. Konfigurasi Django, akun, migrasi, pengujian autentikasi, dan template dasar sudah tersedia. Modul procurement dan helper transaksi bisnis belum dibuat.
+Struktur berikut adalah target implementasi. Konfigurasi Django, akun, template dasar, 14 model Procurement beserta migrasi, parser angka, serta helper token/replay sudah tersedia. Service bisnis, policy objek, dan halaman pengadaan masih mengikuti urutan implementasi berikutnya.
 
 ```text
 manage.py

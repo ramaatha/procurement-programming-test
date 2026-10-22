@@ -2,7 +2,7 @@
 
 Versi 1.0 | 22 Oktober 2026
 
-Rancangan untuk Django dan SQLite. Model User beserta migrasi dan constraint peran/version sudah tersedia. Entitas pengadaan lain masih rancangan. [PRD](PRD.md) dan [proses bisnis](BUSINESS_PROCESS.md) tetap menjadi acuan aturan; [arsitektur](ARCHITECTURE.md) menetapkan transaksi dan akses.
+Rancangan untuk Django dan SQLite. Model User serta 14 entitas pengadaan sudah mempunyai migrasi dan constraint database. Parser angka dan helper aksi tersedia. Transisi bisnis, kelengkapan lintas relasi, izin objek, dan immutability pada jalur aplikasi masih memerlukan service terkait. [PRD](PRD.md) dan [proses bisnis](BUSINESS_PROCESS.md) tetap menjadi acuan aturan; [arsitektur](ARCHITECTURE.md) menetapkan transaksi dan akses.
 
 ## Identitas dan tipe dasar
 
@@ -131,6 +131,8 @@ Custom User harus tersedia sebelum migrasi model yang merujuk AUTH_USER_MODEL. U
 
 Command `seed_demo` memakai akun lima peran, vendor, serta alur barang/jasa sintetis. Command idempotent melalui identitas seed yang stabil; tidak mereset database, password akun existing, atau transaksi pengguna. Password awal berasal dari `DEMO_PASSWORD` pada environment, tidak tercetak pada log. Data demo dan hasil uji tidak disertakan sebagai database biner dalam repo.
 
-## Pemeriksaan sebelum implementasi
+## Status verifikasi
 
-Model ini belum mengubah PRD, BPMN, atau status fitur WBS. Semua FR-01 sampai FR-13 tetap direncanakan. Implementasi harus membuktikan snapshot, izin, presisi, replay, rollback, dan concurrency dengan database SQLite berbasis file. TestCase dengan satu koneksi atau SQLite in-memory saja tidak cukup untuk menyatakan kasus dua penulis sudah aman.
+Migrasi awal berhasil pada database kosong, dapat dibatalkan dan diterapkan ulang pada database terisolasi. Constraint, parser angka, scope/umur token, replay, versi, serta rollback audit/hasil aksi sudah diuji. Helper aksi wajib dipanggil setelah service memeriksa akun dan izin terkini; helper tidak menggantikan policy. Aksi `account.create` dan `account.password` memakai nonce sekali tanpa hash payload password.
+
+Implementasi schema belum menyatakan FR-01 sampai FR-13 selesai dan tidak mengubah PRD, BPMN, atau status paket WBS. Implementasi harus membuktikan snapshot, izin, presisi, replay, rollback, dan concurrency dengan database SQLite berbasis file. TestCase dengan satu koneksi atau SQLite in-memory saja tidak cukup untuk menyatakan kasus dua penulis sudah aman.

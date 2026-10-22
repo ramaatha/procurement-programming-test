@@ -5,7 +5,7 @@
 - Gunakan Python dan Django. Rancangan awal memakai Django templates, CSS/JavaScript lokal, dan SQLite.
 - Ikuti cakupan pada [PRD](docs/PRD.md) dan transisi pada [proses bisnis](docs/BUSINESS_PROCESS.md).
 - Baca [arsitektur](docs/ARCHITECTURE.md), [model data](docs/DATA_MODEL.md), dan [rencana implementasi](docs/IMPLEMENTATION_PLAN.md) sebelum mengubah fitur terkait.
-- Django sudah dipilih. Fondasi akun dan autentikasi tersedia dan teruji; modul pengadaan belum diimplementasikan. Jangan menyamakan rancangan dengan fitur yang sudah dibangun atau teruji.
+- Django sudah dipilih. Fondasi akun/autentikasi serta schema pengadaan dan helper transaksi tersedia dan teruji. Service, izin objek, dan halaman alur pengadaan belum diimplementasikan. Jangan menyamakan rancangan dengan fitur yang sudah dibangun atau teruji.
 
 ## Implementasi
 

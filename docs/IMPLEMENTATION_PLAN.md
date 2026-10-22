@@ -10,7 +10,7 @@ Pengerjaan mengikuti urutan tugas setelah rancangan dan rencana ditinjau. Checkl
 
 **Dokumen rancangan:** [Arsitektur](ARCHITECTURE.md), [model data](DATA_MODEL.md), [PRD](PRD.md), dan [proses bisnis](BUSINESS_PROCESS.md).
 
-Status: Tugas 1 selesai untuk fondasi lokal, dengan 23 pengujian lulus. Tugas 2 sampai 11 belum dikerjakan. Django telah dipilih; keputusan lanjutan tetap mengikuti rancangan terkait. Pengerjaan dilakukan berurutan, satu tugas sampai hasilnya terverifikasi. Arah visual ditinjau sebelum styling pada tugas 10. HTML semantik pada tugas awal adalah prototipe fungsional untuk menguji alur, belum UI final.
+Status: Tugas 1 dan 2 selesai untuk fondasi lokal dan schema, dengan 48 pengujian lulus. Tugas 3 sampai 11 belum dikerjakan. Django telah dipilih; keputusan lanjutan tetap mengikuti rancangan terkait. Pengerjaan dilakukan berurutan, satu tugas sampai hasilnya terverifikasi. Arah visual ditinjau sebelum styling pada tugas 10. HTML semantik pada tugas awal adalah prototipe fungsional untuk menguji alur, belum UI final.
 
 ## Batas yang berlaku pada semua tugas
 
@@ -70,7 +70,7 @@ Perintah pada tugas berikut merupakan perintah rencana, belum bukti bahwa file a
 - [x] Jalankan test yang sama, `python manage.py check`, dan `python manage.py migrate`. Semua lulus, tanpa warning migrasi/model. Buka login melalui runserver loopback; ini belum uji alur Procurement.
 - [x] Siapkan daftar berkas tugas untuk commit pengguna: `chore: bootstrap Django project and session authentication`.
 
-Bukti tahap: [TESTING](TESTING.md). Tersedia dua migrasi akun: struktur awal dan penambahan constraint role/version. Perintah setup/admin juga diperiksa pada database terisolasi. Belum ada staging, commit, atau push; checklist commit hanya berarti saran berkas/pesan sudah disiapkan.
+Bukti tahap: [TESTING](TESTING.md). Tersedia dua migrasi akun: struktur awal dan penambahan constraint role/version. Perintah setup/admin juga diperiksa pada database terisolasi. Checklist commit berarti saran berkas/pesan sudah disiapkan; staging, commit dan push tetap dilakukan pemilik repository.
 
 ## Tugas 2: Model, angka, audit, dan protokol aksi
 
@@ -80,11 +80,13 @@ Bukti tahap: [TESTING](TESTING.md). Tersedia dua migrasi akun: struktur awal dan
 
 **Kontrak:** `parse_quantity(value: str, *, allow_zero: bool = False) -> int`, `parse_money(value: str) -> int`, `line_total(qty_milli: int, unit_price_minor: int) -> int`, `format_quantity(value: int) -> str`, `format_money(value: int) -> str`. Harga harus positif; allow_zero hanya dipakai untuk accepted/rejected. Formatter mengeluarkan desimal baku dengan tiga digit qty atau dua digit uang; presentasi Indonesia dilakukan helper template terpisah. Form angka memakai field teks dan parser yang sama, lalu menghasilkan string kanonik pada input dataclass. `make_action_token(*, actor_id: int, target_type: str, target_key: str, action: str) -> str` dan `load_action_token(token: str, *, actor_id: int, target_type: str, target_key: str, action: str) -> UUID` menggunakan signing Django dan TTL 86.400 detik. `payload_hash(payload: dict) -> str` menerima payload whitelist yang sudah dikanonisasi; password dilarang masuk helper ini.
 
-- [ ] Tulis NumbersTests TC-04 dengan assertion `parse_quantity("0.333") == 333`, `parse_money("0.05") == 5`, `line_total(333, 5) == 2`, `line_total(1, 1) == 0`, dan `line_total(500, 1) + line_total(500, 1) == 2`. Uji penolakan presisi berlebih, float, `NaN`, `Infinity`, `1e3`, negatif, dan hasil di atas int64.
-- [ ] Tulis ConstraintTests untuk unique request/revision, keputusan tunggal, PO tunggal, item asing/berulang, check nilai negatif, dan FK historis PROTECT. Uji minimum baris pada service, bukan menganggap DB menjaganya.
-- [ ] Tulis ActionTokenTests untuk scope aktor/target/action salah, token kedaluwarsa, tampering, canonical hash, serta aturan replay. Test mekanisme transaksi memakai aksi fixture yang menulis AuditEvent dan ActionReceipt lalu sengaja gagal; assert keduanya rollback.
-- [ ] Jalankan `python manage.py test common.tests procurement.tests.test_constraints procurement.tests.test_actions -v 2` hingga melihat kegagalan yang relevan, implementasikan kontrak/model, lalu ulangi hingga lulus. Buat migrasi dan jalankan `python manage.py makemigrations --check --dry-run` sesudahnya.
-- [ ] Siapkan commit pengguna: `feat: add procurement data model and transaction primitives`. Tahap ini belum membuktikan seluruh aturan bisnis service.
+- [x] Tulis NumbersTests TC-04 dengan assertion `parse_quantity("0.333") == 333`, `parse_money("0.05") == 5`, `line_total(333, 5) == 2`, `line_total(1, 1) == 0`, dan `line_total(500, 1) + line_total(500, 1) == 2`. Uji penolakan presisi berlebih, float, `NaN`, `Infinity`, `1e3`, negatif, dan hasil di atas int64.
+- [x] Tulis ConstraintTests untuk unique request/revision, keputusan tunggal, PO tunggal, item asing/berulang, check nilai negatif, dan FK historis PROTECT. Uji minimum baris pada service, bukan menganggap DB menjaganya.
+- [x] Tulis ActionTokenTests untuk scope aktor/target/action salah, token kedaluwarsa, tampering, canonical hash, serta aturan replay. Test mekanisme transaksi memakai aksi fixture yang menulis AuditEvent dan ActionReceipt lalu sengaja gagal; assert keduanya rollback.
+- [x] Jalankan `python manage.py test common.tests procurement.tests.test_constraints procurement.tests.test_actions -v 2` hingga melihat kegagalan yang relevan, implementasikan kontrak/model, lalu ulangi hingga lulus. Buat migrasi dan jalankan `python manage.py makemigrations --check --dry-run` sesudahnya.
+- [x] Siapkan commit pengguna: `feat: add procurement data model and transaction primitives`. Tahap ini belum membuktikan seluruh aturan bisnis service.
+
+Bukti tahap: [TESTING](TESTING.md). Migrasi awal memuat 14 model; siklus migrasi maju, rollback dan penerapan ulang diperiksa pada database terpisah. Penolakan item yang ada tetapi milik aggregate lain, minimum baris, dan jumlah kumulatif tetap diperiksa service pada tugas terkait.
 
 ## Tugas 3: Pengelolaan akun dan policy
 
@@ -233,4 +235,4 @@ Tugas 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11. Pengujian server me
 
 Setelah satu tugas, laporkan perubahan, perintah/hasil pengujian, batas yang belum diuji, dan file untuk commit pengguna. Kegagalan test atau kontrak harus diselesaikan sebelum memperluas fitur. Kekurangan waktu dilaporkan; kebutuhan wajib tidak dihapus diam-diam.
 
-Tiga dokumen rancangan ini belum menjadi bukti implementasi fitur. Tugas 1 sudah diverifikasi. Langkah berikutnya adalah Tugas 2: model pengadaan, angka, audit, dan protokol aksi. Checklist tugas berikutnya tetap kosong sampai pekerjaan serta verifikasinya dijalankan.
+Tugas 1 dan 2 sudah diverifikasi. Langkah berikutnya adalah Tugas 3: pengelolaan akun dan policy akses. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.

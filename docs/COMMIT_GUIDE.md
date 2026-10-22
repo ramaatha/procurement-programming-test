@@ -66,3 +66,11 @@ Pilih berkas baru dan perubahan terkait tahap ini:
 - `docs/COMMIT_GUIDE.md`
 
 Jangan pilih `.venv/`, `var/`, `tmp/`, `.env`, database SQLite, journal database, atau cache Python. Hasil BPMN/WBS tidak berubah pada tahap ini. Jika repository belum mempunyai commit, kelompok inisialisasi dan dokumentasi dapat dibuat lebih dahulu, lalu commit fondasi ini berisi berkas yang masih baru atau berubah.
+
+## Schema dan helper transaksi
+
+Pesan: `feat: add procurement data model and transaction primitives`
+
+Pilih berkas baru pada `common/` dan `procurement/`, termasuk pengujian, fixture, serta migrasi awal. Sertakan perubahan `config/settings.py`, `README.md`, `AGENTS.md`, dan dokumen yang diperbarui: ARCHITECTURE, DATA_MODEL, IMPLEMENTATION_PLAN, WORKFLOW, TESTING, serta panduan ini.
+
+Jangan memasukkan database kerja/test, cadangan database, cache, log, atau isi `tmp/`. Diagram dan workbook tidak berubah pada tahap schema.
