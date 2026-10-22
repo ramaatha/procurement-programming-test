@@ -1,0 +1,24 @@
+{% comment %}filepath: templates/base.html{% endcomment %}
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Procurement{% endblock %}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; line-height: 1.5; margin: 0; }
+    main { max-width: 48rem; margin: 0 auto; padding: 1.25rem; overflow-wrap: anywhere; }
+    input:not([type="hidden"]), button { font: inherit; max-width: 100%; min-height: 2.75rem; }
+    input:not([type="hidden"]) { display: block; width: 100%; }
+    label { display: block; margin-top: 1rem; }
+    button { margin-top: 1rem; cursor: pointer; }
+    :focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+  </style>
+</head>
+<body>
+  <main id="content">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

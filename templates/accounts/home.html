@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% comment %}filepath: templates/accounts/home.html{% endcomment %}
+{% block content %}
+  <h1>Procurement</h1>
+  <h2>Akun Anda</h2>
+  <dl>
+    <dt>Username</dt><dd>{{ user.username }}</dd>
+    <dt>Peran</dt><dd>{{ user.get_role_display }}</dd>
+  </dl>
+  <form method="post" action="{% url 'accounts:logout' %}">
+    {% csrf_token %}
+    <button type="submit">Keluar</button>
+  </form>
+{% endblock %}
