@@ -2,9 +2,14 @@
 from django.urls import path
 from procurement.views import requests
 from procurement.views import sourcing
+from procurement.views import orders
 
 app_name='procurement'
 urlpatterns=[
+    path('orders/',orders.order_list,name='order_list'),
+    path('orders/<uuid:order_id>/',orders.order_detail,name='order_detail'),
+    path('orders/<uuid:order_id>/print/',orders.order_print,name='order_print'),
+    path('requests/<uuid:request_id>/issue-po/',orders.order_issue,name='order_issue'),
     path('vendors/',sourcing.vendor_list,name='vendor_list'),
     path('vendors/new/',sourcing.vendor_create,name='vendor_create'),
     path('vendors/<uuid:vendor_id>/edit/',sourcing.vendor_edit,name='vendor_edit'),

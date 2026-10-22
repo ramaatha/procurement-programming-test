@@ -5,6 +5,7 @@
 {% block content %}
   <nav aria-label="Navigasi permintaan"><a href="{% url 'procurement:request_list' %}">Daftar permintaan</a></nav>
   <h1>{{ target.title|default:'Draft tanpa judul' }}</h1>
+  {% if existing_order %}<p>PO terbit: <a href="{% url 'procurement:order_detail' existing_order.pk %}">{{ existing_order.number }}</a></p>{% endif %}
   <p><a href="{% url 'procurement:quotation_list' target.pk %}">Penawaran dan pemilihan vendor</a></p>
   {% if message %}<p role="alert">{{ message }}</p>{% endif %}
   <dl><dt>Nomor</dt><dd>{{ target.number }}</dd><dt>Pemohon</dt><dd>{{ target.requester.username }}</dd><dt>Jenis</dt><dd>{{ target.get_kind_display }}</dd><dt>Status persetujuan</dt><dd>{{ target.get_status_display }}</dd><dt>Alasan kebutuhan</dt><dd>{{ target.reason|default:'Belum diisi'|linebreaksbr }}</dd><dt>Tujuan</dt><dd>{{ target.destination|default:'Belum diisi' }}</dd><dt>Tanggal kebutuhan</dt><dd>{{ target.needed_on|date:'d M Y'|default:'Belum diisi' }}</dd></dl>
@@ -29,5 +30,6 @@
     </section>
   {% endif %}
   <h2>Revisi pengajuan</h2><ul>{% for revision in revisions %}<li><a href="{% url 'procurement:request_revision' target.pk revision.number %}">Revisi {{ revision.number }}</a> · IDR {{ revision.estimated_total_minor|money_id }}</li>{% empty %}<li>Belum pernah diajukan.</li>{% endfor %}</ul>
+  {% if issue_form %}<section aria-labelledby="issue-heading"><h2 id="issue-heading">Terbitkan purchase order</h2><p>PO akan menyimpan vendor, tujuan, item, harga dan alasan pemilihan saat diterbitkan. Pastikan pilihan penawaran sudah benar. Sesudah terbit, permintaan tidak dapat direvisi atau dibatalkan melalui jalur sebelum PO.</p><p>Penawaran terpilih: {{ target.selected_quotation.reference }} · {{ target.selected_quotation.vendor.name }} · IDR {{ target.selected_quotation.total_minor|money_id }}</p><form method="post" action="{% url 'procurement:order_issue' target.pk %}">{% csrf_token %}{{ issue_form.as_p }}<button type="submit">Terbitkan PO</button></form></section>{% endif %}
   <h2>Riwayat</h2><ol>{% for event in events %}<li>{{ event.label }} oleh {{ event.actor }} · {{ event.time|date:'d M Y H:i' }} WIB{% if event.reason %}<p>{{ event.reason|linebreaksbr }}</p>{% endif %}</li>{% empty %}<li>Belum ada riwayat.</li>{% endfor %}</ol>
 {% endblock %}

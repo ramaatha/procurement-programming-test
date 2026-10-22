@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load procurement_numbers %}
+{% comment %}filepath: templates/procurement/order_list.html{% endcomment %}
+{% block title %}Purchase order | Procurement{% endblock %}
+{% block content %}
+  <nav aria-label="Navigasi PO"><a href="{% url 'accounts:home' %}">Beranda</a></nav>
+  <h1>Purchase order</h1>
+  <ul>{% for order in page_obj %}<li><h2><a href="{% url 'procurement:order_detail' order.pk %}">{{ order.number }}</a></h2><p>{{ order.vendor_name }} · {{ order.get_status_display }} · IDR {{ order.total_minor|money_id }}</p></li>{% empty %}<li>Belum ada PO yang dapat ditampilkan untuk akun Anda.</li>{% endfor %}</ul>
+  {% if page_obj.has_other_pages %}<nav aria-label="Halaman PO">{% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Sebelumnya</a>{% endif %} <span>Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }}</span> {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Berikutnya</a>{% endif %}</nav>{% endif %}
+{% endblock %}

@@ -1,5 +1,5 @@
 # filepath: procurement/tests/factories.py
-"""Requests and approvals use services; order rows remain fixtures until available."""
+"""Business fixtures follow the same services as application mutations."""
 from datetime import timedelta
 from uuid import UUID, uuid4
 
@@ -41,6 +41,7 @@ def approved(owner: User, approver: User, *, kind: str = Kind.GOODS) -> Purchase
 
 
 def issued(*, quantity: str = '10', kind: str = Kind.GOODS) -> PurchaseOrder:
+    from procurement.services.orders import issue_order
     from procurement.inputs import QuotationInput, QuoteLineInput
     from procurement.services.sourcing import save_quotation, save_vendor, select_quotation
     request = _approved(user(Role.REQUESTER), user(Role.APPROVER), kind, parse_quantity(quantity))
@@ -56,9 +57,7 @@ def issued(*, quantity: str = '10', kind: str = Kind.GOODS) -> PurchaseOrder:
     request.refresh_from_db()
     request = select_quotation(context(actor, request), request_id=request.pk, quotation_id=quote.pk,
                                 reason='Sesuai kebutuhan', single_source_reason='Satu sumber tersedia')
-    order=PurchaseOrder.objects.create(request=request, revision=revision, quotation=quote, vendor=vendor, vendor_name=vendor.name, vendor_contact=vendor.contact, kind=kind, destination=request.destination, total_minor=revision.estimated_total_minor, selection_reason=request.selection_reason, single_source_reason=request.single_source_reason, issued_by=actor)
-    PurchaseOrderItem.objects.create(order=order, revision_item=revision_item, position=1, name=revision_item.name, unit=revision_item.unit, qty_milli=revision_item.qty_milli, unit_price_minor=1000, line_total_minor=revision.estimated_total_minor)
-    return order
+    return issue_order(context(actor,request),request_id=request.pk)
 
 
 def context(actor: User, target: Model, *, nonce: UUID | None = None) -> ActionContext:

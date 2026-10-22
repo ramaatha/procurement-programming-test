@@ -1,0 +1,16 @@
+{% load procurement_numbers %}
+{% comment %}filepath: templates/procurement/order_print.html{% endcomment %}
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Cetak {{ order.number }}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font: 12pt/1.5 system-ui,sans-serif; margin: 0; color: #111; background: white; }
+  main { max-width: 48rem; margin: auto; padding: 1.25rem; overflow-wrap: anywhere; }
+  dd { margin-inline-start: 1rem; }
+  :focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+  @page { size: A4; margin: 15mm; }
+  @media print { .navigation { display: none; } main { max-width: none; padding: 0; } h2,h3 { break-after: avoid; } li { break-inside: avoid; } }
+</style></head><body><main>
+  <div class="navigation"><a href="{% url 'procurement:order_detail' order.pk %}">Kembali ke detail PO</a><p>Gunakan menu cetak browser atau Ctrl+P. Dokumen ini tidak mengirim pesanan kepada vendor.</p></div>
+  {% include 'procurement/_order_snapshot.html' %}
+</main></body></html>

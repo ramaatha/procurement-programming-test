@@ -4,6 +4,7 @@
   <h1>Procurement</h1>
   {% if user.role == "ADMIN" %}<p><a href="{% url 'accounts:user_list' %}">Kelola akun</a></p>{% endif %}
   <p><a href="{% url 'procurement:request_list' %}">Permintaan pengadaan</a></p>
+  <p><a href="{% url 'procurement:order_list' %}">Purchase order</a></p>
   {% if user.role == "ADMIN" or user.role == "PROCUREMENT" %}<p><a href="{% url 'procurement:vendor_list' %}">Kelola vendor</a></p>{% endif %}
   {% if user.role == "APPROVER" %}<p><a href="{% url 'procurement:approval_list' %}">Antrean persetujuan</a></p>{% endif %}
   <h2>Akun Anda</h2>

@@ -21,6 +21,10 @@ def visible_requests(actor: User) -> QuerySet[PurchaseRequest]:
     return queryset.none()
 
 
+def visible_orders(actor: User) -> QuerySet[PurchaseOrder]:
+    return PurchaseOrder.objects.filter(request_id__in=visible_requests(actor).values('pk')).select_related('request')
+
+
 def approval_queue(actor: User) -> QuerySet[PurchaseRequest]:
     current = active_actor(actor.pk)
     if current.role != Role.APPROVER:

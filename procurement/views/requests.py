@@ -46,7 +46,9 @@ def _initial_action(request,target,action):
 
 
 @sensitive_variables()
-def _render_detail(request,target,*,submit_form=None,cancel_form=None,review_form=None,revision_form=None,status=200,message=''):
+def _render_detail(request,target,*,submit_form=None,cancel_form=None,review_form=None,revision_form=None,issue_form=None,status=200,message=''):
+    from procurement.views.orders import issue_context
+    order_context = issue_context(request,target,form=issue_form)
     editable=_can_edit(request.user,target)
     cancellable=_can_cancel(request.user,target)
     if submit_form is None and editable:
@@ -65,10 +67,10 @@ def _render_detail(request,target,*,submit_form=None,cancel_form=None,review_for
             and ApprovalDecision.objects.filter(revision=active_revision,decision=Decision.APPROVE).exists()):
         revision_form = RevisionForm(initial=_initial_action(request,target,'request.revision'))
     rows=_rows(target.items.all())
-    labels={'request.create':'Draft dibuat','request.edit':'Draft diperbarui','request.submit':'Permintaan diajukan','request.cancel':'Permintaan dibatalkan','request.revision':'Dikembalikan untuk revisi'}
+    labels={'request.create':'Draft dibuat','request.edit':'Draft diperbarui','request.submit':'Permintaan diajukan','request.cancel':'Permintaan dibatalkan','request.revision':'Dikembalikan untuk revisi','order.issue':'PO diterbitkan'}
     decisions={'APPROVE':'Disetujui','REQUEST_CHANGES':'Diminta revisi','REJECT':'Ditolak'}
     events=[dict(label=decisions.get(event.changes.get('decision'),'Keputusan review') if event.action=='request.review' else labels.get(event.action,'Perubahan permintaan'),actor=event.actor_name,time=event.created_at,reason=event.reason) for event in target.audit_events.order_by('-created_at','-pk')]
-    response=render(request,'procurement/request_detail.html',dict(target=target,rows=rows,total_minor=document_total(row['line_total_minor'] for row in rows),editable=editable,submit_form=submit_form,cancel_form=cancel_form,review_form=review_form,revision_form=revision_form,active_revision=active_revision,revisions=target.revisions.select_related('approval__actor').order_by('-number'),events=events,message=message),status=status)
+    response=render(request,'procurement/request_detail.html',dict(target=target,rows=rows,total_minor=document_total(row['line_total_minor'] for row in rows),editable=editable,submit_form=submit_form,cancel_form=cancel_form,review_form=review_form,revision_form=revision_form,active_revision=active_revision,revisions=target.revisions.select_related('approval__actor').order_by('-number'),events=events,message=message,**order_context),status=status)
     if status==503:response['Retry-After']='1'
     return response
 

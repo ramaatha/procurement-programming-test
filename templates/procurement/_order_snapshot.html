@@ -1,0 +1,19 @@
+{% load procurement_numbers %}
+{% comment %}filepath: templates/procurement/_order_snapshot.html{% endcomment %}
+<h1>Purchase order {{ order.number }}</h1>
+<dl>
+  <dt>Nomor permintaan</dt><dd>{{ order.request.number }}</dd>
+  <dt>Revisi pengajuan</dt><dd>{{ order.revision.number }}</dd>
+  <dt>Status PO</dt><dd>{{ order.get_status_display }}</dd>
+  <dt>Jenis pengadaan</dt><dd>{{ order.get_kind_display }}</dd>
+  <dt>Vendor</dt><dd>{{ order.vendor_name }}</dd>
+  <dt>Kontak vendor</dt><dd>{{ order.vendor_contact }}</dd>
+  <dt>Tujuan penerimaan / layanan</dt><dd>{{ order.destination }}</dd>
+  <dt>Diterbitkan oleh</dt><dd>{{ issued_actor_name }}</dd>
+  <dt>Waktu penerbitan</dt><dd>{{ order.issued_at|date:'d M Y H:i' }} WIB</dd>
+</dl>
+<h2>Rincian pesanan</h2>
+<ol>{% for item in items %}<li><h3>{{ item.name }}</h3><p>{{ item.qty_milli|quantity_id }} {{ item.unit }} × IDR {{ item.unit_price_minor|money_id }} = <strong>IDR {{ item.line_total_minor|money_id }}</strong></p></li>{% endfor %}</ol>
+<p>Total pesanan: <strong>IDR {{ order.total_minor|money_id }}</strong></p>
+<h2>Dasar pemilihan</h2><p>{{ order.selection_reason|linebreaksbr }}</p>
+{% if order.single_source_reason %}<h3>Alasan sumber tunggal</h3><p>{{ order.single_source_reason|linebreaksbr }}</p>{% endif %}
