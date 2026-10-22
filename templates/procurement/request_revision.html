@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load procurement_numbers %}
+{% comment %}filepath: templates/procurement/request_revision.html{% endcomment %}
+{% block title %}Revisi pengajuan | Procurement{% endblock %}
+{% block content %}
+  <nav aria-label="Navigasi permintaan"><a href="{% url 'procurement:request_detail' target.pk %}">Detail permintaan</a></nav>
+  <h1>Revisi {{ revision.number }}: {{ revision.title }}</h1><p>Salinan pengajuan tersimpan dan tidak dapat diedit.</p>
+  <dl><dt>Nomor permintaan</dt><dd>{{ target.number }}</dd><dt>Jenis</dt><dd>{{ revision.get_kind_display }}</dd><dt>Alasan</dt><dd>{{ revision.reason|linebreaksbr }}</dd><dt>Tujuan</dt><dd>{{ revision.destination }}</dd><dt>Tanggal kebutuhan</dt><dd>{{ revision.needed_on|date:'d M Y' }}</dd><dt>Diajukan pada</dt><dd>{{ revision.submitted_at|date:'d M Y H:i' }} WIB</dd></dl>
+  <ul>{% for item in rows %}<li><h2>{{ item.name }}</h2><p>{{ item.qty_milli|quantity_id }} {{ item.unit }} × IDR {{ item.estimated_unit_price_minor|money_id }} = IDR {{ item.line_total_minor|money_id }}</p></li>{% endfor %}</ul>
+  <p>Total estimasi: <strong>IDR {{ revision.estimated_total_minor|money_id }}</strong></p>
+{% endblock %}

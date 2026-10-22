@@ -4,6 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.password_validation import password_validators_help_text_html
 
 from accounts.models import Role
+from common.forms import ActionForm
 
 
 class LoginForm(AuthenticationForm):
@@ -18,11 +19,6 @@ class LoginForm(AuthenticationForm):
         self.fields['username'].widget.attrs.update(autocomplete='username', autocapitalize='none')
         self.fields['password'].label = 'Password'
         self.fields['password'].widget.attrs['autocomplete'] = 'current-password'
-
-
-class ActionForm(forms.Form):
-    action_token = forms.CharField(label='Token aksi', max_length=2048, widget=forms.HiddenInput)
-    expected_version = forms.IntegerField(label='Versi data', min_value=1, required=False, widget=forms.HiddenInput)
 
 
 class UserForm(ActionForm):

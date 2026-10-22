@@ -52,9 +52,9 @@ class ActionTransactionTests(TransactionTestCase):
         self.assertTrue(apps.is_installed('procurement'), 'Schema Procurement belum terdaftar.')
         self.actions=importlib.import_module('common.actions')
         self.ConflictError=importlib.import_module('common.errors').ConflictError
-        from procurement.tests.factories import context, draft, user
+        from procurement.tests.factories import context, user
         self.actor=user('REQUESTER')
-        self.request=draft(self.actor)
+        self.request=apps.get_model('procurement','PurchaseRequest').objects.create(requester=self.actor,kind='GOODS')
         self.audit=apps.get_model('procurement','AuditEvent')
         self.receipts=apps.get_model('procurement','ActionReceipt')
         self.ctx=context(self.actor,self.request)

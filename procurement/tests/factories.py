@@ -1,5 +1,5 @@
 # filepath: procurement/tests/factories.py
-"""Direct-row fixtures for schema tests; business services are not available yet."""
+"""Drafts use services; approval/order rows remain fixtures until their services exist."""
 from datetime import timedelta
 from uuid import UUID, uuid4
 
@@ -20,7 +20,9 @@ def user(role: str) -> User:
 
 
 def draft(owner: User, *, kind: str = Kind.GOODS) -> PurchaseRequest:
-    return PurchaseRequest.objects.create(requester=owner, kind=kind)
+    from procurement.inputs import DraftInput
+    from procurement.services.requests import save_draft
+    return save_draft(ActionContext(owner.pk,uuid4(),None),request_id=None,data=DraftInput(str(kind),'','','',None,()))
 
 
 def _approved(owner: User, approver: User, kind: str, qty_milli: int) -> PurchaseRequest:

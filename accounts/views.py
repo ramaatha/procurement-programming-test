@@ -1,6 +1,4 @@
 # filepath: accounts/views.py
-import sqlite3
-
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
@@ -19,6 +17,7 @@ from accounts.policies import require_role
 from accounts.services import reset_password, save_user
 from common.actions import ActionContext, load_action_token, make_action_token
 from common.errors import ConflictError
+from common.http import database_busy as _busy, validation_errors as _validation_errors
 
 
 class AccountLoginView(LoginView):
@@ -54,21 +53,6 @@ def user_list(request: HttpRequest) -> HttpResponse:
     require_role(request.user, Role.ADMIN)
     page = Paginator(User.objects.order_by('username','pk'), 25).get_page(request.GET.get('page'))
     return render(request, 'accounts/user_list.html', {'page_obj': page})
-
-
-def _validation_errors(form, error: ValidationError) -> None:
-    if hasattr(error, 'message_dict'):
-        for field, errors in error.message_dict.items():
-            form.add_error(field if field in form.fields else None, errors)
-    else:
-        form.add_error(None, error.messages)
-
-
-def _busy(error: OperationalError) -> bool:
-    code = getattr(error.__cause__, 'sqlite_errorcode', None)
-    if code is not None:
-        return code & 255 in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED)
-    return str(error).lower() in ('database is locked', 'database table is locked')
 
 
 @sensitive_variables()
