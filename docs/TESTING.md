@@ -1,10 +1,10 @@
 # Pengujian Procurement
 
-Diperbarui: 22 Oktober 2026
+Diperbarui: 23 Oktober 2026
 
 ## Lingkup yang telah diverifikasi
 
-Verifikasi mencakup akun, autentikasi, session, konfigurasi environment, 14 model Procurement, migrasi SQLite, parser angka, helper token/replay dan versi, service/form pengelolaan akun admin, draft, pengajuan, snapshot revisi dan pembatalan permintaan sebelum PO, keputusan approval dan pengembalian untuk revisi, vendor, penawaran dan pemilihan, serta penerbitan PO dan snapshot detail/cetak. Ini belum menjadi hasil pengujian seluruh aplikasi Procurement.
+Verifikasi lokal mencakup akun, autentikasi, konfigurasi, model dan migrasi SQLite, angka berskala, protokol aksi, permintaan, approval, sourcing, PO, penerimaan barang/jasa, penutupan, tracking dan audit. Antarmuka diperiksa pada lima peran dalam browser. Instalasi dari checkout bersih dan data demo belum selesai; hasil ini tidak menyatakan deployment atau kesiapan produksi.
 
 Lingkungan pemeriksaan: Python 3.12.14, Django 5.2.18, SQLite 3.53.1, dan JSON1 tersedia. Dependensi terpasang: asgiref 3.12.1, sqlparse 0.6.0, dan tzdata 2026.5. `pip check` tidak menemukan dependensi yang rusak.
 
@@ -12,7 +12,7 @@ Lingkungan pemeriksaan: Python 3.12.14, Django 5.2.18, SQLite 3.53.1, dan JSON1 
 
 | Kelompok | Jumlah test | Perilaku yang diperiksa |
 | --- | --- | --- |
-| Autentikasi | 10 | Login/logout, akun nonaktif, kredensial salah, password tidak dipantulkan, CSRF, logout POST, redirect aman, pencabutan akses setelah nonaktif, serta route yang tidak disediakan |
+| Autentikasi | 11 | Login/logout, akun nonaktif, kredensial salah, password tidak dipantulkan, CSRF, logout POST, redirect aman, pencabutan akses setelah nonaktif, route yang tidak disediakan, dan pesan login tunggal |
 | Peran dan guard | 6 | Lima peran dapat login, manipulasi role pada form tidak mengubah akun, peran invalid dan versi nol ditolak database, peran terkini dibaca kembali, dan halaman akun tidak menerima POST |
 | Konfigurasi | 7 | Secret hilang/pendek, nilai DEBUG invalid, hostname produksi hilang/wildcard, Secure cookie dan HTTPS pada mode non-debug, serta database test terpisah |
 | Angka berskala | 5 | Parsing ketat, batas int64, penolakan input ambigu, formatter kanonik, pembulatan half-up per baris, dan overflow hasil/jumlah |
@@ -34,8 +34,13 @@ Lingkungan pemeriksaan: Python 3.12.14, Django 5.2.18, SQLite 3.53.1, dan JSON1 
 | Service PO | 11 | Snapshot header/item, replay, izin terkini, status/revisi/kandidat, vendor/tanggal/plafon/sumber, rollback, terminal dan overflow |
 | HTTP PO | 6 | POST-only, parameter server, scope daftar/detail/cetak, snapshot setelah rename, CSRF/token/versi, 503 dan redaksi POST |
 | Race PO dan harness | 4 | Dua issue, cancel vs issue, vendor nonaktif vs issue, dan penghentian proses yang macet |
+| Penerimaan dan penutupan | 25 | Barang/jasa, multi-item, accepted/rejected/remaining, periode, terminal, replay, rollback, HTTP dan dua koneksi SQLite |
+| Tracking | 16 | Scope, pencarian/filter, tahap operasional, paginasi, label status, balance dan riwayat |
+| Antarmuka dan kegagalan | 6 | Error field dalam form, input dipertahankan, 404/CSRF/500 aman, navigasi per peran, antrean approver dan management form negatif |
+| Navigasi dan logout | 3 | Kapitalisasi, konfirmasi tanpa mengakhiri sesi, login wajib dan logout POST |
+| Lokasi validasi form | 2 | Pemeriksaan 17 endpoint form/aksi dan dua filter, pesan tunggal admin terakhir, serta akun tetap terlindungi |
 
-Total: **180 test lulus**. Subtest beberapa input/peran tidak dihitung sebagai method test tambahan.
+Total: **233 test lulus** pada regresi terakhir. Subtest beberapa input/peran tidak dihitung sebagai method test tambahan.
 
 Perintah yang dijalankan:
 
@@ -183,3 +188,82 @@ Audit diuji kronologis dan berhalaman, memakai nama historis meskipun username k
 Pemeriksaan browser, tampilan mobile, keyboard, dan layout final belum dilakukan pada tahap ini. Tidak ada migrasi atau dependency baru. Bukti server/HTTP tidak menggantikan pemeriksaan UI menyeluruh pada Tugas 10.
 
 Suite akhir Tahap 9 lulus 221 test. Setelah ekstraksi formatter, regresi penuh menangkap import format_quantity yang masih diperlukan detail penerimaan; import dipulihkan dan seluruh suite diulang hingga lulus. Pemeriksaan migrasi tidak mendeteksi perubahan. Review independen tidak menemukan cacat P0-P2 berdasarkan source/diff. Dua penyempurnaan P3 dicatat untuk Tugas 10: prefetch item agar pembacaan snapshot/balance tidak berulang, dan penyelarasan label status PO pada snapshot/cetak dengan tahap operasional. Pembacaan item saat ini merupakan overhead tetap, bukan query tambahan per item. Reviewer tidak menjalankan suite database atau browser.
+
+## Antarmuka per peran dan pemulihan
+
+Tahap 10 menambahkan enam test, sehingga regresi penuh lulus 227 test. Regresi terakhir setelah pemformatan template selesai dalam 33,704 detik. System check tidak menemukan isu; makemigrations --check --dry-run tidak mendeteksi perubahan. Pemeriksaan sintaks JavaScript melalui node --check juga lulus. Tidak ada migrasi atau paket runtime baru; dua paket Node hanya menjadi dependensi development untuk formatter.
+
+Pengujian awal menangkap tidak adanya kerangka antarmuka/error summary serta penolakan management form negatif. Regresi management form gagal dengan respons 303 sebelum guard ditambahkan; sesudah perbaikan, respons menjadi 400 dan item draft tetap tersimpan. Test tambahan memastikan antrean approver tidak menawarkan permintaan miliknya serta exception tak terduga menghasilkan 500 yang aman dalam mode non-debug. Token, pesan internal dan traceback tidak muncul dalam body respons. Test 400/403/404 baru melengkapi pengujian 409/503, Retry-After, CSRF, POST-only, replay dan rollback pada modul sebelumnya.
+
+Browser memakai database sintetis terpisah di var/stage10-browser. Pemohon, approver, procurement, penerima dan admin diperiksa pada lebar 320, 390, 640, 768, 1024 dan 1440px. Pemindaian terakhir memuat 85 kombinasi halaman/peran: 13 pemohon, 13 approver, 16 procurement, 7 penerima dan 36 admin. Semua respons GET yang diperiksa berhasil; tidak ditemukan overflow halaman atau exception JavaScript pada pemindaian itu. Ini adalah jumlah halaman yang dapat ditemukan dari navigasi/data uji saat pemeriksaan, bukan seluruh kemungkinan data atau cabang transaksi.
+
+| Kontrol/alur browser | Hasil aktual |
+| --- | --- |
+| Login dan navigasi lima peran | Login berhasil; tujuan menu dan tautan dokumen yang ditemukan memberi respons 200. |
+| Menu mobile | Dapat dibuka; Escape menutup dan mengembalikan focus ke summary. |
+| Menu tanpa JavaScript lalu resize | Regresi terlebih dahulu gagal ketika tombol pembuka hilang pada desktop; sesudah perbaikan summary native tetap tersedia. |
+| Draft dengan jumlah negatif | Respons 400 mempertahankan input; focus menuju ringkasan error yang menautkan field. |
+| Simpan draft | Input valid menghasilkan redirect ke detail dan pesan sukses. |
+| Tambah/hapus baris tanpa JavaScript | Dua fieldset dirender; baris ekstra kosong yang dicentang Hapus tidak ikut disimpan. |
+| Approval | Pengajuan pengguna lain dapat disetujui dari form keputusan. |
+| Penawaran, pemilihan dan PO | Penawaran dibuat, dipilih dengan alasan sumber tunggal, lalu PO diterbitkan melalui kontrol halaman. |
+| Penerimaan barang dan penutupan | Accepted 6/rejected 2 pada ordered 10 menyisakan 4; approver menutup sisa dan dokumen menjadi Selesai dengan kekurangan. |
+| Akun dan vendor | Admin membuat akun, menonaktifkan, mereset password, serta membuat vendor sintetis. |
+| Keyboard | Tab mencapai skip link; Enter memindahkan focus ke main. Focus tombol simpan memiliki outline 3px. |
+| Submit berulang | Respons POST sengaja ditahan; pesan proses terlihat dan dua aktivasi simpan hanya menghasilkan satu POST. |
+| Browser Back | Setelah simpan, kembali ke form membersihkan aria-busy dan pesan proses. |
+| Reduced motion | Transisi tombol menjadi 0 detik ketika preferensi reduce aktif. |
+| Pembesaran teks | Ukuran teks root 200% pada daftar di lebar 390px tidak menimbulkan overflow halaman. |
+| Cetak | Satu PO dirender ke PDF A4 melalui browser headless. Dialog printer dan hasil fisik belum diuji. |
+
+Screenshot antrean, detail dan form diperiksa secara visual. Enam belas pasangan warna dari stylesheet dihitung: seluruh teks yang diukur melampaui 4,5:1, minimum 5,91:1; batas kontrol 4,76:1 melampaui 3:1. Status selalu disertai teks. Pemeriksaan ini tidak mencakup pembaca layar, keyboard layar perangkat fisik, seluruh kombinasi data panjang, ataupun dokumen cetak beberapa halaman. Penerimaan jasa dan cabang penolakan/revisi/cancel tetap mempunyai tes service/HTTP dan bukti tahap sebelumnya; seluruh cabang tersebut tidak diulang lewat klik pada tahap ini.
+
+Review independen memeriksa source, tanpa menjalankan database atau browser. Satu temuan P2 tentang menu tanpa JavaScript diselesaikan melalui reproduksi gagal lalu lulus. Dua temuan P3 tetap terbuka: paginasi daftar aktif dan historis penawaran mereset parameter satu sama lain, serta panel tindakan mobile masih berada setelah rincian panjang. Tautan menuju tindakan tersedia di awal detail. Optimasi snapshot item saat evaluasi seluruh kandidat, yang dicatat pada tahap sourcing, juga masih terbuka. Comparison rows kini dibangun setelah paginasi; detail PO/cetak dan form penerimaan sudah memakai prefetch item. Label snapshot PO mengikuti mapping tahap yang sama.
+
+Bukti lokal tersimpan dalam tmp: log regresi, matriks halaman/viewport, catatan interaksi, hasil kontras, screenshot dan render A4. Akun/data sintetis tidak masuk database kerja atau Git. Belum ada klaim kapasitas produksi, deployment, maupun hasil instalasi bersih.
+
+## Kompatibilitas pemformatan template
+
+Pemformat HTML generik memecah tag Django hingga 14 template gagal dikompilasi; beberapa ekspresi variabel juga menjadi teks literal. Tag tersebut diperbaiki sambil mempertahankan perapihan HTML. Proyek kini memakai Prettier 3.7.4 dan prettier-plugin-django-alpine 1.3.0 sebagai dependensi development dengan lockfile. Konfigurasi lokal memuat plugin untuk file template; CSS dan JavaScript tetap memakai pemformatan Prettier.
+
+Uji pada 28 template memeriksa urutan/nilai token Django sebelum dan sesudah format serta kestabilan dua kali format. Seluruhnya lulus. Sesudah npm run format, pemeriksaan kompilasi menemukan nol kegagalan dan nol tag multiline, sedangkan npm run format:check lulus. Satu assertion tracking yang semula bergantung pada whitespace HTML mentah disesuaikan menjadi perbandingan HTML semantik; pesan lengkap dan perilaku pemulihannya tetap diperiksa. Seluruh 227 test kemudian lulus, diikuti pemeriksaan browser 85 halaman/peran serta menu, keyboard, submit berulang dan Back. Pengaturan format-on-save VS Code yang sudah aktif tetap dipertahankan.
+
+## Revisi proporsi, kepadatan dan konfirmasi logout
+
+Tiga test baru terlebih dahulu gagal karena kapitalisasi dan route konfirmasi belum tersedia. Setelah implementasi, suite penuh lulus 230 test dalam 23,006 detik. GET konfirmasi tetap mempertahankan sesi, akun anonim diarahkan ke login, dan POST logout mengakhiri sesi. Endpoint logout tetap POST-only serta dilindungi CSRF oleh pengujian autentikasi yang ada.
+
+Browser memeriksa lima halaman admin pada tujuh lebar 320/390/640/768/1024/1440/1920, dilanjutkan pemindaian 93 halaman/peran pada enam lebar sampai 1440. Tidak ditemukan overflow halaman atau pageerror JavaScript pada sampel. Ukuran terukur: brand 28px, subjudul 16px, topbar 17px, nama akun 18px dan Beranda 16px. Filter pada 1440 mempunyai tinggi sekitar 195px.
+
+Konfirmasi logout diuji dengan klik, Batal, Escape, focus awal pada Batal, pengembalian focus ke pemicu, serta Ya, Keluar. Pada konteks tanpa JavaScript, tautan membuka halaman konfirmasi, Batal kembali ke beranda, dan Ya, Keluar mengakhiri sesi. Screenshot login, daftar dan dialog diperiksa. Pemeriksaan visual menangkap dua delimiter HTML yang terlihat pada sidebar; regresi browser terlebih dahulu gagal lalu lulus setelah markup dibetulkan.
+
+Enam pasangan warna tambahan lulus: teks putih/sidebar 12,25:1, teks sekunder/sidebar 9,06:1, teks putih/hover 8,76:1, focus/sidebar 8,56:1, pemisah akun/sidebar 3,84:1 dan teal/putih 7,55:1. Pemindai desain tidak melaporkan temuan pada target eksplisit, tetapi tidak dapat mengikuti tautan stylesheet berupa tag static Django, sehingga hasil templatenya terbatas. Hasil render dan pengukuran warna diperiksa terpisah. Prettier dengan plugin Django dan pemeriksaan kompilasi tetap menjadi bagian verifikasi. Bukti tersimpan pada tmp/ui-refinement di workspace pemeriksaan; database kerja tidak dipakai untuk data sintetis. Perangkat fisik, pembaca layar dan deployment belum diuji.
+
+## Visibilitas password dan pesan login tunggal
+
+Regresi browser terlebih dahulu gagal karena tombol mata belum tersedia. Sesudah implementasi, lima kolom pada login, pembuatan akun, dan reset password lulus pemeriksaan ikon tanpa tulisan, label aksesibel, kontrol per kolom, nilai tetap sama, klik, Space, focus outline 3px dan target minimum 44px. Keempat lebar 320/390/768/1440 tidak menghasilkan overflow pada halaman yang diperiksa. Konteks tanpa JavaScript tetap memuat input password native tanpa tombol tambahan.
+
+Regresi HTTP terlebih dahulu menemukan dua pesan salah kredensial. Setelah perubahan, pesan hanya muncul satu kali dalam form login dan error-summary tidak dirender pada halaman itu. Browser juga memeriksa jumlah pesan serta focus pada login-errors. Server preview dengan --noreload sempat memakai template yang tersimpan sebelum revisi; setelah restart, pemeriksaan memakai source terbaru dan lulus. Screenshot error serta ikon diperiksa secara visual. Suite penuh terakhir lulus 231 test dalam 33,433 detik. Data uji memakai database terpisah; tidak ada perubahan password atau akun kerja.
+
+## Focus login, autocomplete dan seleksi teks
+
+Dua regresi terlebih dahulu gagal pada atribut autocomplete dan pemicu focus alert yang masih tersedia. Sesudah perubahan, 58 test akun/error HTTP lulus dalam 16,633 detik. Pengujian tetap memastikan username dipertahankan, pesan tunggal berada di form, dan widget password tidak merender atribut value. Ringkasan error transaksi tetap diperiksa oleh suite HTTP.
+
+Browser uji memverifikasi autocomplete off pada form/dua kolom, alert tidak menerima focus otomatis, password kosong setelah respons gagal maupun setelah focus dan dua klik ikon mata, serta pesan hanya satu kali. Seleksi input terukur rgb(15,94,94) dengan teks rgb(255,255,255), rasio 7,55:1. Screenshot diperiksa; lebar 320/390/768/1440 tidak menghasilkan overflow pada halaman yang diuji. Tidak ada penugasan nilai password dalam source JavaScript. Pemeriksaan ini memakai profil browser bersih dan tidak mengakses kredensial tersimpan pengguna, sehingga tidak membuktikan bahwa password manager pengguna menaati autocomplete off. Bukti tersimpan pada tmp/login-refinement.
+
+## Validasi tunggal di dalam form
+
+Dua test baru terlebih dahulu gagal karena ringkasan global dan pemberitahuan tambahan masih dirender di luar form. Pemeriksaan parameter mencakup 17 endpoint form/aksi: akun baru/edit/reset, vendor baru/edit, draft baru/edit/submit/cancel, approval/revisi, penawaran baru/edit/pilih, penerbitan PO, penerimaan dan penutupan; ditambah dua daftar dengan filter invalid. Parser HTML memeriksa bahwa error list dan alert validasi berada di dalam form, serta error-summary global tidak ada. Kasus admin aktif terakhir juga memastikan pesan hanya sekali dan akun tetap ADMIN aktif.
+
+Penelusuran menemukan POST penerbitan PO yang invalid, tanpa penawaran terpilih, gagal saat template memformat nilai yang belum ada. Regresi gagal sebelum guard ditambahkan; setelah perbaikan, form tetap dirender untuk menyampaikan validasi tanpa nilai penawaran fiktif. Pesan tambahan pada daftar saat filter invalid juga diuji gagal terlebih dahulu lalu dihapus. Empty state untuk pencarian/filter valid tetap tersedia.
+
+Suite penuh lulus 233 test setelah seluruh perubahan sumber. Browser memeriksa kasus admin terakhir, konfirmasi password berbeda, field vendor kosong, filter invalid dan jumlah item negatif, pada lebar 320/390/768/1440. Pesan admin terakhir muncul satu kali dalam form; GET berikutnya memastikan role tetap ADMIN. Kasus vendor dengan dua field kosong mempunyai dua pesan untuk kesalahan yang berbeda, bukan pengulangan satu kesalahan di luar form. Tautan muat ulang tetap tersedia di dalam form akun/draft. Screenshot desktop/mobile diperiksa. Renderer, partial, CSS dan pemindahan focus ringkasan global yang tidak dipakai telah dihapus.
+
+Pengujian memakai database sintetis terpisah dan tidak mengubah akun kerja. Dokumen rancangan Tahap 11 dipertahankan; command seed dan panduan pengguna belum dibuat. Hasil terdahulu mengenai focus atau ringkasan global merupakan rekam penerapan sebelumnya dan digantikan pola validasi pada bagian ini. Bukti lokal berada di tmp/form-errors.
+
+## Konsistensi Kapitalisasi Antarmuka
+
+Seluruh 29 template diperiksa, termasuk partial riwayat, snapshot PO, pemenuhan pesanan, navigasi, form, dan cetak. Judul, caption, label form, tombol, pilihan status serta nama tindakan riwayat mengikuti kapital pada awal setiap kata. Sumber label form Django ikut diperbarui. Paragraf bantuan, pesan validasi dan keadaan kosong tetap memakai sentence case; nama akun, vendor, item, judul dan isi dokumen ditampilkan sesuai data pengguna. Nilai status dan kontrak transaksi tidak berubah.
+
+Audit sumber untuk heading, tautan, tombol, label, legend dan nama navigasi tidak menemukan pelanggaran kapitalisasi. Semua template berhasil dikompilasi, tag Django tetap utuh, dan Prettier lulus. Enam kegagalan awal suite disebabkan ekspektasi teks lama; sesudah penyesuaian teks yang diperiksa, 233 test lulus dalam 23,310 detik tanpa mengurangi assertion perilaku atau keamanan.
+
+Browser lima peran memeriksa 97 kombinasi halaman/peran pada enam lebar 320/390/640/768/1024/1440, sebanyak 582 pemeriksaan ukuran tanpa overflow halaman. Tidak ditemukan pageerror JavaScript. Label form dan pilihan status diperiksa pada hasil render, termasuk caption detail dan cetak PO. Screenshot detail PO ditinjau; nama akun tetap sesuai sumber. Alur tambah baris, hapus baris kosong dan simpan draft tanpa JavaScript serta render PDF A4 tetap lulus. Bukti lokal tersimpan di tmp/ui-capitalization pada workspace pemeriksaan. Pengujian memakai database sintetis terpisah. Hash rancangan Tahap 11 tetap sama; perangkat fisik, pembaca layar dan deployment belum diuji.

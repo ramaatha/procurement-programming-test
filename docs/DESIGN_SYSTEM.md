@@ -1,8 +1,8 @@
 # Sistem desain Procurement
 
-Versi 1.0 | 23 Oktober 2026
+Versi 1.1 | 23 Oktober 2026
 
-Status: acuan desain untuk implementasi frontend. Kriteria browser di bagian akhir harus diperiksa pada halaman yang sudah dibangun sebelum antarmuka dinyatakan siap.
+Status: diterapkan pada antarmuka lokal. Pemeriksaan lima peran dan batas cakupannya dicatat pada TESTING; instalasi bersih serta pemeriksaan akhir mengikuti Tugas 11.
 
 ## 1. Arah desain
 
@@ -26,7 +26,7 @@ Aturan produk mengikuti [PRD](PRD.md), transisi mengikuti [proses bisnis](BUSINE
 
 ### Kerangka aplikasi
 
-Desktop memakai sidebar berlabel dan area kerja utama. Lebar sidebar awal 15rem. Bagian atas area kerja memuat breadcrumb bila diperlukan, judul, keterangan singkat, dan tindakan halaman. Identitas akun serta peran aktif mudah ditemukan. Nama produk ditulis sebagai teks; logo dan foto profil tidak diperlukan.
+Desktop memakai sidebar berlabel dan area kerja utama. Lebar sidebar 16,5rem. Bagian atas area kerja memuat breadcrumb bila diperlukan, judul, keterangan singkat, dan tindakan halaman. Identitas akun serta peran aktif mudah ditemukan. Nama produk ditulis sebagai teks; logo dan foto profil tidak diperlukan.
 
 Urutan isi: navigasi, pesan hasil tindakan, judul halaman, filter atau ringkasan yang relevan, lalu konten utama. Sediakan tautan lewati navigasi menuju konten. Halaman login menggunakan kolom form yang ringkas tanpa sidebar.
 
@@ -105,7 +105,11 @@ Gunakan IBM Plex Sans sebagai typeface utama karena bentuk hurufnya tegas untuk 
 | Isi, label, input | `1rem` | 400 atau 600; 1.5 |
 | Metadata dan bantuan | `0.875rem` | 400; 1.5 |
 
-Gunakan sentence case. Hindari heading monospace dan huruf kapital dengan tracking lebar. Nomor dokumen boleh memakai angka tabular; angka uang dan kuantitas menggunakan `font-variant-numeric: tabular-nums` serta rata kanan.
+Gunakan kapital pada awal setiap kata untuk judul halaman dan bagian, navigasi, tombol, label form, caption data, pilihan status, serta nama tindakan di riwayat. Contoh: `Riwayat Pengadaan`, `Diterbitkan Oleh`, dan `Pemenuhan Pesanan`. Kata penghubung pada elemen tersebut ikut diawali kapital. Pertahankan singkatan seperti PO, IDR, dan WIB.
+
+Paragraf penjelasan, bantuan, pesan validasi, dan keadaan kosong memakai sentence case agar tetap mudah dibaca. Nama akun, vendor, judul dokumen, item, catatan, dan data pengguna ditampilkan sesuai isinya. Terapkan kapitalisasi pada sumber teks antarmuka dan label form Django; jangan mengandalkan CSS `text-transform` atau mengubah seluruh nilai dinamis.
+
+Hindari heading monospace dan huruf kapital dengan tracking lebar. Nomor dokumen boleh memakai angka tabular; angka uang dan kuantitas menggunakan `font-variant-numeric: tabular-nums` serta rata kanan.
 
 Nilai IDR ditampilkan konsisten dengan dua desimal. Kuantitas menampilkan maksimal tiga desimal sesuai kebutuhan; unit selalu terlihat. Format tampilan Indonesia tidak mengubah parser input atau nilai kanonik server. Petunjuk input menjelaskan format yang benar-benar diterima. Preview perhitungan pada browser harus diberi label estimasi sampai server mengonfirmasi hasilnya.
 
@@ -129,7 +133,7 @@ Tautan dipakai untuk navigasi; tombol submit untuk perubahan data. Target sentuh
 
 Kelompokkan permintaan menjadi informasi kebutuhan, rincian item, dan ringkasan biaya. Gunakan label terlihat, fieldset/legend untuk kelompok terkait, penanda wajib yang dijelaskan, serta petunjuk di dekat field yang membutuhkan format khusus. Placeholder tidak menggantikan label.
 
-Form invalid mempertahankan input aman. Tampilkan ringkasan error di awal form dengan tautan menuju field bermasalah, disertai pesan pada field dan hubungan `aria-describedby`. Setelah respons invalid, arahkan focus ke ringkasan tanpa mengganggu pengguna pada setiap blur. Field error memakai `aria-invalid`.
+Form invalid mempertahankan input aman. Tampilkan setiap kesalahan sekali di dalam form yang terkait: pesan field berada dekat isian dengan hubungan `aria-describedby`, sedangkan kesalahan umum berada di awal form. Jangan mengulang pesan melalui ringkasan global atau pemberitahuan tambahan di luar form. Tidak ada pemindahan focus otomatis ke error. Field error memakai `aria-invalid`; focus pada kontrol tetap terlihat saat digunakan melalui keyboard.
 
 Tambahkan/hapus baris item menyediakan kontrol berlabel yang menjelaskan baris terkait. Penghapusan baris yang sudah diisi harus dapat ditinjau sebelum disimpan. Tanpa JavaScript, pengguna tetap mempunyai jalur server untuk menambah dan menghapus baris serta menyelesaikan alur inti.
 
@@ -165,13 +169,13 @@ Label status mengikuti pilihan model. Gunakan namespace dokumen agar status deng
 | PO | `PARTIALLY_RECEIVED` | Diterima sebagian | Peringatan |
 | PO | `RECEIVED` | Diterima lengkap | Sukses |
 | PO | `CANCELLED` | Dibatalkan | Netral |
-| PO | `CLOSED_SHORT` | Sisa ditutup | Peringatan |
+| PO | `CLOSED_SHORT` | Selesai dengan kekurangan | Peringatan |
 
 Persetujuan menyebut revisi dan plafon yang berlaku. Rincian PO menampilkan snapshot penerbitan. Perubahan data master vendor tidak boleh mengubah tampilan snapshot historis.
 
 Penerimaan menampilkan jumlah dipesan, diterima kumulatif, ditolak, dan tersisa dengan judul kolom yang jelas. Jumlah ditolak tidak mengurangi sisa. Pada form penerimaan, bedakan jumlah yang dicatat sekarang dari akumulasi sebelumnya. Jasa mempunyai field periode dan hasil pekerjaan sesuai PRD. Penerimaan final tidak menyediakan kontrol edit/hapus.
 
-"Sisa ditutup" menyertakan alasan dan kekurangan yang masih ada. Jangan menampilkannya sebagai "Diterima lengkap" atau kemajuan 100%. Riwayat tetap dapat dibaca setelah penolakan, pembatalan, atau penutupan sesuai izin objek.
+"Selesai dengan kekurangan" menyertakan alasan penutupan dan kekurangan yang masih ada. Jangan menampilkannya sebagai "Diterima lengkap" atau kemajuan 100%. Riwayat tetap dapat dibaca setelah penolakan, pembatalan, atau penutupan sesuai izin objek.
 
 ## 7. Keadaan halaman
 
@@ -181,7 +185,7 @@ Penerimaan menampilkan jumlah dipesan, diterima kumulatif, ditolak, dan tersisa 
 | Antrean kosong | Jelaskan bahwa tidak ada pekerjaan pada antrean tersebut; jangan menampilkan tombol yang tidak sesuai peran. |
 | Filter tanpa hasil | Tampilkan kriteria aktif dan tautan "Hapus filter". |
 | Submit berlangsung | Sebut tindakan yang sedang diproses; pertahankan konteks dokumen. |
-| Validasi gagal | Ringkasan error, pesan per field, dan input aman yang dipertahankan. |
+| Validasi gagal | Pesan di dalam form/field terkait, tanpa pengulangan di atas halaman; input aman dipertahankan. |
 | Data berubah | Jelaskan bahwa versi terbaru berbeda dan sediakan muat ulang; jangan kirim ulang perubahan secara diam-diam. |
 | Kegagalan jaringan | Jika dapat dideteksi, jelaskan bahwa hasil belum dapat dipastikan. Periksa detail sebelum mengulangi tindakan; jangan membuat token baru otomatis. |
 | Akses ditolak | Gunakan respons 403/404 sesuai aturan aplikasi tanpa membocorkan objek yang tidak boleh dibaca. |
@@ -232,3 +236,37 @@ Mulai dengan tiga halaman representatif: antrean kerja, detail permintaan, dan f
 | Cetak | PO satu dan beberapa halaman terbaca, total terlihat, dan navigasi tidak ikut tercetak. |
 
 Catat halaman, peran, viewport, tindakan, hasil aktual, dan masalah yang masih terbuka. Dokumen desain, pemeriksaan token, atau screenshot saja tidak membuktikan seluruh alur sudah bekerja. Pembaruan aturan visual dipusatkan di berkas ini setelah hasil penerapannya ditinjau.
+
+## 11. Hasil penerapan
+
+Antrean, form permintaan, dan detail dokumen menjadi dasar penerapan ke halaman lainnya. Font IBM Plex Sans dimuat dari static/fonts bersama lisensi OFL. Sidebar berubah menjadi menu pada lebar di bawah 64rem; keadaan antara 40rem dan 64rem memakai metadata dua kolom serta navigasi dua kolom saat terbuka. Focus memiliki outline 3px. Form dan tombol memakai tinggi minimum 44px. Tema terang dipertahankan untuk membaca dokumen dan kesinambungan hasil cetak.
+
+Detail permintaan menempatkan nomor, status dan tautan menuju tindakan sebelum rincian. Pada desktop, panel tindakan berada di sebelah kanan. Pada mobile, panel lengkap masih berada setelah rincian/riwayat; pemindahan ringkasan tindakan yang lebih lengkap ke awal dokumen menjadi penyempurnaan terbuka. Urutan visual tidak dibalik melalui CSS agar urutan keyboard tetap mengikuti DOM.
+
+Pemeriksaan browser terakhir, setelah pemformatan template, mencakup 85 halaman pada lima peran, masing-masing pada lebar 320, 390, 640, 768, 1024 dan 1440px. Tidak ditemukan overflow halaman pada sampel tersebut. Pembesaran teks 200%, jalur tanpa JavaScript, focus error, submit berulang, pemulihan Back, dan reduced motion diperiksa secara terpisah. Enam belas pasangan kontras lulus: teks terendah 5,91:1 dan batas kontrol 4,76:1 pada pasangan yang diukur. Ini bukan audit aksesibilitas dengan pembaca layar atau pengujian perangkat fisik.
+
+## 12. Penyempurnaan proporsi dan navigasi
+
+Identitas aplikasi, akun dan navigasi diperkuat agar mudah ditemukan saat bekerja. Brand sidebar memakai 28px, subjudul 16px, header Pengadaan Internal 17px, nama akun 18px, dan tombol Beranda 16px pada ukuran root standar. Brand pada login memakai 32px. Ukuran tetap berbasis rem agar mengikuti pembesaran teks pengguna. Label navigasi dan judul utama memakai kapital pada awal setiap kata; nama akun serta isi dokumen dipertahankan apa adanya.
+
+Sidebar memakai navigation #123B3B dengan teks putih, navigation-muted #D1E1DE dan hover #225252. Permukaan kerja tetap terang. Perbedaan terang/gelap memisahkan navigasi dari pekerjaan dokumen tanpa menambahkan dekorasi atau statistik. Teks putih pada sidebar mempunyai rasio 12,25:1; subjudul 9,06:1. Indikator focus #B8E0D6 mempunyai rasio 8,56:1 terhadap sidebar.
+
+Filter daftar disusun satu kolom pada layar kecil, dua kolom pada ukuran menengah, dan tiga kolom pada desktop. Tombol filter berada dalam satu kelompok di bawah field. Pada lebar 1440px, tinggi filter sekitar 195px sehingga daftar lebih cepat terlihat. Area konten lebih dekat ke navigasi dengan padding desktop 2rem. Login memakai konteks aplikasi dan form dalam dua kolom pada layar lebar, lalu kembali satu kolom di mobile.
+
+Keluar membuka dialog konfirmasi dengan Batal sebagai focus awal. Escape dan Batal menutup dialog serta memulihkan focus. Ya, Keluar mengirim POST dengan CSRF. Tanpa JavaScript, tautan menuju halaman konfirmasi; GET tidak mengakhiri sesi. Peringatan menjelaskan bahwa isian yang belum disimpan dapat hilang.
+
+Pemeriksaan terakhir mencakup 93 halaman/peran pada enam lebar 320 sampai 1440px. Lima halaman admin juga diperiksa pada 1920px; tidak ditemukan overflow pada sampel tersebut. Dialog, pembatalan, focus, konfirmasi dan fallback tanpa JavaScript diuji melalui browser. Tiga regresi baru melengkapi suite menjadi 230 test. Pemeriksaan perangkat fisik dan pembaca layar tetap belum dilakukan.
+
+## 13. Visibilitas password dan error login
+
+Kolom password memakai tombol ikon mata berukuran minimum 44px, dengan label aksesibel yang menyebut kolomnya. Mata dicoret menandakan tindakan menyembunyikan password yang sedang terlihat. Setiap kolom dapat diubah terpisah; tombol tidak melakukan submit. Default, submit, dan pageshow mengembalikan kolom ke keadaan tersembunyi. Tanpa JavaScript, input tetap merupakan password native dan tidak menampilkan tombol yang tidak berfungsi.
+
+Halaman login menampilkan kesalahan autentikasi satu kali dalam form. Seluruh halaman form mengikuti pola yang sama: tidak ada ringkasan error global. Pesan login memakai role alert tanpa pemindahan focus atau outline otomatis. Nilai username dipertahankan dan server tidak merender ulang password.
+
+Seleksi teks memakai latar teal #0F5E5E dan teks putih, termasuk pada input dan textarea, dengan rasio 7,55:1. Form serta kolom login meminta autocomplete off. Browser/password manager dapat mengabaikan permintaan tersebut untuk kredensial tersimpan; aplikasi tidak mengisi nilai password melalui JavaScript atau mengembalikan password dalam HTML setelah kegagalan. Pemeriksaan perilaku autofill perlu membedakan browser uji bersih dari profil pengguna yang mempunyai kredensial tersimpan.
+
+## 14. Lokasi pesan validasi
+
+Pesan validasi hanya berada di dalam form yang menerima input. Kesalahan umum tampil di awal form; kesalahan field tampil dekat isian terkait dengan penanda aria-invalid dan aria-describedby dari Django. Satu kesalahan tidak diulang pada ringkasan global atau pemberitahuan belum disimpan di atas form. Bila beberapa field bermasalah, masing-masing tetap mempunyai pesannya sendiri. Tidak ada pemindahan focus otomatis ke error.
+
+Tautan Muat ulang data dipertahankan di dalam form untuk memulihkan konflik versi atau mengambil token baru. Filter invalid menampilkan pesan di dalam form filter tanpa kartu pesan kedua pada daftar. Pemberitahuan keadaan dokumen yang tidak menyediakan form serta halaman 403/404/500 tetap memakai satu penjelasan kontekstual; jangan membuat form semu hanya untuk menampung pesan tersebut. Aturan ini menggantikan pola ringkasan error pada penerapan awal.

@@ -2,7 +2,9 @@
 
 Aplikasi web internal untuk mengelola pengadaan barang dan jasa dari pengajuan kebutuhan sampai penerimaan pesanan.
 
-Fondasi Django sudah tersedia: akun dengan lima peran, login/logout, halaman akun yang memerlukan autentikasi, konfigurasi environment, dan migrasi SQLite. Schema untuk 14 entitas pengadaan, migrasi awal, parser angka, audit, dan helper token/replay sudah tersedia. Pemohon sudah dapat membuat dan mengubah draft, mengajukan permintaan dengan snapshot revisi, melihat riwayat, serta membatalkan permintaan sebelum ada PO. Approver sudah dapat menyetujui, meminta revisi, atau menolak revisi aktif. Procurement dapat mengembalikan permintaan disetujui untuk revisi sebelum ada PO. Procurement/admin sudah dapat mengelola vendor; procurement dapat mencatat, membandingkan dan memilih penawaran. Procurement sudah dapat menerbitkan satu PO dari penawaran terpilih; daftar/detail dan halaman cetak memakai snapshot pesanan. Penerima sudah dapat mencatat barang/jasa bertahap; approver selain pemohon dapat membatalkan PO atau menutup sisanya. Detail PO menampilkan jumlah pemenuhan dan riwayat penerimaan. Admin sudah dapat membuat akun, mengubah peran/keaktifan, serta mereset password melalui halaman akun. Tampilan masih HTML fungsional; desain antarmuka final belum dikerjakan.
+Pemohon membuat draft dan mengajukan kebutuhan. Approver memutuskan revisi aktif; procurement mencatat penawaran, memilih vendor, dan menerbitkan PO. Penerima mencatat hasil barang atau jasa secara bertahap. Approver selain pemohon dapat membatalkan PO atau menutup sisanya. Snapshot, jumlah pemenuhan, serta riwayat keputusan tetap dapat ditelusuri.
+
+Antarmuka memakai antrean kerja sesuai peran, navigasi responsif, dan rincian dokumen dengan tindakan yang diizinkan. Admin mengelola akun dan vendor. Validasi berjalan di server dengan pesan dalam form yang terkait; form inti tetap dapat dipakai tanpa JavaScript. Keluar memerlukan konfirmasi. Pemeriksaan lokal terakhir lulus 233 test. Instalasi dari checkout bersih dan data demo merupakan pekerjaan berikutnya; deployment belum diverifikasi.
 
 ## Environment
 
@@ -10,7 +12,9 @@ Fondasi Django sudah tersedia: akun dengan lima peran, login/logout, halaman aku
 - Windows PowerShell untuk perintah di bawah.
 - Database lokal dan virtual environment tidak disertakan ke Git.
 
-Tidak ada build frontend pada tahap ini. Semua dependensi Python dipatok pada requirements. Tailwind belum menjadi dependensi.
+Frontend memakai Django templates, CSS dan JavaScript lokal tanpa proses build tersendiri. Font IBM Plex Sans disertakan bersama lisensi OFL. Dependensi Python dipatok pada requirements.
+
+Prettier menjadi tool pengembangan opsional untuk pemformatan frontend. Setelah Node.js/npm tersedia, jalankan `npm ci` pada folder repo. Konfigurasi lokal memuat plugin Django agar format-on-save di VS Code mempertahankan tag template. Extension Prettier memakai paket lokal proyek; percayai workspace bila VS Code meminta izin untuk memuat plugin. `npm run format` merapikan template, CSS dan JavaScript; `npm run format:check` memeriksa konsistensinya. Menjalankan aplikasi Django tidak memerlukan Node.js.
 
 ## Menyiapkan aplikasi
 
@@ -101,21 +105,22 @@ Dokumen analisis tidak menyatakan seluruh fitur sudah tersedia. Pengelolaan akun
 - `config/`: konfigurasi Django dan pengujian environment.
 - `common/`: parser/formatter angka, token aksi, pemeriksaan versi, replay, serta helper form dan respons error.
 - `procurement/`: model data, migrasi, kontrak input, policy, selector, service/form/view permintaan, approval, sourcing dan PO, pemeriksaan kelayakan penawaran, serta pengujian.
-- `templates/`: HTML fungsional login, pengelolaan akun, daftar/form/detail permintaan, antrean persetujuan, snapshot revisi beserta keputusan, vendor, penawaran dan PO.
+- `templates/`: halaman akun, antrean kerja, permintaan, persetujuan, penawaran, PO, penerimaan, serta halaman kegagalan.
+- `static/`: stylesheet, peningkatan form, font lokal dan lisensinya.
 - `docs/`: kebutuhan, proses, rancangan, dan hasil verifikasi.
 - `outputs/`: hasil analisis.
 - `var/`: database lokal yang diabaikan Git.
 - `tmp/`: bukti pemeriksaan lokal yang diabaikan Git.
 
-Buka folder repo langsung melalui Open Folder. [Panduan commit](docs/COMMIT_GUIDE.md) memuat pengelompokan berkas; staging, commit, dan push dilakukan pemilik repository.
+Buka folder repo langsung melalui Open Folder. [Pedoman perubahan](docs/COMMIT_GUIDE.md) menjadi acuan agen saat menyiapkan perubahan; staging, commit, dan push dilakukan pemilik repository.
 
 ## Penerimaan dan penutupan PO
 
 Penerima mencatat barang atau jasa melalui tautan Catat penerimaan pada detail PO terbuka. Form memuat referensi, catatan, jumlah diterima/ditolak per item, dan alasan penolakan. Jasa memerlukan bukti serta periode pelaksanaan yang tidak melewati hari konfirmasi WIB. Penerimaan yang sudah tersimpan hanya dapat dibaca.
 
-Approver selain pemohon dapat mengakhiri PO melalui form pada detail: tanpa accepted menjadi Dibatalkan; sesudah diterima sebagian menjadi Sisa ditutup. Jumlah historis tetap tersimpan. Versi data dan token aksi mencegah posting ganda maupun perubahan yang menimpa aksi bersamaan. Penerimaan lengkap menutup PO untuk pencatatan berikutnya.
+Approver selain pemohon dapat mengakhiri PO melalui form pada detail: tanpa accepted menjadi Dibatalkan; sesudah diterima sebagian menjadi Selesai dengan kekurangan. Jumlah historis tetap tersimpan. Versi data dan token aksi mencegah posting ganda maupun perubahan yang menimpa aksi bersamaan. Penerimaan lengkap menutup PO untuk pencatatan berikutnya.
 
-Pengujian Tahap 8 memakai Django test runner dan database tes SQLite terpisah. Hasil serta batas pemeriksaan tersedia pada [catatan pengujian](docs/TESTING.md). Tracking lintas tahap sudah tersedia. UI final masih mengikuti rencana implementasi.
+Pengujian memakai Django test runner dan database tes SQLite terpisah. Hasil server dan pemeriksaan browser lima peran tersedia pada [catatan pengujian](docs/TESTING.md). Arah visual dan batas pemeriksaan antarmuka tercatat dalam [sistem desain](docs/DESIGN_SYSTEM.md).
 
 ## Tracking pengadaan
 

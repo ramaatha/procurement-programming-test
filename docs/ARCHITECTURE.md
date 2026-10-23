@@ -165,7 +165,7 @@ Daftar memakai paginasi 25 baris dan query dalam scope akses. Gunakan `select_re
 
 ## Batas dan keputusan sebelum coding
 
-Django sudah disepakati. SQLite, struktur modul, protokol aksi, model angka, dan route di atas merupakan rancangan untuk ditinjau. Fondasi autentikasi, model pengadaan, helper angka/transaksi, pengelolaan akun dan pengajuan permintaan sudah tersedia. Keputusan approval dan pengembalian untuk revisi sudah tersedia. Vendor, penawaran dan pemilihan sudah tersedia. Penerbitan PO dan snapshot pesanan sudah tersedia. Implementasi berikutnya menambahkan penerimaan dan penutupan PO. Fitur AI, stok, pembayaran, unggah berkas, frontend terpisah, serta dukungan PostgreSQL belum menjadi pekerjaan versi awal. Rancangan ini belum membuktikan keamanan atau correctness runtime; pengujian pada rencana implementasi menjadi syarat pembuktiannya.
+Django dan SQLite menjadi stack implementasi. Akun, permintaan, approval, sourcing, PO, penerimaan, penutupan, tracking dan audit sudah tersedia. Antarmuka bersama memakai aset lokal serta antrean yang dibatasi menurut peran. Instalasi bersih dan data demo mengikuti Tugas 11. Fitur AI, stok, pembayaran, unggah berkas, frontend terpisah, serta dukungan PostgreSQL berada di luar versi awal. Bukti runtime dan keterbatasan pemeriksaan dicatat pada TESTING.
 
 ## Jalur permintaan yang tersedia
 
@@ -197,7 +197,7 @@ Halaman perbandingan mengikuti scope pembaca request dan memisahkan revisi aktif
 
 Header dan item PO, kenaikan versi request, AuditEvent serta ActionReceipt ditulis bersama pada transaksi IMMEDIATE. Request tetap APPROVED; PO dimulai ISSUED/version 1. Harga, jumlah, unit, nama/kontak vendor, tujuan dan alasan berasal dari data yang divalidasi server. Caller tidak memasok total, status, vendor, item atau issuer pada endpoint penerbitan.
 
-`visible_orders` mengikuti scope parent request. Daftar memakai paginasi 25 baris. Detail dan cetak memakai salinan field PO/item; nama penerbit historis diambil dari audit penerbitan agar perubahan username tidak mengganti identitas pada tampilan dokumen. Status PO tetap merupakan keadaan terkini. Halaman cetak berupa GET dengan stylesheet cetak A4; tidak menyimpan file, memanggil printer, atau mengirim pesan ke vendor. Cetak fisik dan ekspor PDF melalui browser belum diverifikasi.
+`visible_orders` mengikuti scope parent request. Daftar memakai paginasi 25 baris. Detail dan cetak memakai salinan field PO/item; nama penerbit historis diambil dari audit penerbitan agar perubahan username tidak mengganti identitas pada tampilan dokumen. Status PO tetap merupakan keadaan terkini. Halaman cetak berupa GET dengan stylesheet cetak A4; tidak menyimpan file, memanggil printer, atau mengirim pesan ke vendor. Render PDF A4 satu PO diperiksa melalui browser lokal; dialog printer, cetak fisik dan dokumen beberapa halaman belum diperiksa.
 
 ## Tracking dan penyajian riwayat
 
@@ -206,3 +206,13 @@ Selector membatasi akses sebelum pencarian, filter tahap/jenis dan paginasi. Tah
 `order_balances` pada selectors menjadi pemilik perhitungan ordered_milli, accepted_milli, rejected_milli dan remaining_milli per UUID item. Service penerimaan/penutupan dan modul presentasi memakai hasil yang sama. Akumulasi memakai integer Python agar riwayat penolakan tidak melampaui batas SQL SUM SQLite. Modul presentation memformat hasil; stages menyimpan label tahap serta tindakan; template tidak menghitung aturan bisnis.
 
 Halaman daftar memakai views/tracking dan form filter bersama. Pencarian dibatasi 200 karakter, tahap/jenis divalidasi, dan filter invalid menghasilkan 400 dengan daftar kosong. Halaman yang tidak valid memakai pemulihan Paginator.get_page. Daftar dan audit dibagi 25 per halaman dengan urutan stabil. Audit disajikan dari yang paling awal, dengan snapshot nama/peran, waktu WIB, dan alasan yang di-escape.
+
+## Antarmuka dan pemulihan
+
+`procurement/dashboard.py` menyusun antrean delapan dokumen terawal dalam scope pengguna. Pemohon melihat draft/perlu revisi, approver melihat pengajuan selain miliknya, procurement melihat permintaan disetujui yang belum memiliki PO, dan penerima melihat pesanan yang masih terbuka. Admin memakai tautan pengelolaan akun/vendor. Antrean tidak menjadi sumber izin mutasi; service tetap memeriksa aktor dan dokumen saat POST.
+
+Kerangka template memuat CSS, font dan JavaScript lokal. Menu memakai elemen details native; JavaScript menyesuaikan keadaan desktop/mobile serta mengembalikan focus ketika Escape ditekan. Validasi dirender sekali di dalam form yang bermasalah, melalui pesan umum atau pesan per field, tanpa ringkasan global maupun pemindahan focus otomatis. Hubungan aria-invalid/aria-describedby tetap berasal dari form Django. Tautan muat ulang untuk pemulihan konflik berada di dalam form. Handler 400/403/404/500 dan kegagalan CSRF memakai pesan aman serta jalur kembali. Konflik 409 dan database sibuk 503 tetap mengikuti helper HTTP yang ada. Keadaan dokumen yang tidak lagi menyediakan form dapat memakai satu pemberitahuan kontekstual tanpa membuat form semu.
+
+Pemformatan frontend memakai Prettier lokal dengan plugin yang mempertahankan token Django, dikonfigurasi dalam .prettierrc.json. Versi tool dipatok pada package.json dan package-lock.json. Tool ini tidak terlibat dalam startup atau runtime Django. Hindari parser HTML generik tanpa plugin karena pemenggalan tag dapat membuat template gagal dikompilasi atau menampilkan ekspresi variabel sebagai teks.
+
+Peningkatan form menandai submit berlangsung dan menahan pengiriman berikutnya pada halaman yang sama, tanpa menonaktifkan submitter yang membawa intent. Peristiwa pageshow memulihkan keadaan setelah browser Back. Token, versi dan transaksi server tetap menjadi penjaga replay ketika JavaScript mati. Perbandingan membangun rincian setelah paginasi; detail PO dan form penerimaan memuat item secara prefetch. Optimasi pembacaan snapshot saat evaluasi banyak kandidat belum diselesaikan.

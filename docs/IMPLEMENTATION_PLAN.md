@@ -205,26 +205,75 @@ Bukti tahap: [TESTING](TESTING.md). Pencarian/filter berjalan setelah scope akse
 
 **Kontrak:** style yang konsisten untuk form/list/detail; fallback submit tanpa JavaScript; error 400/403/404/409/503/500 seperti ARCHITECTURE. Token/versi tidak hilang saat field invalid. Loading berlaku pada submit atau blok async yang benar-benar ada.
 
-- [ ] Rancang antarmuka transaksi yang mendahulukan pekerjaan tiap peran, tinjau pilihan yang relevan, lalu catat arah yang disepakati. Periksa pedoman kualitas sebelum menulis styling. Jangan membuat chart, logo, statistik, atau menu fitur tambahan hanya untuk dekorasi.
-- [ ] Tulis TC-18 HTTP: field invalid mempertahankan input aman, conflict tidak melakukan mutasi, lock timeout 503 dengan Retry-After, CSRF invalid 403, GET action 405, error tak terduga tidak mengekspos traceback/token. Jalankan `python manage.py test procurement.tests.test_http_errors -v 2` untuk red lalu green setelah implementasi.
-- [ ] Jalankan alur pemohon, approver, procurement, penerima, dan admin pada browser 390/768/1440. Periksa keyboard/focus, label/error form, menu kecil, daftar panjang, item multi-baris, empty state, status terminal, klik ganda, back/reload, dan JavaScript dimatikan.
-- [ ] Simpan tangkapan layar dan catatan pemeriksaan browser di tmp. Periksa tampilan akhir, kontras, overflow, keyboard, dan kontrol pada ukuran layar yang ditetapkan, lalu perbaiki temuan. Catat kontrol yang belum diuji.
-- [ ] Siapkan commit pengguna: `feat: complete role based procurement interface`.
+- [x] Terapkan arah Operations Desk pada antrean, detail dan form, lalu perluas kerangka bersama ke halaman lainnya. Sistem desain mencatat identitas, tema, tipografi dan alasan komposisi.
+- [x] Tambahkan TC-18 untuk input/error summary, management form negatif, scope antrean dan error aman. Regresi 409/503, Retry-After, CSRF dan GET action tetap berjalan dalam suite modul terkait. Suite akhir lulus 227 test.
+- [x] Periksa lima peran pada browser dengan enam lebar, termasuk 390/768/1440. Catat interaksi, tanpa JavaScript, klik berulang, pemulihan Back, focus dan reduced motion. Matriks terakhir mencakup 85 halaman/peran; cabang yang belum diulang melalui klik tetap disebutkan pada TESTING.
+- [x] Periksa screenshot, kontras dan overflow, serta perbaiki temuan menu tanpa JavaScript melalui regresi gagal lalu lulus. Simpan bukti di tmp dan catat batas perangkat/pembaca layar/cetak.
+- [x] Siapkan tiga kelompok perubahan untuk commit pengguna: implementasi antarmuka, pemformatan yang memahami Django, dan dokumentasi. Staging, commit dan push tetap dilakukan pengguna.
 
-## Tugas 11: Instalasi bersih, demo, dan dokumentasi akhir
+Bukti tahap: [TESTING](TESTING.md). Tidak ada migrasi atau paket runtime baru. Comparison rows dibangun setelah paginasi, pembacaan item PO diprefetch, dan label snapshot mengikuti mapping operasional. Dua temuan P3 dari review tetap terbuka: parameter paginasi dua daftar penawaran saling mereset, dan panel tindakan mobile berada setelah rincian panjang. Optimasi query snapshot saat menilai banyak kandidat juga belum selesai. Penyempurnaan tersebut masuk pemeriksaan akhir Tugas 11; hasil lokal ini belum membuktikan deployment atau kapasitas produksi.
+
+## Tugas 11: Instalasi bersih, demo, panduan pengguna, dan dokumentasi akhir
+
+**Status: rancangan, belum dieksekusi.** Penambahan cakupan di bawah hanya menjadi rencana kerja. Akun demo, data contoh, command seed, dan panduan pengguna belum dibuat pada pembaruan ini.
 
 **Kebutuhan:** FR-13 dan regresi seluruh kebutuhan; WBS 6.1 beserta paket pengujian/dokumentasi modul 6; TC-19 dan TC-01 sampai TC-18.
 
-**Berkas:** `management/commands/seed_demo.py`, `tests/test_demo_setup.py`, README, `.env.example`, requirements, `docs/TESTING.md`, serta penyesuaian PRD/proses/BPMN/WBS hanya bila perilaku aktual berubah. File output tetap langsung pada outputs tanpa folder ID sesi.
+**Berkas yang direncanakan:** `procurement/management/commands/seed_demo.py` beserta initializer package yang diperlukan, `procurement/tests/test_demo_setup.py`, `docs/USER_GUIDE.md`, README, `.env.example`, requirements bila diperlukan, dan `docs/TESTING.md`. PRD/proses/BPMN/WBS disesuaikan hanya bila perilaku aktual berubah. File output tetap langsung pada outputs tanpa folder ID sesi. Panduan pengguna direncanakan sebagai Markdown yang ditautkan dari README; ekspor PDF bukan syarat penyelesaian tahap ini.
 
-**Kontrak:** `python manage.py seed_demo` memakai `DEMO_PASSWORD` dari environment untuk akun demo baru. Command tidak menghapus data atau mereset password/transaksi existing. Satu contoh barang dan satu jasa dihasilkan melalui service dengan label sintetis.
+**Kontrak:** `python manage.py seed_demo` memakai `DEMO_PASSWORD` dari environment untuk akun demo baru dan mengikuti validator password aplikasi. Command tidak menghapus data atau mereset password, peran maupun transaksi yang sudah ada. Akun dan dokumen demo mempunyai identitas yang dapat dikenali pada pemanggilan berikutnya. Benturan dengan data yang bukan milik seed dilaporkan tanpa mengambil alih atau menimpanya. Semua transaksi contoh dibuat melalui service dan izin peran yang tersedia, termasuk snapshot, audit, versi dan hasil aksi.
 
-- [ ] Tulis TC-19 seed dua kali tidak menggandakan akun/dokumen, tidak menimpa data existing, dan melaporkan benturan identitas demo dengan aman. Alur barang/jasa dapat dijalankan per role mengikuti README.
+### Akun dan data demo
+
+Sediakan lima akun dengan identitas demo yang jelas:
+
+| Akun rencana | Peran | Tujuan pengujian |
+| --- | --- | --- |
+| `demo_admin` | ADMIN | Pengelolaan akun/vendor dan pembacaan transaksi |
+| `demo_pemohon` | REQUESTER | Draft, pengajuan, revisi dan pembatalan sebelum PO |
+| `demo_approver` | APPROVER | Keputusan atas pengajuan pengguna lain dan penutupan PO |
+| `demo_procurement` | PROCUREMENT | Penawaran, perbandingan, pemilihan vendor dan penerbitan PO |
+| `demo_penerima` | RECEIVER | Penerimaan barang/jasa serta pembacaan hasil pemenuhan |
+
+Password akun baru berasal dari environment, bukan password pribadi atau nilai rahasia dalam repo. Panduan menjelaskan cara menetapkannya saat setup lokal. Bila tersedia demo online, alamat dan kredensial demo yang boleh dibagikan disampaikan oleh pemilik proyek melalui kanal pengumpulan; rencana ini tidak mengizinkan pengiriman pesan atau deployment.
+
+Gunakan database demo terpisah, misalnya melalui `DJANGO_DATA_DIR` yang menunjuk `var/demo`, dan jelaskan pemilihan database itu pada setup. Akun/transaksi kerja yang sudah ada tetap dipertahankan. Siapkan vendor serta penawaran yang diperlukan untuk lima skenario berikut:
+
+| Label skenario | Contoh | Keadaan awal yang bisa dilihat |
+| --- | --- | --- |
+| G-01 | Permintaan barang draft | Bisa diedit dan diajukan oleh pemohon |
+| J-01 | Permintaan jasa disetujui, belum ada PO | Siap dicatat penawarannya oleh procurement |
+| G-02 | PO barang terbit | Tampil di daftar PO dan siap diterima |
+| G-03 | PO barang diterima sebagian | Dipesan 10, diterima 6, ditolak 2, sisa 4; bisa dilanjutkan atau ditutup sesuai peran |
+| J-02 | PO jasa diterima lengkap | Bukti/periode jasa dan riwayat pemenuhan bisa dibaca |
+
+Label skenario membantu panduan mengenali contoh; nomor dokumen tetap dihasilkan aplikasi. Command melaporkan akun dan nomor dokumen yang tersedia tanpa mencetak password/token. Tanggal contoh mengikuti hari WIB saat pembuatan agar skenario aktif dapat diuji. Pemanggilan ulang tidak mengubah snapshot atau mengembalikan transaksi yang telah dilanjutkan pengguna ke keadaan awal. Jelaskan bila contoh lama sudah berpindah tahap atau penawarannya kedaluwarsa; pengulangan dari awal dilakukan pada database demo baru, bukan dengan penghapusan otomatis.
+
+### Panduan pengguna dan pengujian recruiter
+
+`docs/USER_GUIDE.md` ditujukan kepada pembaca yang belum mengetahui struktur aplikasi. Bedakan dua jalur berikut:
+
+1. **Melihat contoh:** login sesuai peran, buka Permintaan Pengadaan/PO, cari nomor contoh, periksa detail, snapshot, pemenuhan dan riwayat, lalu buka cetak PO. Jelaskan bahwa admin dapat membaca transaksi tetapi tidak membuat permintaan atau menjalankan aksi operasional peran lain.
+2. **Mencoba dari awal:** pemohon membuat dan mengajukan permintaan; approver memberi keputusan; procurement mencatat serta memilih penawaran dan menerbitkan PO; penerima mencatat barang/jasa; pengguna memeriksa perubahan tahap dan jumlah. Sediakan cabang revisi/penolakan dan penutupan sisa beserta batas perannya.
+
+Setiap skenario menyebut akun/peran, prasyarat, menu/tombol, contoh input sintetis, hasil yang diharapkan dan cara memeriksa hasilnya. Sertakan alur barang dan jasa, kasus field wajib kosong, akses yang ditolak, serta pembedaan jumlah ditolak dari sisa pesanan. Contoh uji negatif harus menyebut pesan/status yang diharapkan tanpa menyarankan bypass izin atau validator.
+
+Panduan juga menjelaskan login/logout, pemilihan database, pencarian/filter, daftar kosong, perpindahan akun, arti status, dan password manager browser. Satu jendela browser memakai satu sesi aktif; gunakan logout/login atau profil browser terpisah saat menguji beberapa peran. Jelaskan cara mengulangi demo tanpa merusak data yang sudah ada. Tambahkan screenshot seperlunya setelah tampilan serta data demo final diverifikasi. README menjadi pintu masuk untuk setup dan tautan panduan, sedangkan bukti teknis tetap berada pada TESTING.
+
+### Urutan pekerjaan dan kriteria penerimaan
+
+- [ ] Selesaikan tindak lanjut antarmuka: paginasi dua daftar penawaran, akses tindakan pada detail mobile panjang, serta pembacaan snapshot kandidat. Lengkapi pemeriksaan cetak beberapa halaman dan cabang interaksi yang belum diulang di browser.
+- [ ] Tulis TC-19: seed dua kali tidak menggandakan akun/dokumen/audit, tidak menimpa data existing, tidak mereset password/peran, dan melaporkan benturan identitas demo dengan aman. Password hilang/tidak valid ditolak sebelum mutasi. Transaksi yang sudah dilanjutkan pengguna tidak dikembalikan ke keadaan awal.
+- [ ] Implementasikan lima akun serta lima skenario melalui service. Verifikasi scope daftar/detail, keputusan, snapshot, accepted/rejected/remaining, status dan audit. Pastikan minimal satu permintaan dan satu PO terlihat setelah login sebagai admin pada database demo.
 - [ ] Uji dari virtualenv dan database kosong yang terpisah dari data kerja: install requirements, isi environment, migrate, seed, check, test, runserver. Semua perintah README harus sudah dijalankan pada lingkungan ini sebelum dinyatakan valid.
+- [ ] Susun USER_GUIDE dan tautkan dari README. Jalankan kedua jalur pengujian dari panduan pada browser menggunakan akun demo, tanpa command internal untuk menggantikan tindakan pengguna. Catat nomor contoh, langkah, hasil aktual dan batas yang belum diuji; perbaiki panduan bila berbeda dari UI.
+- [ ] Uji satu alur barang dan satu jasa dari awal sampai hasil pemenuhan sesuai panduan. Pastikan pergantian peran/sesi, kasus invalid, cabang revisi/penolakan dan penutupan sisa menghasilkan perilaku yang dijelaskan. Sampel siap lihat harus tetap dapat dikenali meskipun contoh lain telah dipakai untuk uji mutasi.
 - [ ] Jalankan `python manage.py check`, `python manage.py makemigrations --check --dry-run`, dan `python manage.py test -v 2`. Periksa migrasi/model, seluruh suite termasuk file-backed concurrency, serta output error/warning. Jangan memakai `--parallel` untuk suite concurrency SQLite yang dirancang dua koneksi sendiri.
 - [ ] Catat versi, perintah, hasil, dan batas yang belum teruji pada TESTING. Periksa setelan non-debug secara terpisah; deployment atau production tidak dinyatakan teruji tanpa pelaksanaannya.
 - [ ] Cocokkan fitur aktual dengan FR/BP/GW/WBS/TC. Perbarui status fitur hanya dengan bukti. OPT-01 tetap Ditunda. Periksa PDF/XLSX, tautan repo, serta file yang akan di-stage; email dan Git tetap dilakukan pengguna.
-- [ ] Siapkan commit pengguna: `docs: add verified setup demo and testing guide`; pisahkan perubahan kode seed sebagai `feat: add repeatable procurement demo data` jika reviewer perlu menilai terpisah.
+- [ ] Siapkan pengelompokan commit pengguna: kode seed/pengujian sebagai `feat: add repeatable procurement demo data`; panduan dan bukti sebagai `docs: add verified setup demo and user guide`. Laporkan daftar berkas aktual setelah implementasi; jangan memperlakukan daftar berkas rencana sebagai perubahan yang sudah tersedia.
+
+Tahap ini selesai setelah setup bersih dapat dijalankan, data demo aman untuk dibuat ulang, kedua jalur pengujian dapat diikuti, dan hasilnya tercatat. URL publik hanya dicantumkan bila deployment benar-benar tersedia dan teruji; menjalankan demo lokal tidak membuktikan deployment. Seluruh checklist di atas tetap belum selesai sampai implementasi serta verifikasinya diinstruksikan dan dijalankan.
 
 ## Urutan dan bukti kemajuan
 
@@ -249,4 +298,4 @@ Tugas 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11. Pengujian server me
 
 Setelah satu tugas, laporkan perubahan, perintah/hasil pengujian, batas yang belum diuji, dan file untuk commit pengguna. Kegagalan test atau kontrak harus diselesaikan sebelum memperluas fitur. Kekurangan waktu dilaporkan; kebutuhan wajib tidak dihapus diam-diam.
 
-Tugas 1 sampai 9 sudah diverifikasi pada server dan HTTP. Langkah berikutnya adalah Tugas 10: UI per peran, aksesibilitas, dan penanganan kegagalan. Pemeriksaan browser Tahap 8 tetap perlu dilakukan bersama pengujian UI menyeluruh. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.
+Tugas 1 sampai 10 sudah mempunyai bukti implementasi dan pemeriksaan lokal pada TESTING, termasuk revisi antarmuka setelah tahap UI. Langkah berikutnya adalah Tugas 11, yang masih berupa rancangan. Akun/data demo dan panduan penggunanya belum tersedia. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.

@@ -5,7 +5,7 @@
 - Gunakan Python dan Django. Rancangan awal memakai Django templates, CSS/JavaScript lokal, dan SQLite.
 - Ikuti cakupan pada [PRD](docs/PRD.md) dan transisi pada [proses bisnis](docs/BUSINESS_PROCESS.md).
 - Baca [arsitektur](docs/ARCHITECTURE.md), [model data](docs/DATA_MODEL.md), dan [rencana implementasi](docs/IMPLEMENTATION_PLAN.md) sebelum mengubah fitur terkait.
-- Django sudah dipilih. Fondasi akun/autentikasi serta schema pengadaan dan helper transaksi tersedia dan teruji. Pengelolaan akun admin, akses per objek permintaan, draft, pengajuan dengan snapshot revisi, serta pembatalan sebelum PO sudah tersedia. Antrean dan keputusan approval serta pengembalian untuk revisi sudah tersedia. Vendor, penawaran, perbandingan dan pemilihan sudah tersedia. Penerbitan PO, snapshot, daftar/detail dan halaman cetak sudah tersedia. Penerimaan barang/jasa, detail final, serta pembatalan dan penutupan sisa PO sudah tersedia. Tracking, pencarian/filter, ringkasan pemenuhan dan riwayat berhalaman sudah tersedia. UI final mengikuti Tugas 10. Jangan menyamakan rancangan dengan fitur yang sudah dibangun atau teruji.
+- Django sudah dipilih. Akun, permintaan, approval, sourcing, PO, penerimaan, penutupan, tracking dan audit sudah tersedia. Antarmuka responsif serta antrean per peran sudah diterapkan pada Tugas 10, kemudian diperbarui proporsi/navigasinya dan ditambahkan konfirmasi logout. Kolom password mempunyai kontrol visibilitas; pesan validasi tampil sekali di dalam form/field terkait pada seluruh alur. Bukti lokal mencakup 233 test dan pemeriksaan browser lima peran; batasnya ada pada TESTING. Tugas 11 masih berupa rancangan dan belum diizinkan untuk dieksekusi. Jangan menyamakan hasil lokal dengan deployment atau validasi produksi.
 
 ## Implementasi
 
@@ -26,6 +26,7 @@
 - Gunakan [sistem desain](docs/DESIGN_SYSTEM.md) untuk arah visual, token, komponen, responsive, dan pemeriksaan antarmuka.
 - Catat arah visual sebelum styling. Periksa form, navigasi, aksesibilitas, responsive, dan keadaan gagal/sukses pada alur yang bekerja.
 - Perbarui dokumen pemilik ketika keputusan berubah. Hindari duplikasi dan berkas yang tidak mempunyai fungsi proyek.
+- Pemformatan frontend memakai konfigurasi Prettier lokal dan plugin Django pada package.json. Jalankan npm run format:check sesudah mengubah template, CSS atau JavaScript. Pertahankan tag Django utuh dalam satu baris; parser HTML generik tanpa plugin dapat memecah tag dan merusak render. Tool Node ini hanya untuk pengembangan, bukan runtime aplikasi.
 
 ## Cara bekerja dan pelaporan
 
