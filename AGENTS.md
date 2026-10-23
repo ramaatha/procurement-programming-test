@@ -5,7 +5,7 @@
 - Gunakan Python dan Django. Rancangan awal memakai Django templates, CSS/JavaScript lokal, dan SQLite.
 - Ikuti cakupan pada [PRD](docs/PRD.md) dan transisi pada [proses bisnis](docs/BUSINESS_PROCESS.md).
 - Baca [arsitektur](docs/ARCHITECTURE.md), [model data](docs/DATA_MODEL.md), dan [rencana implementasi](docs/IMPLEMENTATION_PLAN.md) sebelum mengubah fitur terkait.
-- Django sudah dipilih. Fondasi akun/autentikasi serta schema pengadaan dan helper transaksi tersedia dan teruji. Pengelolaan akun admin, akses per objek permintaan, draft, pengajuan dengan snapshot revisi, serta pembatalan sebelum PO sudah tersedia. Antrean dan keputusan approval serta pengembalian untuk revisi sudah tersedia. Vendor, penawaran, perbandingan dan pemilihan sudah tersedia. Penerbitan PO, snapshot, daftar/detail dan halaman cetak sudah tersedia. Penerimaan dan penutupan PO belum diimplementasikan. Jangan menyamakan rancangan dengan fitur yang sudah dibangun atau teruji.
+- Django sudah dipilih. Fondasi akun/autentikasi serta schema pengadaan dan helper transaksi tersedia dan teruji. Pengelolaan akun admin, akses per objek permintaan, draft, pengajuan dengan snapshot revisi, serta pembatalan sebelum PO sudah tersedia. Antrean dan keputusan approval serta pengembalian untuk revisi sudah tersedia. Vendor, penawaran, perbandingan dan pemilihan sudah tersedia. Penerbitan PO, snapshot, daftar/detail dan halaman cetak sudah tersedia. Penerimaan barang/jasa, detail final, serta pembatalan dan penutupan sisa PO sudah tersedia. Tracking lintas tahap dan UI final mengikuti tugas berikutnya. Jangan menyamakan rancangan dengan fitur yang sudah dibangun atau teruji.
 
 ## Implementasi
 

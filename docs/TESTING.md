@@ -149,3 +149,21 @@ Browser memakai `var/order-browser-check`: procurement menerbitkan PO IDR 80,00 
 Database akhir berisi satu PO ISSUED, satu item, request APPROVED dengan versi 6, delapan audit dan delapan receipt termasuk enam aksi persiapan serta satu edit vendor setelah penerbitan. Vendor saat ini nonaktif, tetapi snapshot PO tetap memuat nama/kontak awal. Akun sintetis tidak ada dalam database kerja; server dihentikan setelah pemeriksaan. Console hanya mencatat favicon 404. Halaman cetak dibuka di browser; dialog printer, hasil cetak fisik, pagination kertas dan ekspor PDF belum diverifikasi.
 
 Review independen tidak menemukan defect penting pada jalur aplikasi berdasarkan kode dan log suite 179 test. Catatan batas join harness diselesaikan melalui RED ke GREEN dan suite akhir 180 test; tidak ada review putaran kedua. UI final, deployment, PostgreSQL dan performa produksi belum dinilai.
+
+## Penerimaan barang/jasa dan penutupan PO
+
+Tahap 8 menambahkan 25 test sehingga suite berisi 205 test. Tiga belas test service awal terlebih dahulu gagal karena fitur belum tersedia. Empat test HTTP gagal karena route dan konteks form belum tersedia. Dua test race terlebih dahulu gagal karena worker belum mengenali aksi penerimaan/penutupan, lalu lulus setelah integrasi. Pemeriksaan tambahan mencakup multi-item, CSRF, akses per objek, versi lama, respons sibuk, dan batas agregat penolakan.
+
+Skenario barang ordered 10, accepted 6/rejected 2 menghasilkan sisa 4; accepted 4 berikutnya menghasilkan RECEIVED. Penolakan saja mempertahankan ISSUED. Nol seluruhnya, negatif, presisi berlebih, item asing/duplikat, accepted berlebih, alasan penolakan kosong, serta referensi/catatan kosong ditolak. PO dua item tetap PARTIALLY_RECEIVED setelah satu item selesai; baris kedua yang invalid membatalkan seluruh posting. Hanya setelah kedua item diterima penuh status menjadi RECEIVED.
+
+Jasa memerlukan jenis bukti dan periode awal <= akhir <= hari konfirmasi WIB. Waktu konfirmasi berasal dari server. Unit mengikuti snapshot PO tanpa mutasi stok. Receipt tidak mempunyai route edit/hapus. Kegagalan audit membatalkan receipt, baris, versi/status PO, dan penanda replay. Penutupan juga rollback bila audit gagal.
+
+Replay memakai payload yang dikanonisasi: angka 6 dan 6.000 menghasilkan receipt yang sama untuk nonce yang sama; perubahan payload konflik. Peran dan akun aktif diperiksa ulang sebelum replay. Approver yang menjadi pemohon melalui perubahan peran tetap tidak dapat menutup PO miliknya. Penutupan accepted nol menghasilkan CANCELLED; setelah partial menghasilkan CLOSED_SHORT dan tetap menyimpan sisa. PO terminal menolak posting baru.
+
+Tes HTTP memeriksa redirect 303, input invalid tetap tersimpan, management form negatif, token invalid, GET pada aksi penutupan 405, objek pemohon lain 404, detail receipt bagi pemilik, CSRF dengan enforce_csrf_checks, konflik 409, serta database terkunci 503 dengan Retry-After. Detail PO menampilkan sisa dan riwayat penerimaan.
+
+Dua koneksi SQLite dalam subprocess berdeadline membuktikan dua receipt accepted 6 pada ordered 10 dengan versi sama menghasilkan satu sukses/satu konflik. Nonce sama menghasilkan dua hasil sukses dengan hanya satu receipt. Close melawan receive pada versi sama tidak dapat keduanya berhasil. Tes membaca jumlah, versi, dan status yang tersimpan setelah worker berakhir.
+
+Review independen menemukan total rejected historis dapat melampaui int64 walaupun setiap baris valid. Regresi memperlihatkan masalah tersebut; formatter agregat kini menerima total integer Python tanpa menambah batas bisnis pada riwayat. Dua rejection-only maksimum per baris tetap dapat ditampilkan pada detail PO dan form penerimaan. Tes ini lulus setelah perbaikan.
+
+Pemeriksaan ini mencakup service dan respons HTML melalui test client. Interaksi browser, tampilan 390/768/1440, keyboard, dan keseluruhan UI Tahap 8 belum diuji di browser. Tidak ada migrasi, dependency, data produksi, atau pengiriman PO ke pihak luar. Penerapan visual mengikuti sistem desain pada tahap UI.

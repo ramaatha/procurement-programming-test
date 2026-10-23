@@ -2,7 +2,7 @@
 
 Aplikasi web internal untuk mengelola pengadaan barang dan jasa dari pengajuan kebutuhan sampai penerimaan pesanan.
 
-Fondasi Django sudah tersedia: akun dengan lima peran, login/logout, halaman akun yang memerlukan autentikasi, konfigurasi environment, dan migrasi SQLite. Schema untuk 14 entitas pengadaan, migrasi awal, parser angka, audit, dan helper token/replay sudah tersedia. Pemohon sudah dapat membuat dan mengubah draft, mengajukan permintaan dengan snapshot revisi, melihat riwayat, serta membatalkan permintaan sebelum ada PO. Approver sudah dapat menyetujui, meminta revisi, atau menolak revisi aktif. Procurement dapat mengembalikan permintaan disetujui untuk revisi sebelum ada PO. Procurement/admin sudah dapat mengelola vendor; procurement dapat mencatat, membandingkan dan memilih penawaran. Procurement sudah dapat menerbitkan satu PO dari penawaran terpilih; daftar/detail dan halaman cetak memakai snapshot pesanan. Penerimaan serta penutupan PO belum diimplementasikan. Admin sudah dapat membuat akun, mengubah peran/keaktifan, serta mereset password melalui halaman akun. Tampilan masih HTML fungsional; desain antarmuka final belum dikerjakan.
+Fondasi Django sudah tersedia: akun dengan lima peran, login/logout, halaman akun yang memerlukan autentikasi, konfigurasi environment, dan migrasi SQLite. Schema untuk 14 entitas pengadaan, migrasi awal, parser angka, audit, dan helper token/replay sudah tersedia. Pemohon sudah dapat membuat dan mengubah draft, mengajukan permintaan dengan snapshot revisi, melihat riwayat, serta membatalkan permintaan sebelum ada PO. Approver sudah dapat menyetujui, meminta revisi, atau menolak revisi aktif. Procurement dapat mengembalikan permintaan disetujui untuk revisi sebelum ada PO. Procurement/admin sudah dapat mengelola vendor; procurement dapat mencatat, membandingkan dan memilih penawaran. Procurement sudah dapat menerbitkan satu PO dari penawaran terpilih; daftar/detail dan halaman cetak memakai snapshot pesanan. Penerima sudah dapat mencatat barang/jasa bertahap; approver selain pemohon dapat membatalkan PO atau menutup sisanya. Detail PO menampilkan jumlah pemenuhan dan riwayat penerimaan. Admin sudah dapat membuat akun, mengubah peran/keaktifan, serta mereset password melalui halaman akun. Tampilan masih HTML fungsional; desain antarmuka final belum dikerjakan.
 
 ## Environment
 
@@ -108,3 +108,11 @@ Dokumen analisis tidak menyatakan seluruh fitur sudah tersedia. Pengelolaan akun
 - `tmp/`: bukti pemeriksaan lokal yang diabaikan Git.
 
 Buka folder repo langsung melalui Open Folder. [Panduan commit](docs/COMMIT_GUIDE.md) memuat pengelompokan berkas; staging, commit, dan push dilakukan pemilik repository.
+
+## Penerimaan dan penutupan PO
+
+Penerima mencatat barang atau jasa melalui tautan Catat penerimaan pada detail PO terbuka. Form memuat referensi, catatan, jumlah diterima/ditolak per item, dan alasan penolakan. Jasa memerlukan bukti serta periode pelaksanaan yang tidak melewati hari konfirmasi WIB. Penerimaan yang sudah tersimpan hanya dapat dibaca.
+
+Approver selain pemohon dapat mengakhiri PO melalui form pada detail: tanpa accepted menjadi Dibatalkan; sesudah diterima sebagian menjadi Sisa ditutup. Jumlah historis tetap tersimpan. Versi data dan token aksi mencegah posting ganda maupun perubahan yang menimpa aksi bersamaan. Penerimaan lengkap menutup PO untuk pencatatan berikutnya.
+
+Pengujian Tahap 8 memakai Django test runner dan database tes SQLite terpisah. Hasil serta batas pemeriksaan tersedia pada [catatan pengujian](docs/TESTING.md). Tracking lintas tahap dan UI final masih mengikuti rencana implementasi.

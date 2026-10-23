@@ -28,27 +28,27 @@ Status: Tugas 1 sampai 7 selesai untuk fondasi, schema, akun, permintaan, approv
 
 ## Fokus review lintas tugas
 
-| Kasus | Perilaku yang harus terbukti | Pemilik |
-| --- | --- | --- |
-| Dua tab memakai versi lama atau satu token dengan payload berbeda | 409, tidak menimpa perubahan atau menggandakan hasil | Tugas 2, 4, 5, 7, 8 |
-| Role berubah setelah form dibuka atau pemohon menjadi approver | Izin dibaca ulang; self-approval/penutupan sendiri tetap ditolak | Tugas 3 dan 5 |
-| Nilai dengan tiga desimal qty, half-cent, NaN, eksponen, atau overflow | Hasil half-up konsisten; input invalid ditolak sebelum penyimpanan | Tugas 2, 4, 6, 8 |
-| Dua penulis menyentuh PO/sisa yang sama atau pembatalan melawan penerbitan | Satu hasil valid pada versi tersebut, rollback utuh untuk aksi lain | Tugas 7 dan 8 |
-| Submit gagal, JavaScript mati, atau layar kecil | Input aman tetap tersedia; alur dapat dilanjutkan; tidak ada tindakan palsu | Tugas 10 dan 11 |
+| Kasus                                                                      | Perilaku yang harus terbukti                                                | Pemilik             |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------- |
+| Dua tab memakai versi lama atau satu token dengan payload berbeda          | 409, tidak menimpa perubahan atau menggandakan hasil                        | Tugas 2, 4, 5, 7, 8 |
+| Role berubah setelah form dibuka atau pemohon menjadi approver             | Izin dibaca ulang; self-approval/penutupan sendiri tetap ditolak            | Tugas 3 dan 5       |
+| Nilai dengan tiga desimal qty, half-cent, NaN, eksponen, atau overflow     | Hasil half-up konsisten; input invalid ditolak sebelum penyimpanan          | Tugas 2, 4, 6, 8    |
+| Dua penulis menyentuh PO/sisa yang sama atau pembatalan melawan penerbitan | Satu hasil valid pada versi tersebut, rollback utuh untuk aksi lain         | Tugas 7 dan 8       |
+| Submit gagal, JavaScript mati, atau layar kecil                            | Input aman tetap tersedia; alur dapat dilanjutkan; tidak ada tindakan palsu | Tugas 10 dan 11     |
 
 ## Struktur dan kontrak bersama
 
 File produksi mengikuti ARCHITECTURE. Setiap package mempunyai `__init__.py`; model dan fungsi publik diekspor secara eksplisit. `procurement/inputs.py` mendefinisikan frozen dataclass berikut sebelum service memakainya:
 
-| Tipe | Field dan makna |
-| --- | --- |
-| `ActionContext` di `common/actions.py` | `actor_id: int`, `nonce: UUID`, `expected_version: int \| None`; view menetapkan actor dari session dan memverifikasi scope token |
-| `RequestLineInput` | `name: str`, `unit: str`, `quantity: str`, `unit_price: str` |
-| `DraftInput` | `kind: str`, `title: str`, `reason: str`, `destination: str`, `needed_on: date \| None`, `items: tuple[RequestLineInput, ...]` |
-| `QuoteLineInput` | `revision_item_id: UUID`, `unit_price: str` |
-| `QuotationInput` | `vendor_id: UUID`, `reference: str`, `quoted_on: date`, `valid_until: date`, `fulfillment_days: int`, `items: tuple[QuoteLineInput, ...]` |
-| `ReceiptLineInput` | `order_item_id: UUID`, `accepted: str`, `rejected: str`, `rejection_reason: str` |
-| `ReceiptInput` | `reference: str`, `notes: str`, `evidence_type: str`, `service_started_on: date \| None`, `service_ended_on: date \| None`, `items: tuple[ReceiptLineInput, ...]` |
+| Tipe                                   | Field dan makna                                                                                                                                                   |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ActionContext` di `common/actions.py` | `actor_id: int`, `nonce: UUID`, `expected_version: int \| None`; view menetapkan actor dari session dan memverifikasi scope token                                 |
+| `RequestLineInput`                     | `name: str`, `unit: str`, `quantity: str`, `unit_price: str`                                                                                                      |
+| `DraftInput`                           | `kind: str`, `title: str`, `reason: str`, `destination: str`, `needed_on: date \| None`, `items: tuple[RequestLineInput, ...]`                                    |
+| `QuoteLineInput`                       | `revision_item_id: UUID`, `unit_price: str`                                                                                                                       |
+| `QuotationInput`                       | `vendor_id: UUID`, `reference: str`, `quoted_on: date`, `valid_until: date`, `fulfillment_days: int`, `items: tuple[QuoteLineInput, ...]`                         |
+| `ReceiptLineInput`                     | `order_item_id: UUID`, `accepted: str`, `rejected: str`, `rejection_reason: str`                                                                                  |
+| `ReceiptInput`                         | `reference: str`, `notes: str`, `evidence_type: str`, `service_started_on: date \| None`, `service_ended_on: date \| None`, `items: tuple[ReceiptLineInput, ...]` |
 
 Seluruh service mengembalikan instance model hasil yang sudah commit. Conflict memakai `common.errors.ConflictError`; validasi memakai Django `ValidationError` berisi field/non-field errors; otorisasi memakai `PermissionDenied`. Mapping HTTP mengikuti ARCHITECTURE. Tidak ada fungsi service yang menerima status/total/pemilik langsung dari browser.
 
@@ -173,12 +173,14 @@ Bukti tahap: [TESTING](TESTING.md). Sebanyak 21 test baru mencakup service/HTTP,
 
 **Kontrak:** `post_receipt(ctx: ActionContext, *, order_id: UUID, data: ReceiptInput) -> Receipt`; `close_order(ctx: ActionContext, *, order_id: UUID, reason: str) -> PurchaseOrder`. Keduanya memakai versi PO. Close menentukan CANCELLED/CLOSED_SHORT dari accepted, tidak menerima target status dari browser.
 
-- [ ] TC-12/TC-13: ordered 10; accepted 6/rejected 2 menyisakan 4; accepted 4 berikutnya menyelesaikan PO. Uji rejected saja tetap ISSUED, alasan penolakan wajib, receipt seluruh nol ditolak, baris negatif/asing/duplikat/accepted berlebih menggagalkan seluruh posting.
-- [ ] TC-14: jasa memakai unit pesanan, bukti dan periode wajib, awal <= akhir <= hari konfirmasi WIB. Tidak ada mutasi stok atau persentase tambahan. Konfirmasi waktu berasal dari server.
-- [ ] TC-16: approver selain pemohon membatalkan accepted nol, atau menutup sisa setelah partial; remaining historis tidak menjadi nol. Status terminal menolak receipt/edit/penutupan kedua.
-- [ ] Tulis concurrency TC-13/TC-16: dua receipt accepted 6 untuk ordered 10 dengan versi sama, replay token sama, serta close vs receive. Gunakan SQLite file dan koneksi terpisah. Fault injection audit harus mengembalikan jumlah receipt/item/status/version ke nilai sebelum transaksi.
-- [ ] Jalankan `python manage.py test procurement.tests.test_receipts procurement.tests.test_services_receipts procurement.tests.test_closure procurement.tests.test_receipt_concurrency -v 2` untuk red, implementasikan, lalu green. Test receipt bukan sekadar mock selector; baca jumlah/status database yang sudah commit.
-- [ ] Siapkan commit pengguna: `feat: add goods services receipts and order closure`.
+- [x] TC-12/TC-13: ordered 10; accepted 6/rejected 2 menyisakan 4; accepted 4 berikutnya menyelesaikan PO. Uji rejected saja tetap ISSUED, alasan penolakan wajib, receipt seluruh nol ditolak, baris negatif/asing/duplikat/accepted berlebih menggagalkan seluruh posting.
+- [x] TC-14: jasa memakai unit pesanan, bukti dan periode wajib, awal <= akhir <= hari konfirmasi WIB. Tidak ada mutasi stok atau persentase tambahan. Konfirmasi waktu berasal dari server.
+- [x] TC-16: approver selain pemohon membatalkan accepted nol, atau menutup sisa setelah partial; remaining historis tidak menjadi nol. Status terminal menolak receipt/edit/penutupan kedua.
+- [x] Tulis concurrency TC-13/TC-16: dua receipt accepted 6 untuk ordered 10 dengan versi sama, replay token sama, serta close vs receive. Gunakan SQLite file dan koneksi terpisah. Fault injection audit harus mengembalikan jumlah receipt/item/status/version ke nilai sebelum transaksi.
+- [x] Jalankan `python manage.py test procurement.tests.test_receipts procurement.tests.test_services_receipts procurement.tests.test_closure procurement.tests.test_receipt_concurrency -v 2` untuk red, implementasikan, lalu green. Test receipt bukan sekadar mock selector; baca jumlah/status database yang sudah commit.
+- [x] Siapkan commit pengguna: `feat: add goods services receipts and order closure`.
+
+Bukti tahap: [TESTING](TESTING.md). Service dan HTTP mencakup barang/jasa, pemenuhan bertahap, penutupan, replay, rollback, multi-item dan dua koneksi SQLite terpisah. Pemformatan agregat penolakan historis diperiksa dengan nilai melampaui batas satu baris. Pemeriksaan browser dan UI final belum dilakukan pada tahap ini. Tidak ada migrasi atau dependency baru.
 
 ## Tugas 9: Tracking, query, dan audit yang dapat ditelusuri
 
@@ -224,25 +226,25 @@ Bukti tahap: [TESTING](TESTING.md). Sebanyak 21 test baru mencakup service/HTTP,
 
 ## Urutan dan bukti kemajuan
 
-| Paket WBS | Tugas / keadaan |
-| --- | --- |
-| 1.1, 1.2 | BPMN/WBS sudah tersedia; pemeriksaan ulang pada tugas 11 |
-| 1.3 | PRD/proses baseline; perbarui hanya jika kebutuhan berubah |
-| 1.4, 1.5 | Rancangan pada tiga dokumen ini; realisasi dan pembuktian pada tugas 1-2 |
-| 1.6 | Tugas 10 |
-| 2.1 | Tugas 1 dan 3 |
-| 2.2, 2.4 | Tugas 4 |
-| 2.3 | Tugas 5 |
-| 3.1, 3.2, 3.3 | Tugas 6, dengan revisi persetujuan pada tugas 5 |
-| 3.4, 3.5 | Tugas 7 |
-| 4.1, 4.2, 4.3, 4.4 | Tugas 8; pembatalan sebelum PO pada tugas 4 |
-| 5.1 | Tugas 9 |
-| 5.2, 5.3 | Tugas 10; HTTP/form dasar diuji pada tugas masing-masing |
-| 6.1, 6.2, 6.3, 6.4 | Tugas 11; keamanan dan pengujian juga melekat pada tugas 1-10 |
-| 7.1 | Ditunda, tidak menjadi bagian implementasi wajib |
+| Paket WBS          | Tugas / keadaan                                                          |
+| ------------------ | ------------------------------------------------------------------------ |
+| 1.1, 1.2           | BPMN/WBS sudah tersedia; pemeriksaan ulang pada tugas 11                 |
+| 1.3                | PRD/proses baseline; perbarui hanya jika kebutuhan berubah               |
+| 1.4, 1.5           | Rancangan pada tiga dokumen ini; realisasi dan pembuktian pada tugas 1-2 |
+| 1.6                | Tugas 10                                                                 |
+| 2.1                | Tugas 1 dan 3                                                            |
+| 2.2, 2.4           | Tugas 4                                                                  |
+| 2.3                | Tugas 5                                                                  |
+| 3.1, 3.2, 3.3      | Tugas 6, dengan revisi persetujuan pada tugas 5                          |
+| 3.4, 3.5           | Tugas 7                                                                  |
+| 4.1, 4.2, 4.3, 4.4 | Tugas 8; pembatalan sebelum PO pada tugas 4                              |
+| 5.1                | Tugas 9                                                                  |
+| 5.2, 5.3           | Tugas 10; HTTP/form dasar diuji pada tugas masing-masing                 |
+| 6.1, 6.2, 6.3, 6.4 | Tugas 11; keamanan dan pengujian juga melekat pada tugas 1-10            |
+| 7.1                | Ditunda, tidak menjadi bagian implementasi wajib                         |
 
 Tugas 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11. Pengujian server mengikuti setiap tugas; pemeriksaan browser alur lengkap dan visual dilakukan pada tahap UI, lalu regresi pada setup bersih. Tidak perlu membuat seluruh schema/UI sekaligus tanpa hasil uji antara.
 
 Setelah satu tugas, laporkan perubahan, perintah/hasil pengujian, batas yang belum diuji, dan file untuk commit pengguna. Kegagalan test atau kontrak harus diselesaikan sebelum memperluas fitur. Kekurangan waktu dilaporkan; kebutuhan wajib tidak dihapus diam-diam.
 
-Tugas 1 sampai 7 sudah diverifikasi. Langkah berikutnya adalah Tugas 8: penerimaan dan penutupan PO. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.
+Tugas 1 sampai 8 sudah diverifikasi pada server dan HTTP. Langkah berikutnya adalah Tugas 9: tracking, query, dan riwayat. Pemeriksaan browser Tahap 8 tetap perlu dilakukan bersama pengujian UI menyeluruh. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.
