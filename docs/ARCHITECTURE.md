@@ -22,7 +22,7 @@ Django dengan frontend terpisah membutuhkan kontrak API, pengelolaan state, dan 
 
 ## Pembagian modul dan file
 
-Struktur berikut adalah target implementasi. Konfigurasi Django, akun, template dasar, 14 model Procurement beserta migrasi, parser angka, serta helper token/replay sudah tersedia. Service akun dan permintaan, policy objek permintaan, serta halaman draft/detail/revisi sudah tersedia. Antrean dan keputusan approval serta pengembalian untuk revisi juga sudah tersedia. Vendor, penawaran dan pemilihan juga sudah tersedia. Penerbitan PO, daftar/detail dan halaman cetak juga tersedia. Penerimaan barang/jasa dan penutupan PO sudah tersedia. Tracking lintas tahap mengikuti tugas berikutnya.
+Struktur berikut adalah target implementasi. Konfigurasi Django, akun, template dasar, 14 model Procurement beserta migrasi, parser angka, serta helper token/replay sudah tersedia. Service akun dan permintaan, policy objek permintaan, serta halaman draft/detail/revisi sudah tersedia. Antrean dan keputusan approval serta pengembalian untuk revisi juga sudah tersedia. Vendor, penawaran dan pemilihan juga sudah tersedia. Penerbitan PO, daftar/detail dan halaman cetak juga tersedia. Penerimaan barang/jasa dan penutupan PO sudah tersedia. Tracking lintas tahap, pencarian/filter dan riwayat berhalaman sudah tersedia.
 
 ```text
 manage.py
@@ -198,3 +198,11 @@ Halaman perbandingan mengikuti scope pembaca request dan memisahkan revisi aktif
 Header dan item PO, kenaikan versi request, AuditEvent serta ActionReceipt ditulis bersama pada transaksi IMMEDIATE. Request tetap APPROVED; PO dimulai ISSUED/version 1. Harga, jumlah, unit, nama/kontak vendor, tujuan dan alasan berasal dari data yang divalidasi server. Caller tidak memasok total, status, vendor, item atau issuer pada endpoint penerbitan.
 
 `visible_orders` mengikuti scope parent request. Daftar memakai paginasi 25 baris. Detail dan cetak memakai salinan field PO/item; nama penerbit historis diambil dari audit penerbitan agar perubahan username tidak mengganti identitas pada tampilan dokumen. Status PO tetap merupakan keadaan terkini. Halaman cetak berupa GET dengan stylesheet cetak A4; tidak menyimpan file, memanggil printer, atau mengirim pesan ke vendor. Cetak fisik dan ekspor PDF melalui browser belum diverifikasi.
+
+## Tracking dan penyajian riwayat
+
+Selector membatasi akses sebelum pencarian, filter tahap/jenis dan paginasi. Tahap operasional memakai status PO jika sudah ada, atau status permintaan jika belum ada PO. CLOSED_SHORT ditampilkan sebagai Selesai dengan kekurangan; status permintaan asal dan sisa setiap item tetap tersedia.
+
+`order_balances` pada selectors menjadi pemilik perhitungan ordered_milli, accepted_milli, rejected_milli dan remaining_milli per UUID item. Service penerimaan/penutupan dan modul presentasi memakai hasil yang sama. Akumulasi memakai integer Python agar riwayat penolakan tidak melampaui batas SQL SUM SQLite. Modul presentation memformat hasil; stages menyimpan label tahap serta tindakan; template tidak menghitung aturan bisnis.
+
+Halaman daftar memakai views/tracking dan form filter bersama. Pencarian dibatasi 200 karakter, tahap/jenis divalidasi, dan filter invalid menghasilkan 400 dengan daftar kosong. Halaman yang tidak valid memakai pemulihan Paginator.get_page. Daftar dan audit dibagi 25 per halaman dengan urutan stabil. Audit disajikan dari yang paling awal, dengan snapshot nama/peran, waktu WIB, dan alasan yang di-escape.

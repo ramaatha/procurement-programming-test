@@ -115,4 +115,10 @@ Penerima mencatat barang atau jasa melalui tautan Catat penerimaan pada detail P
 
 Approver selain pemohon dapat mengakhiri PO melalui form pada detail: tanpa accepted menjadi Dibatalkan; sesudah diterima sebagian menjadi Sisa ditutup. Jumlah historis tetap tersimpan. Versi data dan token aksi mencegah posting ganda maupun perubahan yang menimpa aksi bersamaan. Penerimaan lengkap menutup PO untuk pencatatan berikutnya.
 
-Pengujian Tahap 8 memakai Django test runner dan database tes SQLite terpisah. Hasil serta batas pemeriksaan tersedia pada [catatan pengujian](docs/TESTING.md). Tracking lintas tahap dan UI final masih mengikuti rencana implementasi.
+Pengujian Tahap 8 memakai Django test runner dan database tes SQLite terpisah. Hasil serta batas pemeriksaan tersedia pada [catatan pengujian](docs/TESTING.md). Tracking lintas tahap sudah tersedia. UI final masih mengikuti rencana implementasi.
+
+## Tracking pengadaan
+
+Daftar permintaan dan PO menyediakan pencarian nomor/judul serta filter jenis dan tahap. Nomor permintaan asal juga dapat dicari dari daftar PO. Filter tetap tersimpan saat berpindah halaman. Detail permintaan dan PO menampilkan tahap operasional, jumlah pemenuhan, serta riwayat pengadaan berhalaman. Penutupan sisa dibedakan dari penerimaan lengkap dan tetap menampilkan kekurangannya.
+
+Pemohon hanya membaca permintaan miliknya. Penerima membaca permintaan yang sudah mempunyai PO, termasuk PO berstatus akhir. Filter tidak memperluas akses akun. Rincian pengujian terdapat pada [catatan pengujian](docs/TESTING.md).

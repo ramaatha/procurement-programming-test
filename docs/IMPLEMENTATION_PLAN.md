@@ -190,16 +190,18 @@ Bukti tahap: [TESTING](TESTING.md). Service dan HTTP mencakup barang/jasa, pemen
 
 **Kontrak:** `operational_stage(request: PurchaseRequest) -> str`, `order_balances(order: PurchaseOrder) -> dict[UUID, dict[str, int]]` dengan key `ordered_milli/accepted_milli/rejected_milli/remaining_milli`; `visible_orders(actor: User) -> QuerySet[PurchaseOrder]`. Labels Indonesia berasal dari mapping status tunggal.
 
-- [ ] Tulis TC-17 pencarian nomor/judul, gabungan filter jenis/tahap, pagination 25, input filter invalid, audit kronologis, dan tidak bocor data lintas pemohon. Penerima bisa membaca PO terminal, tetapi tidak request pra-PO.
-- [ ] Assert request APPROVED dengan PO CLOSED_SHORT ditampilkan sebagai selesai dengan kekurangan, remaining tetap ada, dan tidak dilabeli penerimaan lengkap. Header/detail memakai sumber jumlah sama.
-- [ ] Jalankan `python manage.py test procurement.tests.test_tracking -v 2` untuk red, implementasikan, lalu green. Periksa query relasi dengan data multi-item; gunakan prefetch tanpa menetapkan klaim performa yang belum diukur.
-- [ ] Siapkan commit pengguna: `feat: add procurement tracking and audit history`.
+- [x] Tulis TC-17 pencarian nomor/judul, gabungan filter jenis/tahap, pagination 25, input filter invalid, audit kronologis, dan tidak bocor data lintas pemohon. Penerima bisa membaca PO terminal, tetapi tidak request pra-PO.
+- [x] Assert request APPROVED dengan PO CLOSED_SHORT ditampilkan sebagai selesai dengan kekurangan, remaining tetap ada, dan tidak dilabeli penerimaan lengkap. Header/detail memakai sumber jumlah sama.
+- [x] Jalankan `python manage.py test procurement.tests.test_tracking -v 2` untuk red, implementasikan, lalu green. Periksa query relasi dengan data multi-item; gunakan prefetch tanpa menetapkan klaim performa yang belum diukur.
+- [x] Siapkan commit pengguna: `feat: add procurement tracking and audit history`.
+
+Bukti tahap: [TESTING](TESTING.md). Pencarian/filter berjalan setelah scope akses, daftar/audit memakai paginasi 25, dan label serta perhitungan dipusatkan. Validasi server/HTTP tersedia; browser dan UI final tetap pada tugas 10. Tidak ada migrasi atau dependency baru.
 
 ## Tugas 10: UI per peran, aksesibilitas, dan penanganan kegagalan
 
 **Kebutuhan:** FR-12 serta permukaan UI FR-01 sampai FR-11; WBS 1.6, 5.2; TC-18.
 
-**Berkas:** `static/css/app.css`, `static/js/forms.js`, template seluruh alur, error handler di config/views terkait, `tests/test_http_errors.py`, `docs/design_system.md`, dan bukti browser dalam tmp. Dokumen desain dibuat setelah arah visual ditinjau, tidak berdasarkan asumsi bahwa warna/font sudah disepakati.
+**Berkas:** `static/css/app.css`, `static/js/forms.js`, template seluruh alur, error handler di config/views terkait, `tests/test_http_errors.py`, `docs/DESIGN_SYSTEM.md`, dan bukti browser dalam tmp. Dokumen desain dibuat setelah arah visual ditinjau, tidak berdasarkan asumsi bahwa warna/font sudah disepakati.
 
 **Kontrak:** style yang konsisten untuk form/list/detail; fallback submit tanpa JavaScript; error 400/403/404/409/503/500 seperti ARCHITECTURE. Token/versi tidak hilang saat field invalid. Loading berlaku pada submit atau blok async yang benar-benar ada.
 
@@ -247,4 +249,4 @@ Tugas 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11. Pengujian server me
 
 Setelah satu tugas, laporkan perubahan, perintah/hasil pengujian, batas yang belum diuji, dan file untuk commit pengguna. Kegagalan test atau kontrak harus diselesaikan sebelum memperluas fitur. Kekurangan waktu dilaporkan; kebutuhan wajib tidak dihapus diam-diam.
 
-Tugas 1 sampai 8 sudah diverifikasi pada server dan HTTP. Langkah berikutnya adalah Tugas 9: tracking, query, dan riwayat. Pemeriksaan browser Tahap 8 tetap perlu dilakukan bersama pengujian UI menyeluruh. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.
+Tugas 1 sampai 9 sudah diverifikasi pada server dan HTTP. Langkah berikutnya adalah Tugas 10: UI per peran, aksesibilitas, dan penanganan kegagalan. Pemeriksaan browser Tahap 8 tetap perlu dilakukan bersama pengujian UI menyeluruh. Rancangan fitur berikutnya belum menjadi bukti implementasi; checklist berubah setelah pekerjaan dan verifikasinya dijalankan.

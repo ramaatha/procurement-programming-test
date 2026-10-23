@@ -167,3 +167,19 @@ Dua koneksi SQLite dalam subprocess berdeadline membuktikan dua receipt accepted
 Review independen menemukan total rejected historis dapat melampaui int64 walaupun setiap baris valid. Regresi memperlihatkan masalah tersebut; formatter agregat kini menerima total integer Python tanpa menambah batas bisnis pada riwayat. Dua rejection-only maksimum per baris tetap dapat ditampilkan pada detail PO dan form penerimaan. Tes ini lulus setelah perbaikan.
 
 Pemeriksaan ini mencakup service dan respons HTML melalui test client. Interaksi browser, tampilan 390/768/1440, keyboard, dan keseluruhan UI Tahap 8 belum diuji di browser. Tidak ada migrasi, dependency, data produksi, atau pengiriman PO ke pihak luar. Penerapan visual mengikuti sistem desain pada tahap UI.
+
+## Tracking, pencarian, filter dan audit
+
+Tahap 9 menambahkan 16 test tracking. Pengujian awal menemukan delapan kegagalan dan satu error karena kontrak tahap/balance, filter dan konteks riwayat belum tersedia; dua pengujian perilaku lama tetap lulus. Fixture status terminal kemudian disesuaikan agar menyertakan metadata penutupan yang diwajibkan constraint. Hasil tes fitur lulus setelah implementasi.
+
+Pencarian nomor/judul diuji bersama jenis dan tahap untuk barang/jasa. Daftar PO juga mencari nomor permintaan asal. Kind/stage yang tidak dikenal dan pencarian terlalu panjang menghasilkan 400 tanpa mengembalikan daftar luas. Input HTML dan pola mirip SQL diperlakukan sebagai teks; HTML form/riwayat tetap di-escape. Daftar permintaan dan PO berisi 26 objek diuji pada dua halaman yang tidak beririsan, dengan filter dipertahankan pada tautan. Halaman invalid mempunyai pemulihan yang dapat diprediksi.
+
+Scope tetap membatasi pemohon ke objek miliknya. Penerima tidak dapat membaca permintaan pra-PO dan tetap dapat membaca PO terminal. GET tracking tidak menambah audit atau baris penerimaan. Login diperlukan dan daftar menolak POST. Semua tahap request pra-PO serta tahap PO diperiksa terhadap selector operasional.
+
+PO ordered 10 dengan accepted 6/rejected 2 yang ditutup tetap mempunyai remaining 4. Detail permintaan dan PO sama-sama menampilkan Selesai dengan kekurangan tanpa label Diterima lengkap. Service penerimaan dan penutupan memakai selector balance yang sama dengan presentasi; suite sebelumnya tetap menguji multi-item, rollback, replay dan race.
+
+Audit diuji kronologis dan berhalaman, memakai nama historis meskipun username kini berubah. Alasan berisi HTML tidak dieksekusi. Pemindaian tahap tiga request ber-PO memerlukan maksimal dua query; perhitungan balance juga maksimal dua query pada riwayat tiga receipt. Pemeriksaan ini membatasi pola query pada fixture, tanpa klaim kapasitas produksi.
+
+Pemeriksaan browser, tampilan mobile, keyboard, dan layout final belum dilakukan pada tahap ini. Tidak ada migrasi atau dependency baru. Bukti server/HTTP tidak menggantikan pemeriksaan UI menyeluruh pada Tugas 10.
+
+Suite akhir Tahap 9 lulus 221 test. Setelah ekstraksi formatter, regresi penuh menangkap import format_quantity yang masih diperlukan detail penerimaan; import dipulihkan dan seluruh suite diulang hingga lulus. Pemeriksaan migrasi tidak mendeteksi perubahan. Review independen tidak menemukan cacat P0-P2 berdasarkan source/diff. Dua penyempurnaan P3 dicatat untuk Tugas 10: prefetch item agar pembacaan snapshot/balance tidak berulang, dan penyelarasan label status PO pada snapshot/cetak dengan tahap operasional. Pembacaan item saat ini merupakan overhead tetap, bukan query tambahan per item. Reviewer tidak menjalankan suite database atau browser.
