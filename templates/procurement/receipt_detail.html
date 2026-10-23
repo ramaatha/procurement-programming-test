@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Detail penerimaan | Procurement{% endblock %}
+{% block content %}
+<p><a href="{% url 'procurement:order_detail' receipt.order_id %}">Kembali ke PO</a></p>
+<h1>{{ receipt.number }}</h1>
+<p>PO: {{ receipt.order.number }}</p>
+<p>Referensi: {{ receipt.reference }} · Bukti: {{ receipt.get_evidence_type_display }}</p>
+<p>Dikonfirmasi: {{ receipt.confirmed_at|date:"d-m-Y H:i" }} WIB</p>
+{% if receipt.service_started_on %}<p>Periode jasa: {{ receipt.service_started_on }} sampai {{ receipt.service_ended_on }}</p>{% endif %}
+<p>{{ receipt.notes|linebreaksbr }}</p>
+{% for line in lines %}<section><h2>{{ line.item.name }}</h2>
+<p>Diterima: {{ line.accepted }} {{ line.item.unit }} · Ditolak: {{ line.rejected }} {{ line.item.unit }}</p>
+{% if line.reason %}<p>Alasan penolakan: {{ line.reason }}</p>{% endif %}</section>{% endfor %}
+<p>Penerimaan sudah final dan tidak dapat diubah atau dihapus.</p>
+{% endblock %}

@@ -3,9 +3,13 @@ from django.urls import path
 from procurement.views import requests
 from procurement.views import sourcing
 from procurement.views import orders
+from procurement.views import receipts
 
 app_name='procurement'
 urlpatterns=[
+    path('orders/<uuid:order_id>/receipts/new/',receipts.receipt_create,name='receipt_create'),
+    path('receipts/<uuid:receipt_id>/',receipts.receipt_detail,name='receipt_detail'),
+    path('orders/<uuid:order_id>/close/',receipts.order_close,name='order_close'),
     path('orders/',orders.order_list,name='order_list'),
     path('orders/<uuid:order_id>/',orders.order_detail,name='order_detail'),
     path('orders/<uuid:order_id>/print/',orders.order_print,name='order_print'),

@@ -64,3 +64,35 @@ def issue_order(ctx: ActionContext, *, request_id: UUID) -> PurchaseOrder:
                                                 status=order.status,order_number=order.number,total=format_money(order.total_minor)))
         record_action(ctx,action='order.issue',target_type='REQUEST',target_key=str(target.pk),digest=digest,result=order)
         return order
+
+
+def close_order(ctx: ActionContext, *, order_id: UUID, reason: str) -> PurchaseOrder:
+    from procurement.policies import require_request_reviewer
+    from procurement.selectors import visible_orders
+    from procurement.services.receipts import advance_order, order_balances, require_open
+    from procurement.models import OrderStatus
+
+    with transaction.atomic():
+        actor = active_actor(ctx.actor_id)
+        from accounts.models import Role
+        from django.core.exceptions import PermissionDenied
+        if actor.role != Role.APPROVER:
+            raise PermissionDenied
+        order = get_object_or_404(visible_orders(actor),pk=order_id)
+        require_request_reviewer(actor,order.request)
+        reason = _text(reason,4000,'Alasan penutupan',required=True)
+        digest = payload_hash(dict(reason=reason,expected_version=ctx.expected_version))
+        replay = find_replay(ctx,action='order.close',target_type='ORDER',target_key=str(order.pk),digest=digest)
+        if replay is not None:
+            return resolve_result(replay)
+        check_version(order,ctx.expected_version)
+        require_open(order)
+        order.status = OrderStatus.CLOSED_SHORT if any(row['accepted'] for row in order_balances(order)) else OrderStatus.CANCELLED
+        order.closed_by,order.closed_at,order.closed_reason = actor,timezone.now(),reason
+        advance_order(order)
+        order.save(update_fields=['status','version','closed_by','closed_at','closed_reason','updated_at'])
+        AuditEvent.objects.create(request=order.request,actor=actor,actor_name=actor.username,actor_role=actor.role,
+                                  action='order.close',target_type='ORDER',target_id=str(order.pk),reason=reason,
+                                  changes=dict(status=order.status,order_version=order.version))
+        record_action(ctx,action='order.close',target_type='ORDER',target_key=str(order.pk),digest=digest,result=order)
+        return order

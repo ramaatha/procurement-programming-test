@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Catat penerimaan | Procurement{% endblock %}
+{% block content %}
+<p><a href="{% url 'procurement:order_detail' order.pk %}">Kembali ke PO</a></p>
+<h1>Catat penerimaan</h1>
+<p>{{ order.number }} · {{ order.get_kind_display }}</p>
+<p>Isi jumlah yang diterima atau ditolak sekarang. Jumlah ditolak tidak mengurangi sisa pesanan. Catatan yang sudah disimpan tidak dapat diedit.</p>
+<form method="post">{% csrf_token %}
+{{ form.as_p }}
+{{ formset.management_form }}{{ formset.non_form_errors }}
+{% for line, balance in line_forms %}
+<fieldset><legend>{% if balance %}{{ balance.item.name }} ({{ balance.item.unit }}){% else %}Item tidak sesuai PO{% endif %}</legend>
+{% if balance %}<p>Dipesan: {{ balance.ordered }} · Diterima sebelumnya: {{ balance.accepted }} · Sisa: {{ balance.remaining }}</p>{% endif %}
+{{ line.as_p }}</fieldset>
+{% endfor %}
+<button type="submit">Simpan penerimaan final</button>
+</form>
+{% endblock %}

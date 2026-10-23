@@ -1,0 +1,2 @@
+{% extends "base.html" %}
+{% block content %}<h1>PO sudah berakhir</h1><p>Penerimaan baru tidak dapat dicatat.</p><a href="{% url 'procurement:order_detail' order.pk %}">Kembali ke PO</a>{% endblock %}

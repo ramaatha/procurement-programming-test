@@ -40,6 +40,14 @@ def _run(database, jobs, output):
                     requests.cancel_request(ctx,request_id=UUID(job['request_id']),reason='Batal')
                 elif job['action']=='deactivate':
                     sourcing.save_vendor(ctx,vendor_id=UUID(job['vendor_id']),name='Nama baru',contact='Kontak baru',is_active=False)
+                elif job['action']=='receipt':
+                    from procurement.models import PurchaseOrder
+                    from procurement.services.receipts import post_receipt
+                    from procurement.tests.receipt_fixtures import receipt_data
+                    order = PurchaseOrder.objects.get(pk=UUID(job['order_id']))
+                    post_receipt(ctx,order_id=order.pk,data=receipt_data(order,'6','0',''))
+                elif job['action']=='close':
+                    orders.close_order(ctx,order_id=UUID(job['order_id']),reason='Tidak dilanjutkan')
                 else:
                     raise ValueError('Unknown test action')
                 return 'ok'
