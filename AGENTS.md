@@ -23,6 +23,7 @@
 - Ikuti [pedoman kualitas](docs/QUALITY_GUIDELINES.md) untuk kode, keamanan, data, antarmuka, dan bahasa.
 - Dokumentasi hanya menjelaskan produk, keputusan teknis, prosedur kerja, dan hasil verifikasi.
 - Pertahankan aturan bisnis, ID kebutuhan/pengujian, nama field, status, dan kontrak saat menyunting gaya.
+- Gunakan [sistem desain](docs/DESIGN_SYSTEM.md) untuk arah visual, token, komponen, responsive, dan pemeriksaan antarmuka.
 - Catat arah visual sebelum styling. Periksa form, navigasi, aksesibilitas, responsive, dan keadaan gagal/sukses pada alur yang bekerja.
 - Perbarui dokumen pemilik ketika keputusan berubah. Hindari duplikasi dan berkas yang tidak mempunyai fungsi proyek.
 

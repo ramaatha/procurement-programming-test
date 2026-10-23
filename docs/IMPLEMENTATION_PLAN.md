@@ -197,7 +197,7 @@ Bukti tahap: [TESTING](TESTING.md). Sebanyak 21 test baru mencakup service/HTTP,
 
 **Kebutuhan:** FR-12 serta permukaan UI FR-01 sampai FR-11; WBS 1.6, 5.2; TC-18.
 
-**Berkas:** `static/css/app.css`, `static/js/forms.js`, template seluruh alur, error handler di config/views terkait, `tests/test_http_errors.py`, `docs/DESIGN_SYSTEM.md`, dan bukti browser dalam tmp. Dokumen desain dibuat setelah arah visual ditinjau, tidak berdasarkan asumsi bahwa warna/font sudah disepakati.
+**Berkas:** `static/css/app.css`, `static/js/forms.js`, template seluruh alur, error handler di config/views terkait, `tests/test_http_errors.py`, `docs/design_system.md`, dan bukti browser dalam tmp. Dokumen desain dibuat setelah arah visual ditinjau, tidak berdasarkan asumsi bahwa warna/font sudah disepakati.
 
 **Kontrak:** style yang konsisten untuk form/list/detail; fallback submit tanpa JavaScript; error 400/403/404/409/503/500 seperti ARCHITECTURE. Token/versi tidak hilang saat field invalid. Loading berlaku pada submit atau blok async yang benar-benar ada.
 
