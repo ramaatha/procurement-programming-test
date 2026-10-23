@@ -1,0 +1,5 @@
+<form method="get" aria-label="Pencarian dan filter pengadaan">
+  {{ filter_form.as_p }}
+  <button type="submit">Terapkan pencarian dan filter</button>
+  {% if has_filters %}<a href="{{ request.path }}">Hapus filter</a>{% endif %}
+</form>

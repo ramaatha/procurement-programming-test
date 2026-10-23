@@ -68,8 +68,8 @@ def issue_order(ctx: ActionContext, *, request_id: UUID) -> PurchaseOrder:
 
 def close_order(ctx: ActionContext, *, order_id: UUID, reason: str) -> PurchaseOrder:
     from procurement.policies import require_request_reviewer
-    from procurement.selectors import visible_orders
-    from procurement.services.receipts import advance_order, order_balances, require_open
+    from procurement.selectors import order_balances, visible_orders
+    from procurement.services.receipts import advance_order, require_open
     from procurement.models import OrderStatus
 
     with transaction.atomic():
@@ -87,7 +87,7 @@ def close_order(ctx: ActionContext, *, order_id: UUID, reason: str) -> PurchaseO
             return resolve_result(replay)
         check_version(order,ctx.expected_version)
         require_open(order)
-        order.status = OrderStatus.CLOSED_SHORT if any(row['accepted'] for row in order_balances(order)) else OrderStatus.CANCELLED
+        order.status = OrderStatus.CLOSED_SHORT if any(row['accepted_milli'] for row in order_balances(order).values()) else OrderStatus.CANCELLED
         order.closed_by,order.closed_at,order.closed_reason = actor,timezone.now(),reason
         advance_order(order)
         order.save(update_fields=['status','version','closed_by','closed_at','closed_reason','updated_at'])

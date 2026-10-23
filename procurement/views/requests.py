@@ -19,6 +19,7 @@ from procurement.models import ApprovalDecision,Decision,PurchaseOrder,RequestSt
 from procurement.policies import active_actor,require_procurement,require_request_owner,require_request_reviewer
 from procurement.selectors import approval_queue,visible_requests
 from procurement.services.requests import cancel_request,save_draft,submit_request,review_request,request_revision as return_for_revision
+from procurement.views.tracking import audit_context, request_list
 
 
 def _visible(request,request_id):
@@ -67,19 +68,11 @@ def _render_detail(request,target,*,submit_form=None,cancel_form=None,review_for
             and ApprovalDecision.objects.filter(revision=active_revision,decision=Decision.APPROVE).exists()):
         revision_form = RevisionForm(initial=_initial_action(request,target,'request.revision'))
     rows=_rows(target.items.all())
-    labels={'request.create':'Draft dibuat','request.edit':'Draft diperbarui','request.submit':'Permintaan diajukan','request.cancel':'Permintaan dibatalkan','request.revision':'Dikembalikan untuk revisi','order.issue':'PO diterbitkan'}
-    decisions={'APPROVE':'Disetujui','REQUEST_CHANGES':'Diminta revisi','REJECT':'Ditolak'}
-    events=[dict(label=decisions.get(event.changes.get('decision'),'Keputusan review') if event.action=='request.review' else labels.get(event.action,'Perubahan permintaan'),actor=event.actor_name,time=event.created_at,reason=event.reason) for event in target.audit_events.order_by('-created_at','-pk')]
-    response=render(request,'procurement/request_detail.html',dict(target=target,rows=rows,total_minor=document_total(row['line_total_minor'] for row in rows),editable=editable,submit_form=submit_form,cancel_form=cancel_form,review_form=review_form,revision_form=revision_form,active_revision=active_revision,revisions=target.revisions.select_related('approval__actor').order_by('-number'),events=events,message=message,**order_context),status=status)
+    from procurement.presentation import balance_rows
+    balances = balance_rows(order_context['existing_order']) if order_context['existing_order'] else []
+    response=render(request,'procurement/request_detail.html',dict(target=target,rows=rows,total_minor=document_total(row['line_total_minor'] for row in rows),editable=editable,submit_form=submit_form,cancel_form=cancel_form,review_form=review_form,revision_form=revision_form,active_revision=active_revision,revisions=target.revisions.select_related('approval__actor').order_by('-number'),balances=balances,message=message,**audit_context(target,request.GET),**order_context),status=status)
     if status==503:response['Retry-After']='1'
     return response
-
-
-@login_required
-@require_safe
-def request_list(request):
-    page=Paginator(visible_requests(request.user).order_by('-created_at','-pk'),25).get_page(request.GET.get('page'))
-    return render(request,'procurement/request_list.html',dict(page_obj=page))
 
 
 @login_required

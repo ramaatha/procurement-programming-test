@@ -14,18 +14,8 @@ from common.numbers import MAX_INT64, parse_quantity
 from procurement.inputs import ReceiptInput, ReceiptLineInput
 from procurement.models import AuditEvent, EvidenceType, Kind, OrderStatus, PurchaseOrder, Receipt, ReceiptItem
 from procurement.policies import active_actor
-from procurement.selectors import visible_orders
+from procurement.selectors import order_balances, visible_orders
 from procurement.services.requests import _text
-
-
-def order_balances(order: PurchaseOrder) -> list[dict]:
-    rows = list(order.items.order_by('position','pk'))
-    totals = {row.pk: [0,0] for row in rows}
-    for item_id, accepted, rejected in ReceiptItem.objects.filter(receipt__order=order).values_list('order_item_id','accepted_milli','rejected_milli'):
-        totals[item_id][0] += accepted
-        totals[item_id][1] += rejected
-    return [dict(item=row,accepted=totals[row.pk][0],rejected=totals[row.pk][1],
-                 remaining=row.qty_milli-totals[row.pk][0]) for row in rows]
 
 
 def require_open(order: PurchaseOrder) -> None:
@@ -88,17 +78,17 @@ def post_receipt(ctx: ActionContext, *, order_id: UUID, data: ReceiptInput) -> R
                 raise ValidationError('Barang memakai bukti surat jalan tanpa periode jasa.')
         elif header['evidence_type'] not in (EvidenceType.SERVICE_REPORT,EvidenceType.SERVICE_ACCEPTANCE) or start is None or end is None or not start <= end <= timezone.localdate(now):
             raise ValidationError('Isi bukti jasa dan periode awal sampai akhir yang tidak melewati hari konfirmasi.')
-        balances = {row['item'].pk:row for row in order_balances(order)}
+        balances = order_balances(order)
         for row in rows:
             balance = balances.get(row['order_item_id'])
-            if balance is None or row['accepted_milli'] > balance['remaining']:
+            if balance is None or row['accepted_milli'] > balance['remaining_milli']:
                 raise ValidationError('Item tidak sesuai PO atau jumlah diterima melebihi sisa pesanan.')
         receipt = Receipt.objects.create(order=order,kind=order.kind,confirmed_by=actor,confirmed_at=now,**header)
         ReceiptItem.objects.bulk_create([ReceiptItem(receipt=receipt,**row) for row in rows
                                         if row['accepted_milli'] or row['rejected_milli']])
         accepted_now = {row['order_item_id']:row['accepted_milli'] for row in rows}
-        remaining = [balance['remaining']-accepted_now.get(key,0) for key,balance in balances.items()]
-        any_accepted = any(balance['accepted'] or accepted_now.get(key,0) for key,balance in balances.items())
+        remaining = [balance['remaining_milli']-accepted_now.get(key,0) for key,balance in balances.items()]
+        any_accepted = any(balance['accepted_milli'] or accepted_now.get(key,0) for key,balance in balances.items())
         order.status = OrderStatus.RECEIVED if all(value==0 for value in remaining) else (
             OrderStatus.PARTIALLY_RECEIVED if any_accepted else OrderStatus.ISSUED)
         advance_order(order)

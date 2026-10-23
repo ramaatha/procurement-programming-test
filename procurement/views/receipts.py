@@ -16,29 +16,25 @@ from procurement.forms.receipts import CloseOrderForm, ReceiptForm, ReceiptLineF
 from procurement.models import OrderStatus, Receipt
 from procurement.policies import active_actor, require_request_reviewer
 from procurement.selectors import visible_orders
+from procurement.presentation import balance_rows
 from procurement.services.orders import close_order
-from procurement.services.receipts import order_balances, post_receipt, require_open
+from procurement.services.receipts import post_receipt, require_open
 
 
 def _scope(request,order,action):
     return dict(actor_id=request.user.pk,target_type='ORDER',target_key=str(order.pk),action=action)
 
 
-def balance_rows(order):
-    # Historical rejections can exceed the int64 bound of a single stored line.
-    return [row | {key:format_quantity(row[key]) for key in ('accepted','remaining')}
-            | dict(ordered=format_quantity(row['item'].qty_milli),
-                   rejected=f"{row['rejected']//1000}.{row['rejected']%1000:03d}") for row in order_balances(order)]
-
-
 def order_receipt_context(request,order,*,close_form=None):
+    from procurement.views.tracking import audit_context
     actor = active_actor(request.user.pk)
     open_order = order.status in (OrderStatus.ISSUED,OrderStatus.PARTIALLY_RECEIVED)
     can_close = open_order and actor.role == Role.APPROVER and order.request.requester_id != actor.pk
     if can_close and close_form is None:
         close_form = CloseOrderForm(initial=dict(action_token=make_action_token(**_scope(request,order,'order.close')),expected_version=order.version))
     return dict(balances=balance_rows(order),receipts=order.receipts.order_by('confirmed_at','pk'),
-                can_receive=open_order and actor.role==Role.RECEIVER,close_form=close_form if can_close or close_form is not None else None)
+                can_receive=open_order and actor.role==Role.RECEIVER,close_form=close_form if can_close or close_form is not None else None,
+                **audit_context(order.request,request.GET))
 
 
 @sensitive_post_parameters('action_token','csrfmiddlewaretoken')

@@ -1,10 +1,11 @@
 {% extends "base.html" %}
-{% load procurement_numbers %}
+{% load procurement_numbers procurement_display %}
 {% comment %}filepath: templates/procurement/request_detail.html{% endcomment %}
 {% block title %}Detail permintaan | Procurement{% endblock %}
 {% block content %}
   <nav aria-label="Navigasi permintaan"><a href="{% url 'procurement:request_list' %}">Daftar permintaan</a></nav>
   <h1>{{ target.title|default:'Draft tanpa judul' }}</h1>
+  <p>Tahap pengadaan: {{ target|request_stage }}</p>
   {% if existing_order %}<p>PO terbit: <a href="{% url 'procurement:order_detail' existing_order.pk %}">{{ existing_order.number }}</a></p>{% endif %}
   <p><a href="{% url 'procurement:quotation_list' target.pk %}">Penawaran dan pemilihan vendor</a></p>
   {% if message %}<p role="alert">{{ message }}</p>{% endif %}
@@ -31,5 +32,6 @@
   {% endif %}
   <h2>Revisi pengajuan</h2><ul>{% for revision in revisions %}<li><a href="{% url 'procurement:request_revision' target.pk revision.number %}">Revisi {{ revision.number }}</a> · IDR {{ revision.estimated_total_minor|money_id }}</li>{% empty %}<li>Belum pernah diajukan.</li>{% endfor %}</ul>
   {% if issue_form %}<section aria-labelledby="issue-heading"><h2 id="issue-heading">Terbitkan purchase order</h2><p>PO akan menyimpan vendor, tujuan, item, harga dan alasan pemilihan saat diterbitkan. Pastikan pilihan penawaran sudah benar. Sesudah terbit, permintaan tidak dapat direvisi atau dibatalkan melalui jalur sebelum PO.</p><p>Penawaran terpilih: {{ target.selected_quotation.reference }} · {{ target.selected_quotation.vendor.name }} · IDR {{ target.selected_quotation.total_minor|money_id }}</p><form method="post" action="{% url 'procurement:order_issue' target.pk %}">{% csrf_token %}{{ issue_form.as_p }}<button type="submit">Terbitkan PO</button></form></section>{% endif %}
-  <h2>Riwayat</h2><ol>{% for event in events %}<li>{{ event.label }} oleh {{ event.actor }} · {{ event.time|date:'d M Y H:i' }} WIB{% if event.reason %}<p>{{ event.reason|linebreaksbr }}</p>{% endif %}</li>{% empty %}<li>Belum ada riwayat.</li>{% endfor %}</ol>
+  {% include 'procurement/_tracking_balances.html' %}
+  {% include 'procurement/_audit_history.html' %}
 {% endblock %}

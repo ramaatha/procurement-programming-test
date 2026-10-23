@@ -2,7 +2,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.core.paginator import Paginator
 from django.db import OperationalError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.debug import sensitive_post_parameters, sensitive_variables
@@ -16,6 +15,7 @@ from procurement.models import AuditEvent
 from procurement.policies import active_actor, require_procurement
 from procurement.selectors import can_source, visible_orders, visible_requests
 from procurement.services.orders import issue_order
+from procurement.views.tracking import order_list
 
 
 def _scope(request,target):
@@ -30,13 +30,6 @@ def issue_context(request,target,*,form=None):
         form = IssueOrderForm(initial=dict(action_token=make_action_token(**_scope(request,target)),expected_version=target.version))
     # Error submissions retain their original token/version; replay is decided by the service.
     return dict(issue_form=form,existing_order=existing)
-
-
-@login_required
-@require_safe
-def order_list(request):
-    page = Paginator(visible_orders(request.user).order_by('-issued_at','-pk'),25).get_page(request.GET.get('page'))
-    return render(request,'procurement/order_list.html',dict(page_obj=page))
 
 
 def _snapshot_context(order):

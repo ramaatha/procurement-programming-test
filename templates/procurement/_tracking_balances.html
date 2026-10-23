@@ -1,0 +1,4 @@
+{% if balances %}<section aria-labelledby="balances-heading"><h2 id="balances-heading">Pemenuhan pesanan</h2>
+{% for row in balances %}<section><h3>{{ row.item.name }} ({{ row.item.unit }})</h3>
+<p>Dipesan: {{ row.ordered }} · Diterima: {{ row.accepted }} · Ditolak: {{ row.rejected }} · Sisa: {{ row.remaining }}</p>
+</section>{% endfor %}</section>{% endif %}
