@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ error_title }}
+| Procurement{% endblock %}
+{% block content %}
+<p class="muted">
+  Status
+  {{ error_code }}
+</p>
+<h1>{{ error_title }}</h1>
+<p class="intro">{{ error_message }}</p>
+<p><a class="button" href="{% url 'accounts:home' %}">Kembali Ke Beranda</a></p>
+{% endblock %}

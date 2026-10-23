@@ -1,26 +1,86 @@
-{% comment %}filepath: templates/base.html{% endcomment %}
+{% load static %}
 <!doctype html>
 <html lang="id">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Procurement{% endblock %}</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { font-family: system-ui, sans-serif; line-height: 1.5; margin: 0; }
-    main { max-width: 48rem; margin: 0 auto; padding: 1.25rem; overflow-wrap: anywhere; }
-    input:not([type="hidden"]):not([type="checkbox"]), select, textarea, button { font: inherit; max-width: 100%; min-height: 2.75rem; }
-    input:not([type="hidden"]):not([type="checkbox"]), select, textarea { display: block; width: 100%; }
-    label { display: block; margin-top: 1rem; }
-    button { margin-top: 1rem; cursor: pointer; }
-    fieldset { min-inline-size: 0; margin-block: 1rem; }
-    :focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
-  </style>
-</head>
-<body>
-  <main id="content">
-    {% if messages %}<ul role="status" aria-live="polite">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}
-    {% block content %}{% endblock %}
-  </main>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Procurement{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}" />
+    <script src="{% static 'js/forms.js' %}" defer></script>
+  </head>
+  <body class="{% if not user.is_authenticated %}auth-layout{% endif %}">
+    <a class="skip-link" href="#content">Lewati Navigasi</a>
+    <div class="{% if user.is_authenticated %}shell{% endif %}">
+      {% if user.is_authenticated %}
+      <aside class="sidebar">
+        <a class="brand" href="{% url 'accounts:home' %}"
+          >Procurement<small>Ruang Kerja Pengadaan</small></a
+        >
+        <details open>
+          <summary>Menu Navigasi</summary>
+          <nav aria-label="Navigasi Utama">
+            <a href="{% url 'accounts:home' %}">Antrean Kerja</a>
+            <a href="{% url 'procurement:request_list' %}"
+              >{% if user.role == 'REQUESTER' %}Permintaan Saya{% else %}Permintaan
+              Pengadaan{% endif %}</a
+            >
+            {% if user.role == 'APPROVER' %}<a
+              href="{% url 'procurement:approval_list' %}"
+              >Antrean Persetujuan</a
+            >{% endif %}
+            <a href="{% url 'procurement:order_list' %}">Purchase Order</a>
+            {% if user.role == 'ADMIN' or user.role == 'PROCUREMENT' %}<a
+              href="{% url 'procurement:vendor_list' %}"
+              >Kelola Vendor</a
+            >
+            {% endif %}
+            {% if user.role == 'ADMIN' %}<a
+              href="{% url 'accounts:user_list' %}"
+              >Kelola Akun</a
+            >
+            {% endif %}
+          </nav>
+          <div class="account">
+            <p class="account-name">{{ user.username }}</p>
+            <p>{{ user.get_role_display }}</p>
+            <a
+              class="button secondary"
+              data-logout-confirm
+              href="{% url 'accounts:logout_confirm' %}"
+              >Keluar</a
+            >
+          </div>
+        </details>
+      </aside>
+      {% endif %}
+      <div class="workspace">
+        {% if user.is_authenticated %}
+        <header class="topbar">
+          <strong>Pengadaan Internal</strong>
+          <span>{{ user.get_role_display }}</span>
+        </header>
+        {% endif %}
+        <main id="content" tabindex="-1">
+          {% if not user.is_authenticated %}<a
+            class="brand"
+            href="{% url 'accounts:login' %}"
+            >Procurement<small>Ruang Kerja Pengadaan</small></a
+          >{% endif %}
+          {% if messages %}
+          <ul class="messages" role="status">
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+          <div class="page-content">{% block content %}{% endblock %}</div>
+        </main>
+      </div>
+    </div>
+    {% if user.is_authenticated %}
+    <dialog id="logout-dialog" aria-labelledby="logout-dialog-title">
+      {% include 'accounts/_logout_confirmation.html' with heading_id='logout-dialog-title' in_dialog=True %}
+    </dialog>
+    {% endif %}
+  </body>
 </html>

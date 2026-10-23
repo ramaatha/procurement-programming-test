@@ -41,14 +41,14 @@ def _snapshot_context(order):
 @require_safe
 def order_detail(request,order_id):
     from procurement.views.receipts import order_receipt_context
-    order = get_object_or_404(visible_orders(request.user),pk=order_id)
+    order = get_object_or_404(visible_orders(request.user).select_related('revision').prefetch_related('items'),pk=order_id)
     return render(request,'procurement/order_detail.html',_snapshot_context(order)|order_receipt_context(request,order))
 
 
 @login_required
 @require_safe
 def order_print(request,order_id):
-    order = get_object_or_404(visible_orders(request.user),pk=order_id)
+    order = get_object_or_404(visible_orders(request.user).select_related('revision').prefetch_related('items'),pk=order_id)
     return render(request,'procurement/order_print.html',_snapshot_context(order))
 
 

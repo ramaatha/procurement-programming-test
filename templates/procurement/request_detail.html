@@ -1,37 +1,225 @@
 {% extends "base.html" %}
 {% load procurement_numbers procurement_display %}
-{% comment %}filepath: templates/procurement/request_detail.html{% endcomment %}
-{% block title %}Detail permintaan | Procurement{% endblock %}
+{% block title %}Detail Permintaan | Procurement{% endblock %}
 {% block content %}
-  <nav aria-label="Navigasi permintaan"><a href="{% url 'procurement:request_list' %}">Daftar permintaan</a></nav>
-  <h1>{{ target.title|default:'Draft tanpa judul' }}</h1>
-  <p>Tahap pengadaan: {{ target|request_stage }}</p>
-  {% if existing_order %}<p>PO terbit: <a href="{% url 'procurement:order_detail' existing_order.pk %}">{{ existing_order.number }}</a></p>{% endif %}
-  <p><a href="{% url 'procurement:quotation_list' target.pk %}">Penawaran dan pemilihan vendor</a></p>
-  {% if message %}<p role="alert">{{ message }}</p>{% endif %}
-  <dl><dt>Nomor</dt><dd>{{ target.number }}</dd><dt>Pemohon</dt><dd>{{ target.requester.username }}</dd><dt>Jenis</dt><dd>{{ target.get_kind_display }}</dd><dt>Status persetujuan</dt><dd>{{ target.get_status_display }}</dd><dt>Alasan kebutuhan</dt><dd>{{ target.reason|default:'Belum diisi'|linebreaksbr }}</dd><dt>Tujuan</dt><dd>{{ target.destination|default:'Belum diisi' }}</dd><dt>Tanggal kebutuhan</dt><dd>{{ target.needed_on|date:'d M Y'|default:'Belum diisi' }}</dd></dl>
-  <h2>Rincian kebutuhan</h2>
-  <ul>{% for item in rows %}<li><h3>{{ item.name }}</h3><p>{{ item.qty_milli|quantity_id }} {{ item.unit }} × IDR {{ item.estimated_unit_price_minor|money_id }} = IDR {{ item.line_total_minor|money_id }}</p></li>{% empty %}<li>Belum ada item.</li>{% endfor %}</ul>
-  <p>Total estimasi draft: <strong>IDR {{ total_minor|money_id }}</strong></p>
-  {% if editable %}<p><a href="{% url 'procurement:request_edit' target.pk %}">Ubah draft</a></p>{% endif %}
-  {% if submit_form %}<section aria-labelledby="submit-heading"><h2 id="submit-heading">Ajukan permintaan</h2><p>Pengajuan menyimpan salinan revisi untuk review. Isinya tidak dapat diedit sampai diminta revisi.</p><form method="post" action="{% url 'procurement:request_submit' target.pk %}">{% csrf_token %}{{ submit_form.as_p }}<button type="submit">Ajukan permintaan</button></form></section>{% endif %}
-  {% if cancel_form %}<section aria-labelledby="cancel-heading"><h2 id="cancel-heading">Batalkan permintaan</h2><p>Pembatalan bersifat akhir. Riwayat tetap disimpan; kebutuhan lanjutan harus dibuat sebagai permintaan baru.</p><form method="post" action="{% url 'procurement:request_cancel' target.pk %}">{% csrf_token %}{{ cancel_form.as_p }}<button type="submit">Batalkan permintaan</button></form></section>{% endif %}
-  {% if review_form %}
+<nav aria-label="Navigasi Permintaan">
+  <a href="{% url 'procurement:request_list' %}">Daftar Permintaan</a>
+</nav>
+<h1>{{ target.title|default:'Draft Tanpa Judul' }}</h1>
+<p>
+  {{ target.number }}
+  ·
+  <span
+    class="status"
+    data-stage="{{ target.order.status|default:target.status }}"
+    >{{ target|request_stage }}</span
+  >
+</p>
+<p><a href="#followup">Buka Tindakan Untuk Permintaan Ini</a></p>
+{% if message %}
+<p role="alert">{{ message }}</p>
+{% endif %}
+<div class="detail-layout">
+  <section class="detail-main" aria-label="Rincian Permintaan">
+    <h2>Informasi Kebutuhan</h2>
+    <dl>
+      <dt>Pemohon</dt>
+      <dd>{{ target.requester.username }}</dd>
+      <dt>Jenis</dt>
+      <dd>{{ target.get_kind_display }}</dd>
+      <dt>Status Persetujuan</dt>
+      <dd>{{ target.get_status_display|title }}</dd>
+      <dt>Alasan Kebutuhan</dt>
+      <dd>{{ target.reason|default:'Belum Diisi'|linebreaksbr }}</dd>
+      <dt>Tujuan</dt>
+      <dd>{{ target.destination|default:'Belum Diisi' }}</dd>
+      <dt>Tanggal Kebutuhan</dt>
+      <dd>{{ target.needed_on|date:'d M Y'|default:'Belum Diisi' }}</dd>
+    </dl>
+    <h2>Rincian Kebutuhan</h2>
+    <ul>
+      {% for item in rows %}
+      <li>
+        <h3>{{ item.name }}</h3>
+        <p>
+          {{ item.qty_milli|quantity_id }}
+          {{ item.unit }}
+          × IDR
+          {{ item.estimated_unit_price_minor|money_id }}
+          = IDR
+          {{ item.line_total_minor|money_id }}
+        </p>
+      </li>
+      {% empty %}
+      <li>Belum ada item.</li>
+      {% endfor %}
+    </ul>
+    <p>
+      Total Estimasi Draft:
+      <strong
+        >IDR
+        {{ total_minor|money_id }}</strong
+      >
+    </p>
+    {% include 'procurement/_tracking_balances.html' %}
+    <h2>Revisi Pengajuan</h2>
+    <ul>
+      {% for revision in revisions %}
+      <li>
+        <a
+          href="{% url 'procurement:request_revision' target.pk revision.number %}"
+          >Revisi
+          {{ revision.number }}</a
+        >
+        · IDR
+        {{ revision.estimated_total_minor|money_id }}
+      </li>
+      {% empty %}
+      <li>Belum pernah diajukan.</li>
+      {% endfor %}
+    </ul>
+    {% include 'procurement/_audit_history.html' %}
+  </section>
+  <aside
+    id="followup"
+    class="detail-actions"
+    aria-label="Tindakan Dan Dokumen Terkait"
+  >
+    <h2>Tindak Lanjut</h2>
+    <p>
+      <a href="{% url 'procurement:quotation_list' target.pk %}"
+        >Penawaran Dan Pemilihan Vendor</a
+      >
+    </p>
+    {% if existing_order %}
+    <p>
+      PO Terbit:
+      <a href="{% url 'procurement:order_detail' existing_order.pk %}"
+        >{{ existing_order.number }}</a
+      >
+    </p>
+    {% endif %}
+    {% if editable %}
+    <p>
+      <a class="button" href="{% url 'procurement:request_edit' target.pk %}"
+        >Ubah Draft</a
+      >
+    </p>
+    {% endif %}
+    {% if submit_form %}
+    <section aria-labelledby="submit-heading">
+      <h2 id="submit-heading">Ajukan Permintaan</h2>
+      <p>
+        Pengajuan menyimpan salinan revisi untuk review. Isinya tidak dapat
+        diedit sampai diminta revisi.
+      </p>
+      <form
+        method="post"
+        action="{% url 'procurement:request_submit' target.pk %}"
+      >
+        {% csrf_token %}{{ submit_form.as_p }}<button type="submit">
+          Ajukan Permintaan
+        </button>
+      </form>
+    </section>
+    {% endif %}
+    {% if review_form %}
     <section aria-labelledby="review-heading">
-      <h2 id="review-heading">Review pengajuan</h2>
-      {% if active_revision %}<p>Keputusan berlaku untuk <a href="{% url 'procurement:request_revision' target.pk active_revision.number %}">revisi {{ active_revision.number }}</a>, dengan plafon <strong>IDR {{ active_revision.estimated_total_minor|money_id }}</strong>. Periksa salinan pengajuan sebelum memutuskan.</p>{% endif %}
-      <form method="post" action="{% url 'procurement:request_review' target.pk %}">{% csrf_token %}{{ review_form.as_p }}<button type="submit">Simpan keputusan</button></form>
+      <h2 id="review-heading">Review Pengajuan</h2>
+      {% if active_revision %}
+      <p>
+        Keputusan berlaku untuk
+        <a
+          href="{% url 'procurement:request_revision' target.pk active_revision.number %}"
+          >Revisi
+          {{ active_revision.number }}</a
+        >, dengan plafon
+        <strong
+          >IDR
+          {{ active_revision.estimated_total_minor|money_id }}</strong
+        >. Periksa salinan pengajuan sebelum memutuskan.
+      </p>
+      {% endif %}
+      <form
+        method="post"
+        action="{% url 'procurement:request_review' target.pk %}"
+      >
+        {% csrf_token %}{{ review_form.as_p }}<button type="submit">
+          Simpan Keputusan
+        </button>
+      </form>
     </section>
-  {% endif %}
-  {% if revision_form %}
+    {% endif %}
+    {% if revision_form %}
     <section aria-labelledby="revision-heading">
-      <h2 id="revision-heading">Kembalikan untuk revisi</h2>
-      <p>Pemohon perlu memperbarui kebutuhan lalu mengajukan kembali. Pilihan penawaran dikosongkan; revisi dan keputusan sebelumnya tetap tersimpan.</p>
-      <form method="post" action="{% url 'procurement:request_return_revision' target.pk %}">{% csrf_token %}{{ revision_form.as_p }}<button type="submit">Minta revisi kebutuhan</button></form>
+      <h2 id="revision-heading">Kembalikan Untuk Revisi</h2>
+      <p>
+        Pemohon perlu memperbarui kebutuhan lalu mengajukan kembali. Pilihan
+        penawaran dikosongkan; revisi dan keputusan sebelumnya tetap tersimpan.
+      </p>
+      <form
+        method="post"
+        action="{% url 'procurement:request_return_revision' target.pk %}"
+      >
+        {% csrf_token %}{{ revision_form.as_p }}<button type="submit">
+          Minta Revisi Kebutuhan
+        </button>
+      </form>
     </section>
-  {% endif %}
-  <h2>Revisi pengajuan</h2><ul>{% for revision in revisions %}<li><a href="{% url 'procurement:request_revision' target.pk revision.number %}">Revisi {{ revision.number }}</a> · IDR {{ revision.estimated_total_minor|money_id }}</li>{% empty %}<li>Belum pernah diajukan.</li>{% endfor %}</ul>
-  {% if issue_form %}<section aria-labelledby="issue-heading"><h2 id="issue-heading">Terbitkan purchase order</h2><p>PO akan menyimpan vendor, tujuan, item, harga dan alasan pemilihan saat diterbitkan. Pastikan pilihan penawaran sudah benar. Sesudah terbit, permintaan tidak dapat direvisi atau dibatalkan melalui jalur sebelum PO.</p><p>Penawaran terpilih: {{ target.selected_quotation.reference }} · {{ target.selected_quotation.vendor.name }} · IDR {{ target.selected_quotation.total_minor|money_id }}</p><form method="post" action="{% url 'procurement:order_issue' target.pk %}">{% csrf_token %}{{ issue_form.as_p }}<button type="submit">Terbitkan PO</button></form></section>{% endif %}
-  {% include 'procurement/_tracking_balances.html' %}
-  {% include 'procurement/_audit_history.html' %}
+    {% endif %}
+    {% if issue_form %}
+    <section aria-labelledby="issue-heading">
+      <h2 id="issue-heading">Terbitkan Purchase Order</h2>
+      <p>
+        PO akan menyimpan vendor, tujuan, item, harga dan alasan pemilihan saat
+        diterbitkan. Pastikan pilihan penawaran sudah benar. Sesudah terbit,
+        permintaan tidak dapat direvisi atau dibatalkan melalui jalur sebelum
+        PO.
+      </p>
+      {% if target.selected_quotation %}
+      <p>
+        Penawaran Terpilih:
+        {{ target.selected_quotation.reference }}
+        ·
+        {{ target.selected_quotation.vendor.name }}
+        · IDR
+        {{ target.selected_quotation.total_minor|money_id }}
+      </p>
+      {% else %}
+      <p>
+        Belum ada penawaran terpilih. Pilih penawaran sebelum menerbitkan PO.
+      </p>
+      {% endif %}
+      <form
+        method="post"
+        action="{% url 'procurement:order_issue' target.pk %}"
+      >
+        {% csrf_token %}{{ issue_form.as_p }}<button type="submit">
+          Terbitkan PO
+        </button>
+      </form>
+    </section>
+    {% endif %}
+    {% if cancel_form %}
+    <section aria-labelledby="cancel-heading">
+      <h2 id="cancel-heading">Batalkan Permintaan</h2>
+      <p>
+        Pembatalan bersifat akhir. Riwayat tetap disimpan; kebutuhan lanjutan
+        harus dibuat sebagai permintaan baru.
+      </p>
+      <form
+        method="post"
+        action="{% url 'procurement:request_cancel' target.pk %}"
+      >
+        {% csrf_token %}{{ cancel_form.as_p }}<button
+          class="secondary"
+          type="submit"
+        >
+          Batalkan Permintaan
+        </button>
+      </form>
+    </section>
+    {% endif %}
+  </aside>
+</div>
 {% endblock %}

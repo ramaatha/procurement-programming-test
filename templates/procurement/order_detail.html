@@ -3,17 +3,63 @@
 {% comment %}filepath: templates/procurement/order_detail.html{% endcomment %}
 {% block title %}Detail PO | Procurement{% endblock %}
 {% block content %}
-<nav aria-label="Navigasi PO"><a href="{% url 'procurement:order_list' %}">Daftar PO</a> · <a href="{% url 'procurement:request_detail' order.request_id %}">Permintaan sumber</a> · <a href="{% url 'procurement:order_print' order.pk %}">Halaman cetak</a></nav>
+<nav aria-label="Navigasi PO">
+  <a href="{% url 'procurement:order_list' %}">Daftar PO</a> ·
+  <a href="{% url 'procurement:request_detail' order.request_id %}"
+    >Permintaan Sumber</a
+  >
+  · <a href="{% url 'procurement:order_print' order.pk %}">Halaman Cetak</a>
+</nav>
 {% include 'procurement/_order_snapshot.html' %}
 <p>Rincian pesanan tersimpan saat penerbitan dan tidak dapat diedit.</p>
-<p>Tahap pengadaan: {{ order.status|stage_label }}</p>
+<p>
+  Tahap Pengadaan:
+  {{ order.status|stage_label }}
+</p>
 {% include 'procurement/_tracking_balances.html' %}
-{% if can_receive %}<p><a href="{% url 'procurement:receipt_create' order.pk %}">Catat penerimaan</a></p>{% endif %}
-<h2>Riwayat penerimaan</h2>
-<ul>{% for receipt in receipts %}<li><a href="{% url 'procurement:receipt_detail' receipt.pk %}">{{ receipt.number }}</a> · {{ receipt.reference }} · {{ receipt.confirmed_at|date:"d-m-Y H:i" }} WIB</li>{% empty %}<li>Belum ada penerimaan yang dicatat.</li>{% endfor %}</ul>
-{% if order.closed_at %}<h2>PO diakhiri</h2><p>{{ order.get_status_display }}: {{ order.closed_reason|linebreaksbr }}</p>{% endif %}
-{% if close_form %}<section><h2>Batalkan PO atau tutup sisa</h2>
-<p>PO tanpa jumlah diterima akan dibatalkan. Jika sebagian sudah diterima, sisa pesanan akan ditutup. Riwayat tetap tersimpan dan PO tidak dapat menerima pencatatan baru.</p>
-<form method="post" action="{% url 'procurement:order_close' order.pk %}">{% csrf_token %}{{ close_form.as_p }}<button type="submit">Konfirmasi akhiri PO</button></form></section>{% endif %}
+{% if can_receive %}
+<p>
+  <a href="{% url 'procurement:receipt_create' order.pk %}">Catat Penerimaan</a>
+</p>
+{% endif %}
+<h2>Riwayat Penerimaan</h2>
+<ul>
+  {% for receipt in receipts %}
+  <li>
+    <a href="{% url 'procurement:receipt_detail' receipt.pk %}"
+      >{{ receipt.number }}</a
+    >
+    ·
+    {{ receipt.reference }}
+    ·
+    {{ receipt.confirmed_at|date:"d-m-Y H:i" }}
+    WIB
+  </li>
+  {% empty %}
+  <li>Belum ada penerimaan yang dicatat.</li>
+  {% endfor %}
+</ul>
+{% if order.closed_at %}
+<h2>PO Diakhiri</h2>
+<p>
+  {{ order.get_status_display|title }}:
+  {{ order.closed_reason|linebreaksbr }}
+</p>
+{% endif %}
+{% if close_form %}
+<section>
+  <h2>Batalkan PO Atau Tutup Sisa</h2>
+  <p>
+    PO tanpa jumlah diterima akan dibatalkan. Jika sebagian sudah diterima, sisa
+    pesanan akan ditutup. Riwayat tetap tersimpan dan PO tidak dapat menerima
+    pencatatan baru.
+  </p>
+  <form method="post" action="{% url 'procurement:order_close' order.pk %}">
+    {% csrf_token %}{{ close_form.as_p }}<button type="submit">
+      Konfirmasi Akhiri PO
+    </button>
+  </form>
+</section>
+{% endif %}
 {% include 'procurement/_audit_history.html' %}
 {% endblock %}

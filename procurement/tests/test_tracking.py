@@ -88,7 +88,7 @@ class TrackingTests(TestCase):
         self.assertEqual(selectors.order_balances(order)[order.items.get().pk],dict(ordered_milli=10000,accepted_milli=6000,rejected_milli=2000,remaining_milli=4000))
         for url in (f'/requests/{order.request_id}/',f'/orders/{order.pk}/'):
             page = self.client.get(url)
-            self.assertContains(page,'Selesai dengan kekurangan')
+            self.assertContains(page,'Selesai Dengan Kekurangan')
             self.assertNotContains(page,'Diterima lengkap')
             self.assertContains(page,'4.000')
 
@@ -100,7 +100,7 @@ class TrackingTests(TestCase):
         self.actor.save(update_fields=['username'])
         page = self.client.get(f'/requests/{order.request_id}/')
         self.assertContains(page,'Nama saat keputusan')
-        self.assertContains(page,'Sisa PO ditutup')
+        self.assertContains(page,'Sisa PO Ditutup')
         self.assertNotContains(page,'<script>rahasia</script>')
         times = [item.created_at for item in page.context['audit_page']]
         self.assertEqual(times,sorted(times))
@@ -156,8 +156,8 @@ class TrackingTests(TestCase):
     def test_no_results_and_invalid_pages_have_predictable_recovery(self):
         page = self.client.get('/requests/',dict(q='missing',page='bad'))
         self.assertEqual((page.status_code,page.context['page_obj'].number),(200,1))
-        self.assertContains(page,'Hapus filter')
-        self.assertContains(page,'Tidak ada permintaan yang cocok')
+        self.assertContains(page,'Hapus Filter')
+        self.assertContains(page,'<li>Tidak ada permintaan yang cocok dengan pencarian dan filter.</li>',html=True)
 
     def test_all_request_only_stages_are_filterable(self):
         from procurement.models import PurchaseRequest

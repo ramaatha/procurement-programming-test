@@ -1,19 +1,66 @@
 {% extends "base.html" %}
-{% comment %}filepath: templates/accounts/home.html{% endcomment %}
+{% load procurement_display procurement_numbers %}
+{% block title %}Antrean Kerja | Procurement{% endblock %}
 {% block content %}
-  <h1>Procurement</h1>
-  {% if user.role == "ADMIN" %}<p><a href="{% url 'accounts:user_list' %}">Kelola akun</a></p>{% endif %}
-  <p><a href="{% url 'procurement:request_list' %}">Permintaan pengadaan</a></p>
-  <p><a href="{% url 'procurement:order_list' %}">Purchase order</a></p>
-  {% if user.role == "ADMIN" or user.role == "PROCUREMENT" %}<p><a href="{% url 'procurement:vendor_list' %}">Kelola vendor</a></p>{% endif %}
-  {% if user.role == "APPROVER" %}<p><a href="{% url 'procurement:approval_list' %}">Antrean persetujuan</a></p>{% endif %}
-  <h2>Akun Anda</h2>
-  <dl>
-    <dt>Username</dt><dd>{{ user.username }}</dd>
-    <dt>Peran</dt><dd>{{ user.get_role_display }}</dd>
-  </dl>
-  <form method="post" action="{% url 'accounts:logout' %}">
-    {% csrf_token %}
-    <button type="submit">Keluar</button>
-  </form>
+<h1>Antrean Kerja</h1>
+<p class="intro">
+  Tinjau dokumen yang membutuhkan tindakan sesuai peran Anda. Keputusan dan
+  perubahan tetap tercatat pada riwayat pengadaan.
+</p>
+{% if user.role == 'REQUESTER' %}
+<p>
+  <a class="button" href="{% url 'procurement:request_create' %}"
+    >Buat Permintaan</a
+  >
+</p>
+{% endif %}
+<div class="queue-layout">
+  <section class="queue" aria-labelledby="queue-title">
+    <div class="queue-header">
+      <h2 id="queue-title">{{ queue_title }}</h2>
+    </div>
+    <ul>
+      {% for item in queue %}
+      <li>
+        {% if queue_orders %}
+        <a href="{% url 'procurement:order_detail' item.pk %}"
+          >{{ item.number }}</a
+        >
+        <p>
+          {{ item.vendor_name }}
+          ·
+          {{ item.status|stage_label }}
+          · IDR
+          {{ item.total_minor|money_id }}
+        </p>
+        {% else %}<a href="{% url 'procurement:request_detail' item.pk %}"
+          >{{ item.title|default:'Draft Tanpa Judul' }}</a
+        >
+        <p>
+          {{ item.number }}
+          ·
+          {{ item|request_stage }}
+        </p>
+        {% endif %}
+      </li>
+      {% empty %}
+      <li class="empty">
+        {% if user.role == 'ADMIN' %}Kelola akun dan vendor melalui navigasi.
+        Transaksi pengadaan tersedia untuk dibaca pada daftar permintaan dan PO.{% else %}Tidak
+        ada dokumen yang perlu ditindaklanjuti pada antrean ini.{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  <aside>
+    <h2>Telusuri Pengadaan</h2>
+    <p class="muted">
+      Cari nomor dokumen, periksa tahap, atau buka rincian pemenuhannya.
+    </p>
+    <p>
+      <a href="{% url 'procurement:request_list' %}">Permintaan Pengadaan</a>
+    </p>
+    <p><a href="{% url 'procurement:order_list' %}">Purchase Order</a></p>
+  </aside>
+</div>
 {% endblock %}

@@ -1,15 +1,34 @@
 {% extends "base.html" %}
 {% comment %}filepath: templates/accounts/user_form.html{% endcomment %}
-{% block title %}{% if creating %}Buat akun{% else %}Ubah akun{% endif %} | Procurement{% endblock %}
+{% block title %}{% if creating %}Buat Akun{% else %}Ubah Akun{% endif %}
+| Procurement{% endblock %}
 {% block content %}
-  <nav aria-label="Navigasi akun"><a href="{% url 'accounts:user_list' %}">Daftar akun</a></nav>
-  <h1>{% if creating %}Buat akun{% else %}Ubah akun {{ target.username }}{% endif %}</h1>
-  <p>Peran menentukan akses pengguna. Akun nonaktif tidak dapat masuk atau melanjutkan sesi.</p>
-  {% if not creating %}<p>Admin aktif terakhir harus tetap tersedia. <a href="{% url 'accounts:user_password' target.pk %}">Reset password</a> dilakukan terpisah.</p>{% endif %}
-  {% if form.errors %}<p role="alert">Perubahan belum disimpan. Periksa pesan pada form. <a href="{{ reload_url }}">Muat ulang data</a>.</p>{% endif %}
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">{% if creating %}Buat akun{% else %}Simpan perubahan{% endif %}</button>
-  </form>
+<nav aria-label="Navigasi Akun">
+  <a href="{% url 'accounts:user_list' %}">Daftar Akun</a>
+</nav>
+<h1>
+  {% if creating %}Buat Akun{% else %}Ubah Akun
+  {{ target.username }}{% endif %}
+</h1>
+<p>
+  Peran menentukan akses pengguna. Akun nonaktif tidak dapat masuk atau
+  melanjutkan sesi.
+</p>
+{% if not creating %}
+<p>
+  Admin aktif terakhir harus tetap tersedia.
+  <a href="{% url 'accounts:user_password' target.pk %}">Reset Password</a>
+  dilakukan terpisah.
+</p>
+{% endif %}
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  {% if form.errors %}
+  <p><a href="{{ reload_url }}">Muat Ulang Data</a></p>
+  {% endif %}
+  <button type="submit">
+    {% if creating %}Buat Akun{% else %}Simpan Perubahan{% endif %}
+  </button>
+</form>
 {% endblock %}

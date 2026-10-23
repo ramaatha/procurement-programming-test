@@ -29,7 +29,7 @@ class AuthTests(TestCase):
         response = self.client.get("/login/")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'name="csrfmiddlewaretoken"')
-        self.assertContains(response, 'autocomplete="current-password"')
+        self.assertContains(response, 'autocomplete="off"', count=3)
 
     def test_TC01_invalid_credentials_preserve_username_not_password(self):
         response = self.client.post(
@@ -46,6 +46,15 @@ class AuthTests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertNotIn(SESSION_KEY, self.client.session)
+
+    def test_invalid_login_shows_one_error_inside_login_form(self):
+        response = self.client.post('/login/', {'username': self.user.username, 'password': 'invalid-password'})
+        message = 'Tidak dapat masuk. Periksa username dan password, atau hubungi admin.'
+        self.assertContains(response, message, count=1, status_code=400)
+        self.assertNotContains(response, 'id="error-summary"', status_code=400)
+        self.assertContains(response, 'id="login-errors"', status_code=400)
+        self.assertNotContains(response, 'data-error-focus', status_code=400)
+        self.assertNotIn('value=', str(response.context['form']['password']))
 
     def test_TC01_logout_requires_post(self):
         self.client.force_login(self.user)

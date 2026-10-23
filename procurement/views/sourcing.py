@@ -115,7 +115,8 @@ def _render_comparison(request, target, *, selection_form=None, status=200, mess
     if selection_form is None and editable:
         selection_form = SelectionForm(quotations=quotes,
                                         initial=_initial(request,'REQUEST',str(target.pk),'quotation.select',target.version))
-    current = Paginator(comparison_rows(revision),25).get_page(request.GET.get('page'))
+    current = Paginator(quotes.prefetch_related('items__revision_item').order_by('total_minor','fulfillment_days','pk'),25).get_page(request.GET.get('page'))
+    current.object_list = comparison_rows(revision,current.object_list)
     history = target.revisions.values_list('pk',flat=True)
     historical = Quotation.objects.filter(revision_id__in=history).exclude(revision=revision).select_related('vendor','revision').prefetch_related('items__revision_item').order_by('-created_at','pk')
     history_page = Paginator(historical,25).get_page(request.GET.get('history_page'))

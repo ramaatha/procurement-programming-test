@@ -1,20 +1,44 @@
 {% extends "base.html" %}
 {% load procurement_numbers %}
 {% comment %}filepath: templates/procurement/quotation_form.html{% endcomment %}
-{% block title %}Form penawaran | Procurement{% endblock %}
+{% block title %}Form Penawaran | Procurement{% endblock %}
 {% block content %}
-  <nav aria-label="Navigasi penawaran"><a href="{% url 'procurement:quotation_list' target.pk %}">Daftar penawaran</a></nav>
-  <h1>{% if quote %}Ubah penawaran{% else %}Tambah penawaran{% endif %}</h1>
-  <p>{{ target.title }} · Revisi {{ revision.number }}. Jumlah, satuan dan item mengikuti salinan pengajuan. Isi harga per unit dari vendor.</p>
-  <p>Penawaran yang belum berlaku, kedaluwarsa, atau di atas plafon dapat dicatat untuk perbandingan, tetapi tidak dapat dipilih.</p>
-  {% if form.errors or formset.total_error_count %}<p role="alert">Penawaran belum tersimpan. Periksa isian di bawah.</p>{% endif %}
-  <form method="post">{% csrf_token %}{{ form.as_p }}{{ formset.management_form }}{{ formset.non_form_errors }}
-    <h2>Harga item</h2>
-    {% for entry in entries %}<fieldset><legend>{{ entry.item.name|default:'Item tidak dikenal' }}</legend>
-      {% if entry.item %}<p>{{ entry.item.qty_milli|quantity_id }} {{ entry.item.unit }}</p>{% endif %}
-      {{ entry.form.revision_item_id }}{{ entry.form.revision_item_id.errors }}{{ entry.form.non_field_errors }}
-      {{ entry.form.unit_price.errors }}<label for="{{ entry.form.unit_price.id_for_label }}">Harga per unit (IDR)</label>{{ entry.form.unit_price }}<p>{{ entry.form.unit_price.help_text }}</p>
-    </fieldset>{% endfor %}
-    <button type="submit">Simpan penawaran</button>
-  </form>
+<nav aria-label="Navigasi Penawaran">
+  <a href="{% url 'procurement:quotation_list' target.pk %}"
+    >Daftar Penawaran</a
+  >
+</nav>
+<h1>{% if quote %}Ubah Penawaran{% else %}Tambah Penawaran{% endif %}</h1>
+<p>
+  {{ target.title }}
+  · Revisi
+  {{ revision.number }}. Jumlah, satuan dan item mengikuti salinan pengajuan.
+  Isi harga per unit dari vendor.
+</p>
+<p>
+  Penawaran yang belum berlaku, kedaluwarsa, atau di atas plafon dapat dicatat
+  untuk perbandingan, tetapi tidak dapat dipilih.
+</p>
+<form method="post">
+  {% csrf_token %}{{ form.as_p }}{{ formset.management_form }}{{ formset.non_form_errors }}
+  <h2>Harga Item</h2>
+  {% for entry in entries %}
+  <fieldset>
+    <legend>{{ entry.item.name|default:'Item Tidak Dikenal' }}</legend>
+    {% if entry.item %}
+    <p>
+      {{ entry.item.qty_milli|quantity_id }}
+      {{ entry.item.unit }}
+    </p>
+    {% endif %}
+    {{ entry.form.revision_item_id }}{{ entry.form.revision_item_id.errors }}{{ entry.form.non_field_errors }}
+    {{ entry.form.unit_price.errors }}<label
+      for="{{ entry.form.unit_price.id_for_label }}"
+      >Harga Per Unit (IDR)</label
+    >{{ entry.form.unit_price }}
+    <p>{{ entry.form.unit_price.help_text }}</p>
+  </fieldset>
+  {% endfor %}
+  <button type="submit">Simpan Penawaran</button>
+</form>
 {% endblock %}

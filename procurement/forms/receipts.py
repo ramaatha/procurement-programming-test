@@ -9,19 +9,19 @@ from procurement.models import EvidenceType, Kind
 
 
 class ReceiptForm(ActionForm):
-    reference = forms.CharField(label='Referensi bukti',max_length=100)
-    notes = forms.CharField(label='Catatan pemeriksaan',max_length=4000,widget=forms.Textarea)
-    evidence_type = forms.ChoiceField(label='Jenis bukti',choices=EvidenceType.choices)
-    service_started_on = forms.DateField(label='Awal pelaksanaan jasa',required=False,widget=forms.DateInput(attrs={'type':'date'},format='%Y-%m-%d'),input_formats=['%Y-%m-%d'])
-    service_ended_on = forms.DateField(label='Akhir pelaksanaan jasa',required=False,widget=forms.DateInput(attrs={'type':'date'},format='%Y-%m-%d'),input_formats=['%Y-%m-%d'])
+    reference = forms.CharField(label='Referensi Bukti',max_length=100)
+    notes = forms.CharField(label='Catatan Pemeriksaan',max_length=4000,widget=forms.Textarea)
+    evidence_type = forms.ChoiceField(label='Jenis Bukti',choices=EvidenceType.choices)
+    service_started_on = forms.DateField(label='Awal Pelaksanaan Jasa',required=False,widget=forms.DateInput(attrs={'type':'date'},format='%Y-%m-%d'),input_formats=['%Y-%m-%d'])
+    service_ended_on = forms.DateField(label='Akhir Pelaksanaan Jasa',required=False,widget=forms.DateInput(attrs={'type':'date'},format='%Y-%m-%d'),input_formats=['%Y-%m-%d'])
 
     def __init__(self,*args,kind,**kwargs):
         super().__init__(*args,**kwargs)
         self.fields['expected_version'].required = True
         if kind == Kind.GOODS:
-            self.fields['evidence_type'].choices = [(EvidenceType.GOODS_DELIVERY,'Surat jalan')]
+            self.fields['evidence_type'].choices = [(EvidenceType.GOODS_DELIVERY,'Surat Jalan')]
         else:
-            self.fields['evidence_type'].choices = EvidenceType.choices[1:]
+            self.fields['evidence_type'].choices = [(code, label.title()) for code, label in EvidenceType.choices[1:]]
             self.fields['service_started_on'].required = True
             self.fields['service_ended_on'].required = True
 
@@ -33,9 +33,9 @@ class ReceiptForm(ActionForm):
 
 class ReceiptLineForm(forms.Form):
     order_item_id = forms.UUIDField(widget=forms.HiddenInput)
-    accepted = forms.CharField(label='Diterima sekarang',max_length=24,strip=False,help_text='Gunakan titik desimal, maksimal tiga angka desimal. Isi 0 bila tidak ada.')
-    rejected = forms.CharField(label='Ditolak sekarang',max_length=24,strip=False)
-    rejection_reason = forms.CharField(label='Alasan penolakan',max_length=4000,required=False,widget=forms.Textarea(attrs={'rows':2}))
+    accepted = forms.CharField(label='Diterima Sekarang',max_length=24,strip=False,help_text='Gunakan titik desimal, maksimal tiga angka desimal. Isi 0 bila tidak ada.')
+    rejected = forms.CharField(label='Ditolak Sekarang',max_length=24,strip=False)
+    rejection_reason = forms.CharField(label='Alasan Penolakan',max_length=4000,required=False,widget=forms.Textarea(attrs={'rows':2}))
 
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
@@ -62,7 +62,7 @@ ReceiptLineFormSet = formset_factory(ReceiptLineForm,formset=BaseReceiptFormSet,
 
 
 class CloseOrderForm(ActionForm):
-    reason = forms.CharField(label='Alasan pembatalan atau penutupan sisa',max_length=4000,widget=forms.Textarea(attrs={'rows':3}))
+    reason = forms.CharField(label='Alasan Pembatalan Atau Penutupan Sisa',max_length=4000,widget=forms.Textarea(attrs={'rows':3}))
 
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)

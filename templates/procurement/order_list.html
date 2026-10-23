@@ -1,12 +1,36 @@
 {% extends "base.html" %}
 {% load procurement_numbers procurement_display %}
-{% block title %}Purchase order | Procurement{% endblock %}
+{% block title %}Purchase Order | Procurement{% endblock %}
 {% block content %}
-<nav aria-label="Navigasi PO"><a href="{% url 'accounts:home' %}">Beranda</a></nav>
-<h1>Purchase order</h1>
+<nav aria-label="Navigasi PO">
+  <a href="{% url 'accounts:home' %}">Beranda</a>
+</nav>
+<h1>Purchase Order</h1>
 {% include 'procurement/_tracking_filters.html' %}
-<ul>{% for order in page_obj %}<li><h2><a href="{% url 'procurement:order_detail' order.pk %}">{{ order.number }}</a></h2>
-<p>{{ order.vendor_name }} · {{ order.status|stage_label }} · IDR {{ order.total_minor|money_id }}</p></li>
-{% empty %}<li>{% if filter_form.errors %}Perbaiki filter untuk menampilkan daftar.{% elif has_filters %}Tidak ada PO yang cocok dengan pencarian dan filter.{% else %}Belum ada PO yang dapat ditampilkan untuk akun Anda.{% endif %}</li>{% endfor %}</ul>
+{% if not filter_form.errors %}
+<ul>
+  {% for order in page_obj %}
+  <li>
+    <h2>
+      <a href="{% url 'procurement:order_detail' order.pk %}"
+        >{{ order.number }}</a
+      >
+    </h2>
+    <p>
+      {{ order.vendor_name }}
+      ·
+      {{ order.status|stage_label }}
+      · IDR
+      {{ order.total_minor|money_id }}
+    </p>
+  </li>
+  {% empty %}
+  <li>
+    {% if has_filters %}Tidak ada PO yang cocok dengan pencarian dan filter.{% else %}Belum
+    ada PO yang dapat ditampilkan untuk akun Anda.{% endif %}
+  </li>
+  {% endfor %}
+</ul>
 {% include 'procurement/_tracking_pagination.html' %}
+{% endif %}
 {% endblock %}

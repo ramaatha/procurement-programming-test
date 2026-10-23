@@ -3,12 +3,40 @@
 {% block title %}Permintaan | Procurement{% endblock %}
 {% block content %}
 <nav aria-label="Navigasi"><a href="{% url 'accounts:home' %}">Beranda</a></nav>
-<h1>Permintaan pengadaan</h1>
-{% if user.role == 'REQUESTER' %}<p><a href="{% url 'procurement:request_create' %}">Buat permintaan</a></p>{% endif %}
+<h1>Permintaan Pengadaan</h1>
+{% if user.role == 'REQUESTER' %}
+<p><a href="{% url 'procurement:request_create' %}">Buat Permintaan</a></p>
+{% endif %}
 {% include 'procurement/_tracking_filters.html' %}
-<ul>{% for item in page_obj %}<li>
-<h2><a href="{% url 'procurement:request_detail' item.pk %}">{{ item.title|default:'Draft tanpa judul' }}</a></h2>
-<p>{{ item.number }} · {{ item.get_kind_display }} · {{ item|request_stage }}</p><p>Pemohon: {{ item.requester.username }}</p>
-</li>{% empty %}<li>{% if filter_form.errors %}Perbaiki filter untuk menampilkan daftar.{% elif has_filters %}Tidak ada permintaan yang cocok dengan pencarian dan filter.{% else %}Belum ada permintaan yang dapat ditampilkan untuk akun Anda.{% endif %}</li>{% endfor %}</ul>
+{% if not filter_form.errors %}
+<ul>
+  {% for item in page_obj %}
+  <li>
+    <h2>
+      <a href="{% url 'procurement:request_detail' item.pk %}"
+        >{{ item.title|default:'Draft Tanpa Judul' }}</a
+      >
+    </h2>
+    <p>
+      {{ item.number }}
+      ·
+      {{ item.get_kind_display }}
+      ·
+      {{ item|request_stage }}
+    </p>
+    <p>
+      Pemohon:
+      {{ item.requester.username }}
+    </p>
+  </li>
+  {% empty %}
+  <li>
+    {% if has_filters %}Tidak ada permintaan yang cocok dengan pencarian dan
+    filter.{% else %}Belum ada permintaan yang dapat ditampilkan untuk akun
+    Anda.{% endif %}
+  </li>
+  {% endfor %}
+</ul>
 {% include 'procurement/_tracking_pagination.html' %}
+{% endif %}
 {% endblock %}

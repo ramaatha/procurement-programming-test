@@ -1,8 +1,38 @@
 {% load procurement_display %}
-<section aria-labelledby="audit-heading"><h2 id="audit-heading">Riwayat pengadaan</h2>
-<ol>{% for event in audit_page %}<li>{{ event|audit_label }} oleh {{ event.actor_name }} ({{ event.get_actor_role_display }}) · {{ event.created_at|date:'d M Y H:i' }} WIB{% if event.reason %}<p>{{ event.reason|linebreaksbr }}</p>{% endif %}</li>{% empty %}<li>Belum ada riwayat.</li>{% endfor %}</ol>
-{% if audit_page.has_other_pages %}<nav aria-label="Halaman riwayat">
-{% if audit_page.has_previous %}<a href="?history_page={{ audit_page.previous_page_number }}#audit-heading">Riwayat sebelumnya</a>{% endif %}
-<span>Halaman {{ audit_page.number }} dari {{ audit_page.paginator.num_pages }}</span>
-{% if audit_page.has_next %}<a href="?history_page={{ audit_page.next_page_number }}#audit-heading">Riwayat berikutnya</a>{% endif %}
-</nav>{% endif %}</section>
+<section aria-labelledby="audit-heading">
+  <h2 id="audit-heading">Riwayat Pengadaan</h2>
+  <ol>
+    {% for event in audit_page %}
+    <li>
+      {{ event|audit_label }}
+      oleh
+      {{ event.actor_name }}
+      ({{ event.get_actor_role_display }}) ·
+      {{ event.created_at|date:'d M Y H:i' }}
+      WIB{% if event.reason %}
+      <p>{{ event.reason|linebreaksbr }}</p>
+      {% endif %}
+    </li>
+    {% empty %}
+    <li>Belum ada riwayat.</li>
+    {% endfor %}
+  </ol>
+  {% if audit_page.has_other_pages %}
+  <nav aria-label="Halaman Riwayat">
+    {% if audit_page.has_previous %}<a
+      href="?history_page={{ audit_page.previous_page_number }}#audit-heading"
+      >Riwayat Sebelumnya</a
+    >{% endif %}
+    <span
+      >Halaman
+      {{ audit_page.number }}
+      dari
+      {{ audit_page.paginator.num_pages }}</span
+    >
+    {% if audit_page.has_next %}<a
+      href="?history_page={{ audit_page.next_page_number }}#audit-heading"
+      >Riwayat Berikutnya</a
+    >{% endif %}
+  </nav>
+  {% endif %}
+</section>

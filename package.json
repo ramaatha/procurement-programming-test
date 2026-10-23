@@ -1,0 +1,12 @@
+{
+  "name": "procurement-format-tools",
+  "private": true,
+  "scripts": {
+    "format": "prettier --write \"templates/**/*.html\" \"static/css/**/*.css\" \"static/js/**/*.js\"",
+    "format:check": "prettier --check \"templates/**/*.html\" \"static/css/**/*.css\" \"static/js/**/*.js\""
+  },
+  "devDependencies": {
+    "prettier": "3.7.4",
+    "prettier-plugin-django-alpine": "1.3.0"
+  }
+}

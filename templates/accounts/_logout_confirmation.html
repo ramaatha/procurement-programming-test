@@ -1,0 +1,18 @@
+<section class="logout-confirmation">
+  <h2 id="{{ heading_id }}">Keluar Dari Akun?</h2>
+  <p>
+    Isian yang belum disimpan dapat hilang. Anda perlu masuk kembali untuk
+    melanjutkan pekerjaan.
+  </p>
+  <form method="post" action="{% url 'accounts:logout' %}">
+    {% csrf_token %}
+    <div class="confirmation-actions">
+      {% if in_dialog %}
+      <button type="button" class="secondary" data-dialog-close>Batal</button>
+      {% else %}
+      <a class="button secondary" href="{% url 'accounts:home' %}">Batal</a>
+      {% endif %}
+      <button type="submit">Ya, Keluar</button>
+    </div>
+  </form>
+</section>

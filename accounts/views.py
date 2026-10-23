@@ -43,8 +43,15 @@ class AccountLogoutView(LogoutView):
 
 @login_required
 @require_safe
+def logout_confirm(request: HttpRequest) -> HttpResponse:
+    return render(request, 'accounts/logout_confirm.html')
+
+
+@login_required
+@require_safe
 def home(request: HttpRequest) -> HttpResponse:
-    return render(request, 'accounts/home.html')
+    from procurement.dashboard import work_queue
+    return render(request, 'accounts/home.html', work_queue(request.user))
 
 
 @login_required

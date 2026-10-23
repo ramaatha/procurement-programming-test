@@ -47,12 +47,13 @@ def can_source(actor: User, target: PurchaseRequest) -> bool:
                                                 decision=Decision.APPROVE).exists())
 
 
-def comparison_rows(revision):
+def comparison_rows(revision, quotations=None):
     if revision is None:
         return []
     today = timezone.localdate()
     result = []
-    for quote in revision.quotations.select_related('vendor').prefetch_related('items__revision_item').order_by('total_minor','fulfillment_days','pk'):
+    candidates = quotations if quotations is not None else revision.quotations.select_related('vendor').prefetch_related('items__revision_item').order_by('total_minor','fulfillment_days','pk')
+    for quote in candidates:
         result.append(dict(quote=quote, issues=quotation_issues(quote, revision, today),
                            lines=sorted(quote.items.all(), key=lambda row: row.revision_item.position)))
     return result

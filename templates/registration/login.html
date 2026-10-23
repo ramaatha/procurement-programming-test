@@ -2,17 +2,29 @@
 {% comment %}filepath: templates/registration/login.html{% endcomment %}
 {% block title %}Masuk | Procurement{% endblock %}
 {% block content %}
-  <h1>Masuk ke Procurement</h1>
-  <p>Gunakan akun yang diberikan admin.</p>
-  <form method="post" action="{% url 'accounts:login' %}">
+<div class="login-layout">
+  <section class="login-context">
+    <h1>Masuk Ke Procurement</h1>
+    <p>Gunakan akun yang diberikan admin.</p>
+    <h2>Pengajuan Sampai Penerimaan</h2>
+    <p>
+      Periksa kebutuhan, keputusan, penawaran, dan pemenuhan pesanan dalam satu
+      ruang kerja.
+    </p>
+    <p class="muted">Menu dan tindakan mengikuti peran akun Anda.</p>
+  </section>
+  <form method="post" action="{% url 'accounts:login' %}" autocomplete="off">
     {% csrf_token %}
     {% if form.non_field_errors %}
-      <div role="alert">{{ form.non_field_errors }}</div>
+    <div id="login-errors" role="alert">
+      {{ form.non_field_errors }}
+    </div>
     {% endif %}
     {% for field in form %}
-      <div>{{ field.as_field_group }}</div>
+    <div>{{ field.as_field_group }}</div>
     {% endfor %}
-    <input type="hidden" name="next" value="{{ next }}">
+    <input type="hidden" name="next" value="{{ next }}" />
     <button type="submit">Masuk</button>
   </form>
+</div>
 {% endblock %}

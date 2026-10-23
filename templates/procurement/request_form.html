@@ -1,20 +1,46 @@
 {% extends "base.html" %}
 {% comment %}filepath: templates/procurement/request_form.html{% endcomment %}
-{% block title %}Draft permintaan | Procurement{% endblock %}
+{% block title %}Draft Permintaan | Procurement{% endblock %}
 {% block content %}
-  <nav aria-label="Navigasi permintaan"><a href="{% url 'procurement:request_list' %}">Daftar permintaan</a>{% if target %} · <a href="{% url 'procurement:request_detail' target.pk %}">Detail permintaan</a>{% endif %}</nav>
-  <h1>{% if target %}Ubah draft{% else %}Buat permintaan{% endif %}</h1>
-  <p>Draft boleh belum lengkap. Setiap item yang diisi harus lengkap. Pengajuan dilakukan terpisah setelah draft disimpan.</p>
-  {% if form.errors or formset.total_error_count %}<p role="alert">Draft belum disimpan. Periksa isian di bawah. <a href="{{ reload_url }}">Muat ulang data</a>.</p>{% endif %}
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <h2>Rincian item</h2>
-    <p>Jumlah maksimal tiga desimal dan harga dua desimal. Gunakan titik untuk input desimal. Centang Hapus untuk membuang baris.</p>
-    {{ formset.management_form }}
-    {{ formset.non_form_errors }}
-    {% for line in formset %}<fieldset><legend>Item {{ forloop.counter }}</legend>{{ line.as_p }}</fieldset>{% endfor %}
-    <button type="submit" name="intent" value="add_row" formnovalidate>Tambah baris item</button>
-    <button type="submit" name="intent" value="save">Simpan draft</button>
-  </form>
+<nav aria-label="Navigasi Permintaan">
+  <a href="{% url 'procurement:request_list' %}">Daftar Permintaan</a
+  >{% if target %}
+  ·
+  <a href="{% url 'procurement:request_detail' target.pk %}"
+    >Detail Permintaan</a
+  >{% endif %}
+</nav>
+<h1>{% if target %}Ubah Draft{% else %}Buat Permintaan{% endif %}</h1>
+<p>
+  Draft boleh belum lengkap. Setiap item yang diisi harus lengkap. Pengajuan
+  dilakukan terpisah setelah draft disimpan.
+</p>
+<form method="post" class="document-form">
+  {% csrf_token %}
+  <h2>Informasi Kebutuhan</h2>
+  {{ form.as_p }}
+  {% if form.errors or formset.total_error_count %}
+  <p><a href="{{ reload_url }}">Muat Ulang Data</a></p>
+  {% endif %}
+  <h2>Rincian Item</h2>
+  <p>
+    Jumlah maksimal tiga desimal dan harga dua desimal. Gunakan titik untuk
+    input desimal. Centang Hapus untuk membuang baris.
+  </p>
+  {{ formset.management_form }}
+  {{ formset.non_form_errors }}
+  {% for line in formset %}
+  <fieldset>
+    <legend>
+      Item
+      {{ forloop.counter }}
+    </legend>
+    {{ line.as_p }}
+  </fieldset>
+  {% endfor %}
+  <button type="submit" name="intent" value="add_row" formnovalidate>
+    Tambah Baris Item
+  </button>
+  <button type="submit" name="intent" value="save">Simpan Draft</button>
+</form>
 {% endblock %}

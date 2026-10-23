@@ -1,0 +1,13 @@
+{
+  "plugins": ["prettier-plugin-django-alpine"],
+  "singleQuote": false,
+  "tabWidth": 2,
+  "printWidth": 80,
+  "endOfLine": "lf",
+  "overrides": [
+    {
+      "files": "templates/**/*.html",
+      "options": { "parser": "html" }
+    }
+  ]
+}

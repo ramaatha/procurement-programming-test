@@ -1,5 +1,14 @@
-{% if page_obj.has_other_pages %}<nav aria-label="Halaman daftar">
-  {% if previous_url %}<a href="{{ previous_url }}">Sebelumnya</a>{% endif %}
-  <span>Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }}</span>
-  {% if next_url %}<a href="{{ next_url }}">Berikutnya</a>{% endif %}
-</nav>{% endif %}
+{% if page_obj.has_other_pages %}
+<nav aria-label="Halaman Daftar">
+  {% if previous_url %}<a href="{{ previous_url }}">Sebelumnya</a
+  >{% endif %}
+  <span
+    >Halaman
+    {{ page_obj.number }}
+    dari
+    {{ page_obj.paginator.num_pages }}</span
+  >
+  {% if next_url %}<a href="{{ next_url }}">Berikutnya</a
+  >{% endif %}
+</nav>
+{% endif %}

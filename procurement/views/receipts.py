@@ -45,7 +45,7 @@ def receipt_create(request,order_id):
     actor = active_actor(request.user.pk)
     if actor.role != Role.RECEIVER:
         raise PermissionDenied
-    order = get_object_or_404(visible_orders(actor),pk=order_id)
+    order = get_object_or_404(visible_orders(actor).prefetch_related('items'),pk=order_id)
     if request.method=='GET':
         try:
             require_open(order)

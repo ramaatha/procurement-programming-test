@@ -49,7 +49,7 @@ class AccountPermissionTests(TestCase):
 
     def test_TC02_admin_list_form_and_navigation_are_available(self):
         self.client.force_login(self.admin)
-        self.assertContains(self.client.get('/'),'Kelola akun')
+        self.assertContains(self.client.get('/'),'Kelola Akun')
         self.assertContains(self.client.get('/users/'),self.member.username)
         form=self.get_form('/users/new/')
         self.assertNotIn('is_superuser',form.fields)
