@@ -2,6 +2,8 @@
 
 Versi 1.1 | 22 Oktober 2026
 
+Status implementasi ditinjau ulang pada 23 Oktober 2026; kebutuhan produk tetap sama.
+
 ## 1. Gambaran produk
 
 Procurement adalah aplikasi web internal untuk mengelola pengadaan barang dan jasa. Pemohon mengajukan kebutuhan, approver menilai permintaan dan anggarannya, tim procurement memilih vendor serta menerbitkan purchase order (PO), lalu penerima mencatat hasil pemenuhan pesanan.
@@ -127,20 +129,22 @@ ID proses dan gateway mengacu pada [alur proses pengadaan](BUSINESS_PROCESS.md).
 
 | Kebutuhan | Peran | Proses / gateway | ID WBS | Skenario uji | Status |
 | --- | --- | --- | --- | --- | --- |
-| FR-01 | Seluruh pengguna internal | BP-00 | 2.1 | TC-01; TC-02 | Direncanakan |
-| FR-02 | Pemohon | BP-01; BP-02 | 2.2 | TC-03; TC-04 | Direncanakan |
-| FR-03 | Approver | BP-03; GW-01 | 2.3 | TC-05; TC-06 | Direncanakan |
-| FR-04 | Procurement; Admin | BP-04 | 3.1 | TC-07 | Direncanakan |
-| FR-05 | Procurement | BP-05; GW-02 | 3.2 | TC-08 | Direncanakan |
-| FR-06 | Procurement; Pemohon | BP-06; BP-07; GW-03 | 3.3 | TC-09; TC-10 | Direncanakan |
-| FR-07 | Procurement | BP-08; BP-09 | 3.4 | TC-11 | Direncanakan |
-| FR-08 | Penerima | BP-10; BP-11; BP-13; GW-04; GW-05 | 4.1 | TC-12; TC-13 | Direncanakan |
-| FR-09 | Penerima | BP-10; BP-12; BP-13; GW-04; GW-05 | 4.2 | TC-14 | Direncanakan |
-| FR-10 | Pemohon; Approver | BP-14; BP-15; GW-06 | 4.3 | TC-15; TC-16 | Direncanakan |
-| FR-11 | Seluruh pengguna internal | BP-16 | 5.1 | TC-17 | Direncanakan |
-| FR-12 | Seluruh pengguna internal | Seluruh proses internal | 5.2 | TC-18 | Direncanakan |
-| FR-13 | Tim pengembang | BP-00 sampai BP-16 | 6.1 | TC-19 | Direncanakan |
+| FR-01 | Seluruh pengguna internal | BP-00 | 2.1 | TC-01; TC-02 | Teruji lokal |
+| FR-02 | Pemohon | BP-01; BP-02 | 2.2 | TC-03; TC-04 | Teruji lokal |
+| FR-03 | Approver | BP-03; GW-01 | 2.3 | TC-05; TC-06 | Teruji lokal |
+| FR-04 | Procurement; Admin | BP-04 | 3.1 | TC-07 | Teruji lokal |
+| FR-05 | Procurement | BP-05; GW-02 | 3.2 | TC-08 | Teruji lokal |
+| FR-06 | Procurement; Pemohon | BP-06; BP-07; GW-03 | 3.3 | TC-09; TC-10 | Teruji lokal |
+| FR-07 | Procurement | BP-08; BP-09 | 3.4 | TC-11 | Teruji lokal |
+| FR-08 | Penerima | BP-10; BP-11; BP-13; GW-04; GW-05 | 4.1 | TC-12; TC-13 | Teruji lokal |
+| FR-09 | Penerima | BP-10; BP-12; BP-13; GW-04; GW-05 | 4.2 | TC-14 | Teruji lokal |
+| FR-10 | Pemohon; Approver | BP-14; BP-15; GW-06 | 4.3 | TC-15; TC-16 | Teruji lokal |
+| FR-11 | Seluruh pengguna internal | BP-16 | 5.1 | TC-17 | Teruji lokal |
+| FR-12 | Seluruh pengguna internal | Seluruh proses internal | 5.2 | TC-18 | Teruji lokal |
+| FR-13 | Tim pengembang | BP-00 sampai BP-16 | 6.1 | TC-19 | Teruji lokal |
 | OPT-01 | Pemohon | Sebelum BP-01 | 7.1 | Pengujian integrasi saat fitur dikembangkan | Ditunda |
+
+Status teruji lokal mengacu pada suite 245 test serta bukti browser/setup pada [TESTING](TESTING.md). Aktivitas vendor dan penyampaian PO di luar aplikasi tetap manual. Status ini bukan validasi deployment, HTTPS, perangkat fisik atau pembaca layar; OPT-01 tetap Ditunda.
 
 ## 11. Kriteria penerimaan versi awal
 

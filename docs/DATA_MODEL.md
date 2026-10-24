@@ -152,3 +152,7 @@ Kelayakan pemilihan memeriksa isi item dan total tersimpan terhadap perhitungan 
 Service `issue_order` sudah tersedia tanpa perubahan schema. Request version naik satu; status request tetap APPROVED dan PO baru ISSUED/version 1. PO menyimpan header vendor/tujuan/alasan dan seluruh item revisi dengan harga penawaran terpilih. Relasi request, revision, quotation dan vendor tetap mengikat asal dokumen; field snapshot menjadi isi detail/cetak.
 
 Satu PO sepanjang riwayat dijaga oleh transaksi dan constraint one-to-one. Replay memakai target REQUEST tetapi mengembalikan hasil ORDER. Penerbitan serentak dengan pembatalan atau penonaktifan vendor diuji pada dua koneksi SQLite berbasis file. Perubahan vendor setelah PO terbit tidak mengubah snapshot; request dengan PO terminal tetap terkunci terhadap penerbitan kedua, revisi dan pembatalan sebelum PO.
+
+## Registry Demo
+
+Migrasi `0002_demosetup` menambahkan `DemoSetup`: key versi seed sebagai primary key, manifest JSON berisi pasangan username/ID akun, kode skenario/ID permintaan dan ID vendor, serta waktu pembuatan. Registry tidak menyimpan password atau token. Registry dan seluruh data contoh dibuat dalam satu transaksi; kegagalan service membatalkan semuanya. ID yang dicatat menentukan kepemilikan seed, bukan kesamaan nama dokumen. Pemeriksaan identitas berhenti jika referensi hilang/username berubah, tanpa mengganti akun atau transaksi. Registry tidak memberi izin operasional dan tidak mengubah constraint maupun status dokumen bisnis.

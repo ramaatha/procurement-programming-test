@@ -1,10 +1,10 @@
-# Procurement
+# Procurement Web App
 
 Aplikasi web internal untuk mengelola pengadaan barang dan jasa dari pengajuan kebutuhan sampai penerimaan pesanan.
 
 Pemohon membuat draft dan mengajukan kebutuhan. Approver memutuskan revisi aktif; procurement mencatat penawaran, memilih vendor, dan menerbitkan PO. Penerima mencatat hasil barang atau jasa secara bertahap. Approver selain pemohon dapat membatalkan PO atau menutup sisanya. Snapshot, jumlah pemenuhan, serta riwayat keputusan tetap dapat ditelusuri.
 
-Antarmuka memakai antrean kerja sesuai peran, navigasi responsif, dan rincian dokumen dengan tindakan yang diizinkan. Admin mengelola akun dan vendor. Validasi berjalan di server dengan pesan dalam form yang terkait; form inti tetap dapat dipakai tanpa JavaScript. Keluar memerlukan konfirmasi. Pemeriksaan lokal terakhir lulus 233 test. Instalasi dari checkout bersih dan data demo merupakan pekerjaan berikutnya; deployment belum diverifikasi.
+Antarmuka memakai antrean kerja sesuai peran, navigasi responsif, dan rincian dokumen dengan tindakan yang diizinkan. Admin mengelola akun dan vendor. Validasi berjalan di server dengan pesan dalam form yang terkait; form inti tetap dapat dipakai tanpa JavaScript. Keluar memerlukan konfirmasi. Data demo lima peran dan panduan pengujian tersedia. Hasil verifikasi lokal ada pada [TESTING](docs/TESTING.md); deployment belum diverifikasi.
 
 ## Environment
 
@@ -42,7 +42,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Migrasi gagal.' }
 
 Konfigurasi membaca environment. `.env.example` mendokumentasikan nama variabel; aplikasi tidak memuat file `.env` secara otomatis. Gunakan terminal yang sama untuk perintah selanjutnya. Secret yang dibuat di atas tersimpan pada environment terminal dan tidak ditampilkan. Mengganti secret akan mengakhiri sesi yang menggunakan secret sebelumnya.
 
-Pada environment kerja yang telah disiapkan, Python tersedia melalui `.venv`. Ketersediaan Python pada launcher sistem berbeda dari ketersediaan interpreter di dalam virtual environment.
+Pada environment kerja yang telah disiapkan, Python tersedia melalui `.venv`. Ketersediaan Python pada launcher sistem berbeda dari ketersediaan interpreter di dalam virtual environment. Bila launcher `py` tidak tersedia, buat `.venv` menggunakan executable Python 3.12 yang terpasang: jalankan executable tersebut dengan argumen `-m venv .venv`, lalu lanjutkan mulai dari penetapan `$python`. Verifikasi instalasi bersih menggunakan interpreter Python 3.12 langsung; launcher Windows Store tidak tersedia pada lingkungan pemeriksaan.
 
 ## Membuat akun pertama
 
@@ -52,15 +52,52 @@ Pada environment kerja yang telah disiapkan, Python tersedia melalui `.venv`. Ke
 
 Isi username dan password saat diminta. Akun ini memakai peran aplikasi ADMIN. Route `/admin/` tidak diaktifkan, dan status superuser tidak memberi pengecualian pada aturan bisnis. Pembuatan akun pertama memakai command line. Setelah login sebagai ADMIN, gunakan tautan Kelola akun pada beranda atau buka `/users/` untuk mengelola akun berikutnya. Admin aktif terakhir tidak dapat dinonaktifkan atau diubah perannya.
 
-Jangan memakai password produksi untuk pengujian. Data contoh untuk seluruh alur pengadaan akan ditambahkan pada tahap berikutnya.
+Jangan memakai password produksi untuk pengujian. Untuk melihat contoh seluruh alur, gunakan database demo terpisah pada bagian berikut; tidak perlu membuat akun pertama lagi pada database demo kosong.
 
-## Menjalankan aplikasi lokal
+## Menyiapkan Demo Lima Role
+
+Setelah instalasi requirements dan environment pada langkah setup, pilih folder demo di terminal yang sama. Folder harus berada di dalam repository. Langkah ini tidak memindahkan atau menghapus database kerja `var/db.sqlite3`.
+
+```powershell
+$env:DJANGO_DATA_DIR = Join-Path (Get-Location) 'var/demo'
+& $python manage.py migrate
+if ($LASTEXITCODE -ne 0) { throw 'Migrasi demo gagal.' }
+$env:DEMO_PASSWORD = [System.Net.NetworkCredential]::new('', (Read-Host 'Password sintetis untuk akun demo baru' -AsSecureString)).Password
+try {
+    & $python manage.py seed_demo
+    if ($LASTEXITCODE -ne 0) { throw 'Pembuatan demo gagal.' }
+} finally {
+    Remove-Item Env:DEMO_PASSWORD -ErrorAction SilentlyContinue
+}
+& $python manage.py check
+& $python manage.py runserver 127.0.0.1:8000
+```
+
+Login menggunakan `demo_admin`, `demo_pemohon`, `demo_approver`, `demo_procurement`, atau `demo_penerima` dan password yang baru ditetapkan. Gunakan password minimal enam karakter yang tidak umum, tidak seluruhnya angka, dan tidak mirip username. Password tidak dicetak command atau disimpan di repository. Akun demo bersifat akun aplikasi biasa, bukan superuser.
+
+`seed_demo` membuat lima contoh berlabel G-01/J-01/G-02/G-03/J-02 dan mencetak nomor PR/PO-nya. Registry database mencatat kepemilikan data seed. Command bersifat atomik, menolak benturan identitas, dan tidak mereset password, peran atau kemajuan transaksi saat dijalankan ulang. Jika identitas yang tercatat hilang/berubah, command berhenti tanpa mengambil alih data lain. Penawaran contoh berlaku tujuh hari sejak dibuat; pemanggilan ulang tidak memperpanjangnya. Untuk mengulang dari keadaan awal, pilih folder baru seperti `var/demo-baru`, lalu migrate dan seed; jangan menghapus data lama.
+
+Ikuti [Panduan Pengguna](docs/USER_GUIDE.md) untuk melihat contoh sebagai recruiter atau mencoba barang/jasa dari awal, termasuk pergantian peran, revisi, penolakan dan penutupan sisa. Terminal dan server harus memakai `DJANGO_DATA_DIR` yang sama. Hentikan server lama sebelum mengganti folder data. File `.env` tidak dibaca otomatis.
+
+## Menjalankan aplikasi secara lokal
 
 ```powershell
 & $python manage.py runserver 127.0.0.1:8000
 ```
 
-Buka [halaman login lokal](http://127.0.0.1:8000/login/). Setelah login, halaman akun menampilkan username dan peran. Tombol Keluar mengakhiri sesi. Admin dapat membuka daftar akun, membuat akun, mengubah peran/status aktif, dan mereset password. Reset password mencabut sesi lama akun terkait; reset password sendiri mengakhiri sesi saat ini. Buka Daftar permintaan dari beranda untuk melihat data sesuai peran. Pemohon dapat membuat draft melalui `/requests/new/`. Draft boleh belum lengkap; setiap baris yang diisi harus lengkap, dengan jumlah dan harga positif. Simpan terlebih dahulu sebelum mengajukan. Pengajuan memerlukan header lengkap, tanggal kebutuhan hari ini atau setelahnya dalam WIB, serta minimal satu item. Setiap pengajuan menyimpan revisi yang tidak dapat diedit. Pembatalan memerlukan alasan dan hanya tersedia bagi pemilik sebelum ada PO. Approver membuka Antrean persetujuan pada `/approvals/`; permintaan sendiri tidak masuk antrean dan tidak boleh diputuskan sendiri setelah berganti peran. Review berlaku untuk revisi pengajuan aktif beserta plafonnya. Alasan wajib untuk meminta revisi atau menolak. Procurement dapat mengembalikan permintaan APPROVED sebelum ada PO dengan alasan; pemohon mengubah draft lalu mengajukan revisi berikutnya. Keputusan dan snapshot sebelumnya tetap dapat dibaca pada halaman revisi. Kelola vendor melalui `/vendors/`. Buka Penawaran dan pemilihan vendor pada detail permintaan untuk membandingkan harga serta waktu pemenuhan. Penawaran hanya ditulis untuk revisi aktif APPROVED sebelum PO; jumlah dan satuan mengikuti snapshot. Penawaran di luar tanggal berlaku atau plafon tetap dapat dicatat, tetapi tidak dapat dipilih. Pemilihan memerlukan alasan; jika hanya satu vendor yang layak, isi alasan sumber tunggal. Mengedit penawaran terpilih menghapus pilihan dan alasannya. Terbitkan PO melalui detail permintaan setelah pilihan penawaran diperiksa. Server mengulang pemeriksaan revisi, vendor, tanggal, rincian, plafon dan sumber tunggal. Setiap permintaan hanya boleh memiliki satu PO sepanjang riwayatnya. Buka `/orders/` untuk daftar PO, detail dan halaman cetak. Gunakan menu cetak browser atau Ctrl+P pada halaman cetak; aplikasi tidak mengirim dokumen ke vendor. Data vendor/item pesanan disimpan saat penerbitan. Request tetap APPROVED; PO mulai ISSUED dan permintaan tidak dapat direvisi/dibatalkan melalui jalur sebelum PO. Hentikan server dengan Ctrl+C.
+- **Login dan logout:** buka [halaman login lokal](http://127.0.0.1:8000/login/). Setelah login, periksa username dan peran akun. Pilih Keluar, lalu konfirmasikan untuk mengakhiri sesi.
+- **Pengelolaan akun:** admin dapat membuka daftar akun, membuat akun, mengubah peran/status aktif, dan mereset password. Reset password mencabut sesi lama akun terkait; reset password sendiri mengakhiri sesi saat ini.
+- **Draft permintaan:** buka Permintaan Pengadaan dari beranda untuk melihat data sesuai peran. Pemohon dapat membuat draft melalui `/requests/new/`. Draft boleh belum lengkap, tetapi setiap baris yang diisi harus lengkap dengan jumlah dan harga positif.
+- **Pengajuan dan pembatalan:** simpan draft sebelum mengajukan. Pengajuan memerlukan header lengkap, tanggal kebutuhan hari ini atau setelahnya dalam WIB, serta minimal satu item. Setiap pengajuan menyimpan revisi yang tidak dapat diedit. Pembatalan memerlukan alasan dan hanya tersedia bagi pemilik sebelum ada PO.
+- **Review approver:** buka Antrean Persetujuan pada `/approvals/`. Permintaan sendiri tidak masuk antrean dan tidak boleh diputuskan sendiri setelah berganti peran. Review berlaku untuk revisi pengajuan aktif beserta plafonnya; alasan wajib untuk meminta revisi atau menolak.
+- **Revisi kebutuhan:** procurement dapat mengembalikan permintaan APPROVED sebelum ada PO dengan alasan. Pemohon kemudian mengubah draft dan mengajukan revisi berikutnya. Keputusan dan snapshot sebelumnya tetap dapat dibaca pada halaman revisi.
+- **Vendor dan penawaran:** kelola vendor melalui `/vendors/`. Buka Penawaran Dan Pemilihan Vendor pada detail permintaan untuk membandingkan harga serta waktu pemenuhan. Penawaran hanya ditulis untuk revisi aktif APPROVED sebelum PO; jumlah dan satuan mengikuti snapshot.
+- **Pemilihan penawaran:** penawaran di luar tanggal berlaku atau plafon tetap dapat dicatat, tetapi tidak dapat dipilih. Pemilihan memerlukan alasan; jika hanya satu vendor yang layak, isi Alasan Sumber Tunggal. Mengedit penawaran terpilih menghapus pilihan dan alasannya.
+- **Penerbitan PO:** terbitkan PO melalui detail permintaan setelah pilihan penawaran diperiksa. Server memeriksa ulang revisi, vendor, tanggal, rincian, plafon, dan sumber tunggal. Setiap permintaan hanya boleh memiliki satu PO sepanjang riwayatnya.
+- **Detail dan cetak PO:** buka `/orders/` untuk daftar PO, detail, dan halaman cetak. Gunakan menu cetak browser atau Ctrl+P; aplikasi tidak mengirim dokumen ke vendor. Data vendor/item pesanan disimpan saat penerbitan. Request tetap APPROVED, PO mulai ISSUED, dan permintaan tidak dapat direvisi atau dibatalkan melalui jalur sebelum PO.
+- **Menghentikan server:** tekan Ctrl+C pada terminal yang menjalankan server.
+
+Untuk langkah uji barang, jasa, penerimaan, dan penutupan sisa, ikuti [Panduan Pengguna](docs/USER_GUIDE.md).
 
 Server pengembangan hanya untuk penggunaan lokal. Mode `DEBUG=false` mewajibkan hostname eksplisit dan mengaktifkan HTTPS redirect serta Secure cookie. Deployment dan HTTPS pada lingkungan hosting belum diuji.
 
@@ -77,7 +114,9 @@ Gunakan environment terminal dari langkah setup. Pastikan tidak ada proses lain 
 
 Database kerja berada pada `var/db.sqlite3`; test runner memakai `var/test.sqlite3`. `DJANGO_DATA_DIR` dapat menunjuk folder lain di dalam repository untuk pemeriksaan terisolasi. File SQLite dan journal-nya diabaikan Git. Hasil serta batas verifikasi tercatat pada [pengujian](docs/TESTING.md).
 
-## Cakupan produk
+Regresi browser yang dapat diulang tersedia melalui `scripts/browser/run.py`. Runner menyiapkan salinan sumber, database sintetis dan server loopback terpisah, lalu menjalankan suite akun/sesi, filter/paginasi dan transaksi. Prasyarat runtime, cara menjalankan, hasil terbaru serta batas bukti ada pada [regresi browser](docs/TESTING.md#tindak-lanjut-tahap-11-regresi-browser-dan-status-historis). Pengujian ini tidak mengubah database kerja atau menyatakan deployment sudah teruji.
+
+## Scope produk
 
 Versi awal dirancang untuk satu tingkat approval, satu vendor dan maksimal satu PO per permintaan, penerimaan barang/jasa bertahap, serta riwayat keputusan dan perubahan. Stok gudang, invoice, dan pembayaran tidak termasuk. Bantuan input AI/Computer Vision tetap ditunda.
 
@@ -97,7 +136,7 @@ Versi awal dirancang untuk satu tingkat approval, satu vendor dan maksimal satu 
 - [Diagram yang dapat diedit](outputs/Procurement_BPMN.drawio).
 - [WBS](outputs/Procurement_WBS.xlsx), dengan tujuh modul dan 27 paket pekerjaan.
 
-Dokumen analisis tidak menyatakan seluruh fitur sudah tersedia. Pengelolaan akun dan akses permintaan sesuai peran sudah tersedia; penerimaan FR-01 tetap menunggu seluruh modul dan pengujian alur lengkap. BPMN/WBS tidak diubah pada tahap permintaan ini.
+Status penerimaan FR-01 sampai FR-13 sudah diperbarui menjadi teruji lokal pada matriks PRD, dengan batas pemeriksaan di TESTING. BPMN/WBS tetap menjadi acuan proses; aktivitas vendor dan penyampaian PO di luar aplikasi bersifat manual. OPT-01 tetap Ditunda.
 
 ## Struktur repository
 
@@ -107,6 +146,7 @@ Dokumen analisis tidak menyatakan seluruh fitur sudah tersedia. Pengelolaan akun
 - `procurement/`: model data, migrasi, kontrak input, policy, selector, service/form/view permintaan, approval, sourcing dan PO, pemeriksaan kelayakan penawaran, serta pengujian.
 - `templates/`: halaman akun, antrean kerja, permintaan, persetujuan, penawaran, PO, penerimaan, serta halaman kegagalan.
 - `static/`: stylesheet, peningkatan form, font lokal dan lisensinya.
+- `scripts/browser/`: runner regresi Chrome dengan sumber dan database sintetis terpisah.
 - `docs/`: kebutuhan, proses, rancangan, dan hasil verifikasi.
 - `outputs/`: hasil analisis.
 - `var/`: database lokal yang diabaikan Git.
