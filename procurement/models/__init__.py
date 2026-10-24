@@ -12,3 +12,4 @@ __all__ = [
     'Vendor','Quotation','QuotationItem','PurchaseOrder','PurchaseOrderItem',
     'Receipt','ReceiptItem','AuditEvent','ActionReceipt',
 ]
+from .demo import DemoSetup

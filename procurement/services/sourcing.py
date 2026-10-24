@@ -4,6 +4,7 @@ from uuid import UUID
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import prefetch_related_objects
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -157,6 +158,7 @@ def select_quotation(ctx: ActionContext, *, request_id: UUID, quotation_id: UUID
         quote = get_object_or_404(Quotation.objects.select_related('vendor'), pk=quotation_id, revision__request=target)
         if quote.revision_id != revision.pk:
             raise ConflictError('Penawaran revisi lama tidak dapat dipilih.')
+        prefetch_related_objects([revision], 'items')
         today = timezone.localdate()
         issues = quotation_issues(quote, revision, today)
         if issues:

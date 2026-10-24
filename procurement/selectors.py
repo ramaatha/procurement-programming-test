@@ -3,6 +3,7 @@ from typing import TypedDict
 from uuid import UUID
 
 from django.db.models import Case, CharField, F, Q, QuerySet, When
+from django.db.models import prefetch_related_objects
 from django.core.exceptions import PermissionDenied
 
 from accounts.models import Role, User
@@ -50,6 +51,7 @@ def can_source(actor: User, target: PurchaseRequest) -> bool:
 def comparison_rows(revision, quotations=None):
     if revision is None:
         return []
+    prefetch_related_objects([revision], 'items')
     today = timezone.localdate()
     result = []
     candidates = quotations if quotations is not None else revision.quotations.select_related('vendor').prefetch_related('items__revision_item').order_by('total_minor','fulfillment_days','pk')
