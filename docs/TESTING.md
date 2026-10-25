@@ -2,6 +2,14 @@
 
 Diperbarui: 25 Oktober 2026
 
+## Sinkronisasi status akhir: 25 Oktober 2026
+
+Screenshot console berikutnya mengonfirmasi check --deploy hanya menghasilkan W005/W021, migrate --check tanpa error, serta izin folder konfigurasi 700 dan kedua file privat 600. Remote main commit 5209c62375103889c2f91c5065bec12185a0891e sudah dipush dan diverifikasi melalui connector; template/panduan tersedia pada commit tersebut.
+
+WBS v1.3 diperbarui pada berkas yang sama: 6.3 menjadi Terverifikasi dan 6.4 tetap Dikerjakan karena pengiriman hasil belum dikonfirmasi. Ringkasan 27/25/1/1 dan tautan Tracking lulus pemeriksaan perubahan status sementara di artifact-tool serta Microsoft Excel read-only, kemudian dipulihkan tanpa menyimpan perubahan uji. Rentang yang berubah ditinjau visual tanpa teks terpotong. Istilah Schema, UI responsive, serta istilah Inggris umum lainnya dipertahankan; hanya dependensi acyclic diganti menjadi dependensi tidak bersiklus. PDF/draw.io tidak diubah.
+
+Catatan WBS/remote yang lebih lama di bawah merupakan snapshot sebelum pemeriksaan server dan push selesai. Revisi dokumen/WBS ini masih lokal dan belum tercakup dalam commit 5209c62. Tidak ada suite aplikasi yang diulang untuk perubahan dokumen ini.
+
 ## Kesiapan Penyerahan: 25 Oktober 2026
 
 Instalasi bersih dilakukan pada salinan 193 berkas sumber yang tersedia saat pemeriksaan, virtualenv baru dan database sintetis terpisah. Python 3.12.14, SQLite 3.53.1/JSON1, seluruh requirements termasuk Pillow/HTTPX, pip check, migrasi, makemigrations --check --dry-run, check, seed dua kali dan collectstatic profil hosting lulus. Suite penuh menjalankan **297 tes dalam 52,576 detik**, tanpa kegagalan. Profil hosting memakai konfigurasi sintetis; check --deploy menghasilkan security.W005 dan security.W021 yang sudah didokumentasikan, tanpa warning yang disembunyikan.

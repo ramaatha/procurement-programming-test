@@ -103,7 +103,7 @@ Server pengembangan hanya untuk penggunaan lokal. Mode `DEBUG=false` mewajibkan 
 
 ## Demo Online di PythonAnywhere
 
-Target hosting demo adalah PythonAnywhere Beginner + SQLite. Profil hosting, pembuatan konfigurasi privat, WSGI, static files, backup dan verifikasi URL publik dijelaskan pada [panduan deployment](docs/DEPLOYMENT.md). Persiapan lokal sudah diuji. [URL demo](https://ramaatha.pythonanywhere.com/) berhasil diakses melalui HTTPS beserta static files. Screenshot pengguna membuktikan login lintas peran, alur barang/jasa, cetak PO, serta AI teks/gambar sampai draf. Pemeriksaan publik terbaru juga lulus. Pemeriksaan konfigurasi/izin file server masih terbuka; hasil lokal tidak menggantikannya.
+Target hosting demo adalah PythonAnywhere Beginner + SQLite. Profil hosting, pembuatan konfigurasi privat, WSGI, static files, backup dan verifikasi URL publik dijelaskan pada [panduan deployment](docs/DEPLOYMENT.md). Persiapan lokal sudah diuji. [URL demo](https://ramaatha.pythonanywhere.com/) berhasil diakses melalui HTTPS beserta static files. Screenshot pengguna membuktikan login lintas peran, alur barang/jasa, cetak PO, serta AI teks/gambar sampai draf. Pemeriksaan publik terbaru juga lulus. Screenshot console mengonfirmasi pemeriksaan deployment, tidak adanya migrasi tertunda, serta izin file privat. Batas pemeriksaan tetap tercatat pada TESTING.
 
 ## Menjalankan pemeriksaan
 
@@ -142,7 +142,7 @@ Versi awal dirancang untuk satu tingkat approval, satu vendor dan maksimal satu 
 
 Status penerimaan FR-01 sampai FR-13 mengacu pada matriks PRD dan batas pengujian di TESTING. BPMN v1.2 mempertahankan alur pengadaan dan menambahkan keterangan bantuan AI opsional pada pembuatan draf baru (BP-01/OPT-01). Aktivitas vendor dan penyampaian PO di luar aplikasi tetap manual.
 
-WBS v1.3 memuat 24 paket terverifikasi sesuai lingkup bukti, 2 dikerjakan, dan 1 baseline disetujui. Instalasi bersih versi akhir dengan dependensi AI dan 297 tes sudah lulus. Pemeriksaan konfigurasi/izin file server serta commit/push penyerahan masih terbuka. Rincian bukti tersedia pada sheet Tracking, [TESTING](docs/TESTING.md), dan [panduan penyerahan](docs/HANDOVER.md).
+WBS v1.3 memuat 25 paket terverifikasi sesuai lingkup bukti, 1 dikerjakan, dan 1 baseline disetujui. Instalasi bersih dengan 297 tes serta pemeriksaan hosting sudah lulus. Sumber pada main commit 5209c62 sudah dipush dan diverifikasi; pengiriman hasil belum dikonfirmasi. Revisi WBS dan dokumentasi setelah commit tersebut masih perlu di-commit/push. Rincian bukti tersedia pada sheet Tracking, [TESTING](docs/TESTING.md), dan [panduan penyerahan](docs/HANDOVER.md).
 
 ## Struktur repository
 

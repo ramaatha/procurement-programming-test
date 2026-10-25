@@ -6,8 +6,8 @@
 - Hosting: delapan aset publik cocok dengan sumber lokal; HTTPS, header, CSRF, route terlindungi, dan lima path privat lulus pemeriksaan anonim.
 - Bukti browser pengguna sudah mencakup pengadaan barang/jasa, cetak PO, dan bantuan AI sampai draf tersimpan.
 - Riwayat console menunjukkan paket v6 telah diterapkan dan VERIFY_OK. Ini bukti terpisah dari pemeriksaan HTTP terbaru.
-- Pemeriksaan akhir check --deploy dan izin file konfigurasi pada Linux masih menunggu blok di [HANDOVER](HANDOVER.md).
-- GitHub publik masih pada commit e07f790; source terbaru belum di-commit/push pengguna.
+- Screenshot console mengonfirmasi check --deploy hanya menghasilkan W005/W021, migrate --check tanpa error, serta izin folder privat 700 dan kedua file konfigurasi 600.
+- Remote main commit 5209c62 sudah dipush dan diverifikasi. Revisi WBS/dokumentasi setelah commit tersebut masih lokal; pengiriman hasil belum dikonfirmasi.
 
 Bagian bertanggal 24 Oktober di bawah merupakan riwayat tahap terdahulu. Pernyataan belum diuji pada bagian tersebut berlaku pada snapshot itu; gunakan status terbaru dan TESTING untuk keadaan akhir.
 

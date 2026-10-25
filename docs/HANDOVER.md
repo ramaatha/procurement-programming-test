@@ -3,8 +3,9 @@
 Diperbarui: 25 Oktober 2026.
 
 Pemeriksaan deployment, migrasi, dan izin file privat sudah diperiksa pada server.
-Penyerahan masih memerlukan pengujian login dengan password baru, peninjauan staged changes,
-commit, push, serta pemeriksaan tautan dokumen pada repository remote.
+Sumber pada main commit 5209c62 sudah dipush dan diperiksa pada repository remote.
+Penyerahan masih memerlukan pengujian login dengan password baru serta pengiriman hasil.
+Revisi WBS/dokumentasi setelah commit tersebut perlu ditinjau dan di-commit/push tersendiri.
 
 ## 1. Hasil pemeriksaan
 
@@ -16,7 +17,7 @@ commit, push, serta pemeriksaan tautan dokumen pada repository remote.
 | Izin konfigurasi | Screenshot console: folder privat `700`; kedua file konfigurasi `600`. |
 | Akses publik | HTTPS, header keamanan, CSRF, proteksi route/path privat, dan delapan hash aset lulus pemeriksaan sebelumnya. |
 | Password akun demo | Penggantian seluruh password dikonfirmasi pengelola; hasil login ulang belum dicatat. |
-| Repository | Branch `main` dan origin sudah diperiksa; tidak ada hasil commit/push terbaru yang dinyatakan selesai. |
+| Repository | Commit `5209c62` pada `main` sudah dipush dan diverifikasi; revisi setelahnya masih lokal. |
 
 Hasil ini berlaku pada lingkup pemeriksaan tercatat. Perangkat fisik, pembaca layar,
 beban produksi, foto rumit, dan perbandingan mode berpikir AI belum termasuk bukti tersebut.
@@ -69,8 +70,8 @@ Penghapusan tiga lampiran berikut sudah dikonfirmasi dan termasuk commit dokumen
 - `outputs/Procurement_WBS.xlsx`
 
 WBS v1.2 merupakan versi sebelumnya dan tidak termasuk lampiran aktif untuk commit ini.
-Status dalam WBS v1.3 adalah snapshot saat berkas tersebut dibuat; hasil server yang lebih baru
-dicatat pada tabel pemeriksaan di atas.
+WBS v1.3 sudah disinkronkan dengan hasil server dan push tersebut: 25 paket terverifikasi,
+1 dikerjakan, dan 1 disetujui. Pengiriman hasil tetap belum dinyatakan selesai.
 
 ## 4. Commit dan push
 
