@@ -36,6 +36,153 @@ function state(request) {
   const id = request.split('/').filter(Boolean)[1];
   return JSON.parse(execFileSync(python, [path.join(__dirname, 'observe.py'), database, id], { encoding: 'utf8' }));
 }
+
+async function verifyBreadcrumbs(page, request) {
+  const deep = request + 'quotations/new/';
+  assert.equal((await page.goto(base + deep)).status(), 200);
+  const trail = () => page.getByRole('navigation', { name: 'Jejak navigasi', exact: true });
+  const labels = await trail().locator('li').allTextContents();
+  assert.deepEqual(labels.map(label => label.replace(/\u2192/g, '').replace(/\s+/g, ' ').trim()),
+    ['Beranda', 'Daftar Permintaan', 'Detail Permintaan', 'Penawaran', 'Tambah Penawaran']);
+  assert.equal(await trail().locator('[aria-current=page]').innerText(), 'Tambah Penawaran');
+  assert.equal(await trail().locator('[aria-current=page] a').count(), 0);
+  assert.deepEqual((await trail().locator('.breadcrumb-separator').allTextContents()).map(s => s.trim()),
+    ['\u2192', '\u2192', '\u2192', '\u2192']);
+  const destinations = await trail().locator('a').evaluateAll(links => links.map(link => link.getAttribute('href')));
+  for (const width of [320, 390, 640, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    assert(await trail().evaluate(nav => parseFloat(getComputedStyle(nav).fontSize) >= 16));
+    assert(await trail().locator('a').evaluateAll(links => links.every(link => link.getBoundingClientRect().height >= 44)));
+    if ([390, 1440].includes(width))
+      await page.screenshot({ path: path.join(output, 'breadcrumbs-' + width + '.png'), fullPage: false });
+  }
+  evidence('breadcrumb font, arrow semantics and responsive wrapping', { widths: [320,390,640,768,1024,1440], fontMinPx: 16 });
+  for (let i = 0; i < destinations.length; i++) {
+    await page.goto(base + deep);
+    const anchor = trail().locator('a').nth(i);
+    if (i === 0) {
+      await anchor.focus();
+      await page.keyboard.press('Tab');
+      await page.keyboard.press('Shift+Tab');
+      assert(await anchor.evaluate(link => document.activeElement === link && parseFloat(getComputedStyle(link).outlineWidth) >= 3));
+    }
+    const [response] = await Promise.all([
+      page.waitForResponse(r => r.url() === base + destinations[i] && r.request().isNavigationRequest()),
+      i === 0 ? anchor.press('Enter') : anchor.click(),
+    ]);
+    assert.equal(response.status(), 200);
+    await page.waitForLoadState('domcontentloaded');
+    assert.equal(new URL(page.url()).pathname, destinations[i]);
+  }
+  evidence('breadcrumb ancestor links work with keyboard and pointer', { destinations });
+  await page.goto(base + request + 'quotations/');
+  assert.equal(await page.getByLabel(/^Alasan hanya satu vendor:?$/).count(), 1);
+  assert.equal(await page.getByText('Wajib jika hanya satu vendor memiliki penawaran yang memenuhi syarat.', { exact: true }).count(), 1);
+  evidence('single eligible vendor explanation is visible beside its field');
+}
+
+
+async function verifyStatusNotice(page) {
+  const notice = page.locator('.messages[role="status"]');
+  await notice.waitFor({ state: 'visible' });
+  assert((await notice.innerText()).includes('PO berhasil diterbitkan.'));
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const layout = await notice.evaluate(element => {
+      const style = getComputedStyle(element);
+      const range = document.createRange();
+      range.selectNodeContents(element.querySelector('li'));
+      const textWidth = range.getBoundingClientRect().width;
+      const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
+        + parseFloat(style.borderLeftWidth) + parseFloat(style.borderRightWidth);
+      return {
+        width: element.getBoundingClientRect().width,
+        textWidth, padding,
+        noMarkers: [...element.children].every(item => getComputedStyle(item).listStyleType === 'none'),
+      };
+    });
+    assert(layout.noMarkers, 'Status messages must have no bullet markers');
+    assert(layout.width <= layout.textWidth + layout.padding + 2, 'Short status must fit its text');
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    if ([390, 1440].includes(width))
+      await page.screenshot({ path: path.join(output, 'status-notice-' + width + '.png'), fullPage: false });
+  }
+  const original = await notice.innerHTML();
+  try {
+    await page.setViewportSize({ width: 320, height: 900 });
+    await notice.evaluate(element => {
+      element.firstElementChild.textContent = 'Pesan status sintetis untuk memeriksa pembungkusan teks. '.repeat(12) + 'REFERENSI'.repeat(20);
+      const extra = document.createElement('li');
+      extra.textContent = 'Pesan sintetis kedua.';
+      element.append(extra);
+    });
+    assert(await notice.evaluate(element => {
+      const parent = element.parentElement;
+      const parentStyle = getComputedStyle(parent);
+      const available = parent.clientWidth - parseFloat(parentStyle.paddingLeft) - parseFloat(parentStyle.paddingRight);
+      return element.getBoundingClientRect().width <= available + 1
+        && [...element.children].every(item => getComputedStyle(item).listStyleType === 'none');
+    }));
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+  } finally {
+    await notice.evaluate((element, original) => { element.innerHTML = original; }, original);
+    await page.setViewportSize({ width: 1440, height: 900 });
+  }
+  evidence('status notice fits text without bullets; long and multiple messages wrap', { widths: [320,390,768,1440], role: 'status' });
+}
+
+
+async function followAction(page, label, expectedHref) {
+  const control = page.getByRole('link', { name: label, exact: true });
+  await control.waitFor({ state: 'visible' });
+  assert.equal(await control.getAttribute('href'), expectedHref);
+  assert(await control.evaluate(link => {
+    const style = getComputedStyle(link), box = link.getBoundingClientRect();
+    return box.height >= 44 && parseFloat(style.fontSize) >= 16
+      && parseFloat(style.borderTopWidth) >= 1 && style.backgroundColor !== 'rgba(0, 0, 0, 0)';
+  }), label + ': action must look like a readable button');
+  const destination = new URL(expectedHref, page.url()).href;
+  await control.focus();
+  await control.press('Enter');
+  await page.waitForURL(destination);
+  await page.waitForLoadState('domcontentloaded');
+}
+let receiptActionCaptured = false;
+async function verifyReceiptEntry(page) {
+  const control = page.getByRole('link', { name: 'Catat Penerimaan', exact: true });
+  assert(await control.evaluate(link => {
+    const details = document.querySelector('main dl');
+    return Boolean(link.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING);
+  }));
+  if (receiptActionCaptured) return;
+  for (const width of [320,390,640,768,1024,1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    assert(await control.evaluate(link => link.getBoundingClientRect().height >= 44));
+    if ([390,1440].includes(width))
+      await page.screenshot({ path: path.join(output, 'receipt-action-' + width + '.png'), fullPage: false });
+  }
+  receiptActionCaptured = true;
+}
+async function verifyActionLayouts(cases) {
+  let checks = 0;
+  for (const [page, route] of cases) {
+    assert.equal((await page.goto(base + route)).status(), 200);
+    assert(await page.locator('.page-actions a').count() > 0);
+    for (const width of [320,390,640,768,1024,1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+      assert(await page.locator('main a.button').evaluateAll(links => links.every(link => {
+        const box = link.getBoundingClientRect();
+        return box.height >= 44 && box.right <= innerWidth + 1 && box.left >= -1;
+      })));
+      checks++;
+    }
+  }
+  evidence('workflow action buttons reflow across requester, PO, accounts and vendors', { checks, widths: [320,390,640,768,1024,1440] });
+}
+
 async function text(page) { return (await page.locator('main').innerText()).replace(/\s+/g, ' '); }
 async function fill(scope, values) {
   for (const [name, value] of Object.entries(values)) await scope.locator('[name="' + name + '"]').fill(value);
@@ -65,40 +212,46 @@ async function login(username, javaScriptEnabled = true) {
   return page;
 }
 async function draft(page, title, kind = 'GOODS', incomplete = false) {
-  await page.goto(base + '/requests/new/');
+  await page.goto(base + '/requests/');
+  await followAction(page, 'Buat Permintaan', '/requests/new/');
   await page.locator('[name=kind]').selectOption(kind);
   await fill(page, {
     title, reason: incomplete ? '' : 'Pengujian sintetis panduan',
     destination: incomplete ? '' : 'Kantor Demo', needed_on: today,
     'items-0-name': kind === 'GOODS' ? 'Monitor Uji' : 'Pemeriksaan Jaringan',
     'items-0-unit': kind === 'GOODS' ? 'unit' : 'kunjungan',
-    'items-0-quantity': kind === 'GOODS' ? '10' : '2', 'items-0-unit_price': '100000'
+    'items-0-quantity': kind === 'GOODS' ? '10' : '2', 'items-0-unit_price': kind === 'GOODS' ? '100.000' : '100.000,00'
   });
-  assert.equal(await click(page, 'Simpan Draft'), 303);
+  assert.equal(await click(page, 'Simpan Draf'), 303);
   await page.waitForURL(/\/requests\/[0-9a-f-]+\/$/);
   return new URL(page.url()).pathname;
 }
 async function submit(page, request) {
   await page.goto(base + request);
+  await followAction(page, 'Lanjutkan Pengajuan', '#submit-heading');
   assert.equal(await click(form(page, 'submit-heading'), 'Ajukan Permintaan'), 303);
   assert.equal(state(request).request[0].status, 'SUBMITTED');
 }
 async function review(page, request, decision = 'APPROVE', reason = 'Sesuai kebutuhan uji') {
   await page.goto(base + request);
+  await followAction(page, 'Tinjau Pengajuan', '#review-heading');
   const target = form(page, 'review-heading');
   await target.locator('[name=decision]').selectOption(decision);
   await fill(target, { reason });
   assert.equal(await click(target, 'Simpan Keputusan'), 303);
 }
 async function quote(page, request, suffix) {
-  await page.goto(base + request + 'quotations/new/');
+  await page.goto(base + request);
+  await followAction(page, 'Penawaran dan Pemilihan Vendor', request + 'quotations/');
+  await followAction(page, 'Tambah Penawaran', request + 'quotations/new/');
   await page.locator('[name=vendor]').selectOption({ label: 'DEMO Vendor Peralatan' });
   await fill(page, {
     reference: prefix + suffix, quoted_on: today, valid_until: tomorrow, fulfillment_days: '1',
-    'items-0-unit_price': '90000'
+    'items-0-unit_price': '90.000,00'
   });
   assert.equal(await click(page, 'Simpan Penawaran'), 303);
   await page.waitForURL(base + request + 'quotations/');
+  await followAction(page, 'Pilih Penawaran', '#selection-heading');
   await page.locator('[name=quotation]').selectOption({ index: 1 });
   await fill(page, { reason: 'Harga sesuai plafon uji', single_source_reason: 'Satu vendor sintetis layak' });
   assert.equal(await click(page, 'Simpan Pilihan Vendor'), 303);
@@ -109,6 +262,7 @@ async function quote(page, request, suffix) {
 }
 async function issue(page, request) {
   await page.goto(base + request);
+  await followAction(page, 'Lanjutkan Penerbitan PO', '#issue-heading');
   assert.equal(await click(form(page, 'issue-heading'), 'Terbitkan PO'), 303);
   await page.waitForURL(/\/orders\/[0-9a-f-]+\/$/);
   return new URL(page.url()).pathname;
@@ -122,8 +276,14 @@ async function ready(owner, approver, buyer, suffix, kind = 'GOODS') {
   return { request, order };
 }
 async function receiptForm(page, order, accepted, rejected, evidenceType = 'GOODS_DELIVERY', period = true) {
-  const response = await page.goto(base + order + 'receipts/new/');
-  assert.equal(response.status(), 200);
+  assert.equal((await page.goto(base + order)).status(), 200);
+  await verifyReceiptEntry(page);
+  await followAction(page, 'Catat Penerimaan', order + 'receipts/new/');
+  for (const name of ['service_started_on', 'service_ended_on']) {
+    const input = page.locator('[name="' + name + '"]');
+    assert.equal(await input.count(), evidenceType === 'GOODS_DELIVERY' ? 0 : 1);
+    if (evidenceType !== 'GOODS_DELIVERY') assert.notEqual(await input.getAttribute('required'), null);
+  }
   await fill(page, {
     reference: prefix + '-R-' + report.length + '-' + Date.now(),
     notes: 'Pemeriksaan sintetis sesuai panduan', 'items-0-accepted': accepted,
@@ -158,8 +318,8 @@ async function invalid(page, scope, button, request, expectedText, name, status 
     const receiver = await login('demo_penerima');
 
     for (const [code, orders, expected] of [
-      ['G-01', false, 'Draft'], ['J-01', false, 'Disetujui'],
-      ['G-02', true, 'Terbit'], ['G-03', true, 'Diterima Sebagian'], ['J-02', true, 'Diterima Lengkap']
+      ['G-01', false, 'Draf'], ['J-01', false, 'Disetujui'],
+      ['G-02', true, 'Terbit'], ['G-03', true, 'Diterima sebagian'], ['J-02', true, 'Diterima lengkap']
     ]) {
       await admin.goto(base + (orders ? '/orders/' : '/requests/') + '?q=' + encodeURIComponent('[DEMO ' + code + ']'));
       const link = admin.locator('main li h2 a').first();
@@ -170,14 +330,14 @@ async function invalid(page, scope, button, request, expectedText, name, status 
         const balances = admin.locator('#balances-heading').locator('..');
         const values = await balances.innerText();
         const normalized = values.replace(/\s+/g, ' ');
-        for (const [label, quantity] of [['Dipesan', '10.000'], ['Diterima', '6.000'], ['Ditolak', '2.000'], ['Sisa', '4.000']]) {
-          assert(normalized.includes(label + ': ' + quantity), code + ': ' + label + ' balance');
+        for (const [label, quantity] of [['Dipesan', '10'], ['Diterima', '6'], ['Ditolak', '2'], ['Sisa', '4']]) {
+          assert(new RegExp(label + ': ' + quantity + '(?: \u00b7|$)').test(normalized.trim()), code + ': ' + label + ' balance');
         }
       }
       if (code === 'J-02') {
         await admin.locator('main a[href^="/receipts/"]').first().click();
-        assert((await text(admin)).includes('Laporan Pekerjaan'));
-        assert((await text(admin)).includes('Periode Jasa'));
+        assert((await text(admin)).includes('Laporan pekerjaan'));
+        assert((await text(admin)).includes('Periode jasa'));
       }
       evidence('demo ' + code + ' readback', { expected });
     }
@@ -197,12 +357,12 @@ async function invalid(page, scope, button, request, expectedText, name, status 
     await owner.goto(base + incomplete + 'edit/');
     const edit = owner.locator('main form');
     await owner.locator('[name="items-0-quantity"]').fill('-1');
-    await invalid(owner, edit, 'Simpan Draft', incomplete,
+    await invalid(owner, edit, 'Simpan Draf', incomplete,
       'Gunakan angka biasa', 'negative quantity');
     await owner.locator('[name="items-0-quantity"]').fill('10');
     await owner.locator('[name="items-0-unit_price"]').fill('not-a-price');
-    await invalid(owner, owner.locator('main form'), 'Simpan Draft', incomplete,
-      'angka', 'invalid price');
+    await invalid(owner, owner.locator('main form'), 'Simpan Draf', incomplete,
+      'Format harga tidak valid', 'invalid price');
 
     const request = await draft(owner, prefix + ' goods');
     assert((await text(owner)).includes('1.000.000,00'));
@@ -231,7 +391,7 @@ async function invalid(page, scope, button, request, expectedText, name, status 
     assert.equal(returned.approvaldecision.length, 1);
     await owner.goto(base + request + 'edit/');
     await fill(owner, { destination: 'Kantor Demo Revisi' });
-    assert.equal(await click(owner, 'Simpan Draft'), 303);
+    assert.equal(await click(owner, 'Simpan Draf'), 303);
     await submit(owner, request);
     await review(approver, request);
     assert.equal(state(request).requestrevision.length, 2);
@@ -240,7 +400,9 @@ async function invalid(page, scope, button, request, expectedText, name, status 
     assert(!(await text(owner)).includes('Kantor Demo Revisi'));
     evidence('procurement return clears selection; revision1 immutable; resubmit revision2');
     await quote(buyer, request, ' goods-new');
+    await verifyBreadcrumbs(buyer, request);
     const order = await issue(buyer, request);
+    await verifyStatusNotice(buyer);
     const issued = state(request);
     assert.equal(issued.purchaseorder[0].total_minor, 90000000);
     for (const item of ['900.000,00', 'DEMO Vendor Peralatan', 'Monitor Uji', 'Kantor Demo Revisi', 'Harga sesuai plafon uji', 'Satu vendor sintetis layak'])
@@ -252,17 +414,22 @@ async function invalid(page, scope, button, request, expectedText, name, status 
     await fill(receiver, { 'items-0-rejection_reason': 'Dua unit rusak' });
     await saveReceipt(receiver);
     assert((await text(receiver)).includes('Dua unit rusak'));
+    await followAction(receiver, 'Catat Penerimaan Berikutnya', order + 'receipts/new/');
+    assert.equal(await receiver.locator('[name=service_started_on]').count(), 0);
     await receiver.goto(base + order);
-    assert((await text(receiver)).includes('Diterima Sebagian'));
-    assert((await text(receiver)).includes('4.000'));
+    assert((await text(receiver)).includes('Diterima sebagian'));
+    assert.match((await receiver.locator('#balances-heading').locator('..').innerText()).replace(/\s+/g, ' '), /Sisa: 4(?: \u00b7|$)/);
     await receiptForm(receiver, order, '4', '0');
     await saveReceipt(receiver);
-    await receiver.goto(base + order);
-    assert((await text(receiver)).includes('Diterima Lengkap'));
+    assert.match((await text(receiver)).replace(/\s+/g, ' '), /Diterima: 4 unit \u00b7 Ditolak: 0 unit/);
+    assert.equal(await receiver.getByRole('link', { name: 'Catat Penerimaan Berikutnya', exact: true }).count(), 0);
+    await followAction(receiver, 'Buka Detail PO', order);
+    assert((await text(receiver)).includes('Diterima lengkap'));
+    assert.match((await receiver.locator('#balances-heading').locator('..').innerText()).replace(/\s+/g, ' '), /Dipesan: 10 \u00b7 Diterima: 10 \u00b7 Ditolak: 2 \u00b7 Sisa: 0/);
     assert.equal(state(request).receipt.length, 2);
     assert.equal(state(request).receiptitem.reduce((n, r) => n + r.accepted_milli, 0), 10000);
     assert.equal(state(request).receiptitem.reduce((n, r) => n + r.rejected_milli, 0), 2000);
-    evidence('goods partial then complete; rejection history preserved');
+    evidence('goods partial then complete; rejection history preserved', { nextReceiptActionMatchesRemaining: true });
 
     for (const evidenceType of ['SERVICE_REPORT', 'SERVICE_ACCEPTANCE']) {
       const service = await ready(owner, approver, buyer, ' ' + evidenceType, 'SERVICES');
@@ -274,9 +441,9 @@ async function invalid(page, scope, button, request, expectedText, name, status 
         'periode', evidenceType + ' future period');
       await fill(receiver, { service_started_on: today, service_ended_on: today });
       await saveReceipt(receiver);
-      const label = evidenceType === 'SERVICE_REPORT' ? 'Laporan Pekerjaan' : 'Berita Acara Jasa';
+      const label = evidenceType === 'SERVICE_REPORT' ? 'Laporan pekerjaan' : 'Berita acara jasa';
       const detail = await text(receiver);
-      assert(detail.includes(label) && detail.includes('Periode Jasa') && detail.includes('Pemeriksaan sintetis'));
+      assert(detail.includes(label) && detail.includes('Periode jasa') && detail.includes('Pemeriksaan sintetis'));
       assert.equal(state(service.request).purchaseorder[0].total_minor, 18000000);
       const receipt = state(service.request).receipt[0];
       assert.equal(receipt.evidence_type, evidenceType);
@@ -286,6 +453,7 @@ async function invalid(page, scope, button, request, expectedText, name, status 
       evidence(evidenceType + ' final receipt detail', { period: today, total: 'IDR 180.000,00' });
     }
 
+    evidence('goods omit service dates; both service evidence types require and save periods');
     const cancelled = await draft(owner, prefix + ' cancel request');
     await fill(form(owner, 'cancel-heading'), { reason: 'Kebutuhan uji dibatalkan' });
     assert.equal(await click(form(owner, 'cancel-heading'), 'Batalkan Permintaan'), 303);
@@ -309,7 +477,7 @@ async function invalid(page, scope, button, request, expectedText, name, status 
       assert.equal(await click(approver, 'Konfirmasi Akhiri PO'), 303);
       const status = partial ? 'CLOSED_SHORT' : 'CANCELLED';
       assert.equal(state(closing.request).purchaseorder[0].status, status);
-      if (partial) assert((await text(approver)).includes('4.000'));
+      if (partial) assert.match((await approver.locator('#balances-heading').locator('..').innerText()).replace(/\s+/g, ' '), /Sisa: 4(?: \u00b7|$)/);
       await fill(staleClose, { reason: 'Percobaan penutupan kedua' });
       await invalid(staleClose, staleClose.locator('main form').filter({ has: staleClose.locator('[name=reason]') }),
         'Konfirmasi Akhiri PO', closing.request, 'sudah berubah', status + ' second closure', 409);
@@ -327,9 +495,9 @@ async function invalid(page, scope, button, request, expectedText, name, status 
     const a = await owner.context().newPage(), b = await owner.context().newPage();
     await a.goto(base + stale + 'edit/'); await b.goto(base + stale + 'edit/');
     await fill(a, { title: prefix + ' winner A' });
-    assert.equal(await click(a, 'Simpan Draft'), 303);
+    assert.equal(await click(a, 'Simpan Draf'), 303);
     await fill(b, { title: prefix + ' stale B' });
-    await invalid(b, b.locator('main form'), 'Simpan Draft', stale, 'Data sudah berubah', 'two tabs stale draft', 409);
+    await invalid(b, b.locator('main form'), 'Simpan Draf', stale, 'Data sudah berubah', 'two tabs stale draft', 409);
     assert.equal(state(stale).request[0].title, prefix + ' winner A');
     await a.close(); await b.close();
 
@@ -351,8 +519,27 @@ async function invalid(page, scope, button, request, expectedText, name, status 
     await receiptForm(noReceiver, noJs.order, '10', '0');
     await saveReceipt(noReceiver);
     assert.equal(state(noJs.request).purchaseorder[0].status, 'RECEIVED');
-    evidence('JavaScript disabled: draft to approval, PO and final receipt');
+    await noBuyer.goto(base + noJs.request + 'quotations/');
+    assert.equal(await noBuyer.getByRole('navigation', { name: 'Jejak navigasi', exact: true }).locator('[aria-current=page]').innerText(), 'Penawaran');
+    evidence('JavaScript disabled: draft to approval, PO and final receipt', { breadcrumbRendered: true });
 
+    const localized = await draft(owner, prefix + ' localized money');
+    await owner.goto(base + localized + 'edit/');
+    await fill(owner, { 'items-0-unit_price': '25.00.000' });
+    await invalid(owner, owner.locator('main form'), 'Simpan Draf', localized,
+      'Format harga tidak valid', 'malformed price grouping rejected without writes');
+    await fill(owner, { 'items-0-unit_price': '1.250,50' });
+    assert.equal(await click(owner, 'Simpan Draf'), 303);
+    assert.equal(state(localized).requestitem[0].estimated_unit_price_minor, 125050);
+    assert((await text(owner)).includes('12.505,00'));
+    for (const value of ['1250.50', '1.250,50']) {
+      await owner.goto(base + localized + 'edit/');
+      await fill(owner, { 'items-0-unit_price': value });
+      assert.equal(await click(owner, 'Simpan Draf'), 303);
+      assert.equal(state(localized).requestitem[0].estimated_unit_price_minor, 125050);
+    }
+    evidence('Indonesian and legacy fractional price input stores exact minor units', { priceMinor: 125050, quantity: 10 });
+    await verifyActionLayouts([[owner, '/requests/'], [owner, request], [receiver, order], [admin, '/users/'], [admin, '/vendors/']]);
     await receiver.goto(base + order);
     await receiver.screenshot({ path: path.join(output, 'goods-complete.png'), fullPage: true });
     await buyer.goto(base + order + 'print/');

@@ -1,12 +1,25 @@
 {% extends "base.html" %}
 {% block title %}Detail Penerimaan | Procurement{% endblock %}
 {% block content %}
-<p>
-  <a href="{% url 'procurement:order_detail' receipt.order_id %}"
-    >Kembali Ke PO</a
-  >
-</p>
 <h1>{{ receipt.number }}</h1>
+<div class="page-actions" aria-label="Tindakan penerimaan">
+  {% if can_receive %}
+  <a
+    class="button"
+    href="{% url 'procurement:receipt_create' receipt.order_id %}"
+    >Catat Penerimaan Berikutnya</a
+  >
+  <a
+    class="button secondary"
+    href="{% url 'procurement:order_detail' receipt.order_id %}"
+    >Buka Detail PO</a
+  >
+  {% else %}
+  <a class="button" href="{% url 'procurement:order_detail' receipt.order_id %}"
+    >Buka Detail PO</a
+  >
+  {% endif %}
+</div>
 <p>
   PO:
   {{ receipt.order.number }}
@@ -15,7 +28,7 @@
   Referensi:
   {{ receipt.reference }}
   · Bukti:
-  {{ receipt.get_evidence_type_display|title }}
+  {{ receipt.get_evidence_type_display }}
 </p>
 <p>
   Dikonfirmasi:
@@ -24,7 +37,7 @@
 </p>
 {% if receipt.service_started_on %}
 <p>
-  Periode Jasa:
+  Periode jasa:
   {{ receipt.service_started_on }}
   sampai
   {{ receipt.service_ended_on }}
@@ -44,7 +57,7 @@
   </p>
   {% if line.reason %}
   <p>
-    Alasan Penolakan:
+    Alasan penolakan:
     {{ line.reason }}
   </p>
   {% endif %}

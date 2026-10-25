@@ -27,9 +27,13 @@ class ReceiptHTTPTests(TestCase):
         self.assertEqual(result.status_code,303)
         self.assertEqual(self.client.post(self.url,data).url,result.url)
         self.assertEqual(Receipt.objects.count(),1)
-        self.assertContains(self.client.get(result.url),'SJ-HTTP')
+        detail = self.client.get(result.url)
+        self.assertContains(detail, 'SJ-HTTP')
+        self.assertEqual(detail.context['lines'][0]['accepted'], '6')
+        self.assertEqual(detail.context['lines'][0]['rejected'], '2')
         page = self.client.get(f'/orders/{self.order.pk}/')
-        self.assertContains(page,'4.000')
+        self.assertEqual(page.context['balances'][0]['remaining'], '4')
+        self.assertNotContains(page, '4.000')
 
     def test_invalid_preserves_input_and_negative_management_is_rejected(self):
         data = self.payload()
@@ -90,3 +94,64 @@ class ReceiptHTTPTests(TestCase):
         with patch('procurement.views.receipts.post_receipt',side_effect=OperationalError('database is locked')):
             response = self.client.post(self.url,data)
         self.assertEqual((response.status_code,response['Retry-After']),(503,'5'))
+
+    def test_goods_form_omits_service_dates_and_posts_without_them(self):
+        page = self.client.get(self.url)
+        self.assertNotContains(page, 'name="service_started_on"')
+        self.assertNotContains(page, 'name="service_ended_on"')
+        result = self.client.post(self.url, self.payload())
+        self.assertEqual(result.status_code, 303)
+        receipt = Receipt.objects.get(order=self.order)
+        self.assertIsNone(receipt.service_started_on)
+        self.assertIsNone(receipt.service_ended_on)
+
+    def test_goods_rejects_forged_service_dates_without_rendering_them(self):
+        data = self.payload()
+        data.update(service_started_on='2026-01-01', service_ended_on='2026-01-02')
+        page = self.client.post(self.url, data)
+        self.assertEqual(page.status_code, 400)
+        self.assertTrue(page.context['form'].non_field_errors())
+        self.assertNotContains(page, 'name="service_started_on"', status_code=400)
+        self.assertNotContains(page, 'name="service_ended_on"', status_code=400)
+        self.assertFalse(Receipt.objects.exists())
+
+    def test_services_keep_required_dates_and_save_the_period(self):
+        from django.utils import timezone
+        self.order = issued(kind='SERVICES')
+        self.url = f'/orders/{self.order.pk}/receipts/new/'
+        page = self.client.get(self.url)
+        for name in ('service_started_on', 'service_ended_on'):
+            self.assertContains(page, f'name="{name}"')
+            self.assertTrue(page.context['form'].fields[name].required)
+        data = self.payload()
+        data['evidence_type'] = 'SERVICE_REPORT'
+        self.assertEqual(self.client.post(self.url, data).status_code, 400)
+        today = timezone.localdate()
+        data.update(service_started_on=today.isoformat(), service_ended_on=today.isoformat())
+        result = self.client.post(self.url, data)
+        self.assertEqual(result.status_code, 303)
+        receipt = Receipt.objects.get(order=self.order)
+        self.assertEqual((receipt.service_started_on, receipt.service_ended_on), (today, today))
+
+    def test_record_receipt_entry_precedes_order_metadata_and_respects_role(self):
+        page = self.client.get(f'/orders/{self.order.pk}/')
+        entry = f'href="{self.url}"'.encode()
+        self.assertLess(page.content.index(entry), page.content.index(b'<dl>'))
+        self.client.force_login(user(Role.ADMIN))
+        self.assertNotContains(self.client.get(f'/orders/{self.order.pk}/'), entry.decode())
+
+    def test_receipt_next_action_follows_remaining_quantity_and_role(self):
+        result = self.client.post(self.url, self.payload())
+        page = self.client.get(result.url)
+        self.assertContains(page, f'href="{self.url}"')
+        self.client.force_login(user(Role.ADMIN))
+        self.assertNotContains(self.client.get(result.url), f'href="{self.url}"')
+        self.client.force_login(self.actor)
+        data = self.payload()
+        data.update(reference='SJ-HTTP-2', **{
+            'items-0-accepted': '4', 'items-0-rejected': '0',
+            'items-0-rejection_reason': '',
+        })
+        final = self.client.post(self.url, data)
+        self.assertEqual(final.status_code, 303)
+        self.assertNotContains(self.client.get(final.url), f'href="{self.url}"')

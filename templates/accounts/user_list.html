@@ -2,12 +2,11 @@
 {% comment %}filepath: templates/accounts/user_list.html{% endcomment %}
 {% block title %}Kelola Akun | Procurement{% endblock %}
 {% block content %}
-<nav aria-label="Navigasi Akun">
-  <a href="{% url 'accounts:home' %}">Beranda</a>
-</nav>
 <h1>Kelola Akun</h1>
 <p>Buat akun internal, atur peran, dan aktifkan atau nonaktifkan aksesnya.</p>
-<p><a href="{% url 'accounts:user_create' %}">Buat Akun</a></p>
+<div class="page-actions">
+  <a class="button" href="{% url 'accounts:user_create' %}">Buat Akun</a>
+</div>
 <ul>
   {% for account in page_obj %}
   <li>
@@ -21,12 +20,16 @@
       {% if account.is_active %}Aktif{% else %}Nonaktif{% endif %}
     </p>
     <p>
-      <a href="{% url 'accounts:user_edit' account.pk %}"
+      <a
+        class="button secondary"
+        href="{% url 'accounts:user_edit' account.pk %}"
         >Ubah Akun
         {{ account.username }}</a
       >
       ·
-      <a href="{% url 'accounts:user_password' account.pk %}"
+      <a
+        class="button secondary"
+        href="{% url 'accounts:user_password' account.pk %}"
         >Reset Password
         {{ account.username }}</a
       >

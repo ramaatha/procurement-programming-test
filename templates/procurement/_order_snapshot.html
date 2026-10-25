@@ -4,24 +4,48 @@
   Purchase Order
   {{ order.number }}
 </h1>
+{% if show_actions %}
+<div class="page-actions" aria-label="Tindakan PO">
+  {% if can_receive %}
+  <a class="button" href="{% url 'procurement:receipt_create' order.pk %}"
+    >Catat Penerimaan</a
+  >
+  {% endif %}
+  <a
+    class="button secondary"
+    href="{% url 'procurement:order_print' order.pk %}"
+    >Halaman Cetak</a
+  >
+  <a
+    class="button secondary"
+    href="{% url 'procurement:request_detail' order.request_id %}"
+    >Permintaan Sumber</a
+  >
+  {% if close_form %}
+  <a class="button secondary" href="#close-order-heading"
+    >Batalkan PO atau Tutup Sisa</a
+  >
+  {% endif %}
+</div>
+{% endif %}
 <dl>
-  <dt>Nomor Permintaan</dt>
+  <dt>Nomor permintaan</dt>
   <dd>{{ order.request.number }}</dd>
-  <dt>Revisi Pengajuan</dt>
+  <dt>Revisi pengajuan</dt>
   <dd>{{ order.revision.number }}</dd>
   <dt>Status PO</dt>
   <dd>{{ order.status|stage_label }}</dd>
-  <dt>Jenis Pengadaan</dt>
+  <dt>Jenis pengadaan</dt>
   <dd>{{ order.get_kind_display }}</dd>
   <dt>Vendor</dt>
   <dd>{{ order.vendor_name }}</dd>
-  <dt>Kontak Vendor</dt>
+  <dt>Kontak vendor</dt>
   <dd>{{ order.vendor_contact }}</dd>
-  <dt>Tujuan Penerimaan / Layanan</dt>
+  <dt>Tujuan penerimaan / layanan</dt>
   <dd>{{ order.destination }}</dd>
-  <dt>Diterbitkan Oleh</dt>
+  <dt>Diterbitkan oleh</dt>
   <dd>{{ issued_actor_name }}</dd>
-  <dt>Waktu Penerbitan</dt>
+  <dt>Waktu penerbitan</dt>
   <dd>
     {{ order.issued_at|date:'d M Y H:i' }}
     WIB
@@ -47,7 +71,7 @@
   {% endfor %}
 </ol>
 <p>
-  Total Pesanan:
+  Total pesanan:
   <strong
     >IDR
     {{ order.total_minor|money_id }}</strong
@@ -56,6 +80,6 @@
 <h2>Dasar Pemilihan</h2>
 <p>{{ order.selection_reason|linebreaksbr }}</p>
 {% if order.single_source_reason %}
-<h3>Alasan Sumber Tunggal</h3>
+<h3>Alasan Hanya Satu Vendor</h3>
 <p>{{ order.single_source_reason|linebreaksbr }}</p>
 {% endif %}

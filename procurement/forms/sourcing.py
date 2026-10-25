@@ -3,15 +3,15 @@ from django import forms
 from django.forms import BaseFormSet, formset_factory
 
 from common.forms import ActionForm
-from common.numbers import MAX_INT64, format_money, parse_money
+from common.numbers import MAX_INT64, format_money, parse_money_input
 from procurement.inputs import QuotationInput, QuoteLineInput
 from procurement.models import Quotation, Vendor
 
 
 class VendorForm(ActionForm):
-    name = forms.CharField(label='Nama Vendor', max_length=200)
+    name = forms.CharField(label='Nama vendor', max_length=200)
     contact = forms.CharField(label='Kontak', max_length=500)
-    is_active = forms.BooleanField(label='Vendor Aktif', required=False, initial=True)
+    is_active = forms.BooleanField(label='Vendor aktif', required=False, initial=True)
 
     def __init__(self, *args, creating=False, **kwargs):
         super().__init__(*args, **kwargs)
@@ -20,17 +20,17 @@ class VendorForm(ActionForm):
 
 class VendorChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
-        return obj.name + ('' if obj.is_active else ' (Nonaktif)')
+        return obj.name + ('' if obj.is_active else ' (nonaktif)')
 
 
 class QuotationForm(ActionForm):
     vendor = VendorChoiceField(label='Vendor', queryset=Vendor.objects.none())
-    reference = forms.CharField(label='Referensi Penawaran', max_length=100)
-    quoted_on = forms.DateField(label='Tanggal Penawaran', input_formats=['%Y-%m-%d'],
+    reference = forms.CharField(label='Referensi penawaran', max_length=100)
+    quoted_on = forms.DateField(label='Tanggal penawaran', input_formats=['%Y-%m-%d'],
                                 widget=forms.DateInput(format='%Y-%m-%d', attrs={'type':'date'}))
-    valid_until = forms.DateField(label='Berlaku Sampai', input_formats=['%Y-%m-%d'],
+    valid_until = forms.DateField(label='Berlaku sampai', input_formats=['%Y-%m-%d'],
                                   widget=forms.DateInput(format='%Y-%m-%d', attrs={'type':'date'}))
-    fulfillment_days = forms.IntegerField(label='Estimasi Pemenuhan (Hari)', min_value=0, max_value=MAX_INT64)
+    fulfillment_days = forms.IntegerField(label='Estimasi pemenuhan (hari)', min_value=0, max_value=MAX_INT64)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -46,11 +46,12 @@ class QuotationForm(ActionForm):
 
 class QuotationLineForm(forms.Form):
     revision_item_id = forms.UUIDField(widget=forms.HiddenInput)
-    unit_price = forms.CharField(label='Harga Per Unit (IDR)', max_length=24, strip=False,
-                                 help_text='Gunakan titik desimal, maksimal dua angka desimal.')
+    unit_price = forms.CharField(label='Harga per unit (IDR)', max_length=32, strip=False,
+                                 help_text='Contoh: 250000 atau 250.000. Untuk pecahan: 1.250,50. Tanpa Rp; maksimal dua angka desimal.',
+                                 widget=forms.TextInput(attrs={'inputmode':'decimal'}))
 
     def clean_unit_price(self):
-        return format_money(parse_money(self.cleaned_data['unit_price']))
+        return format_money(parse_money_input(self.cleaned_data['unit_price']))
 
 
 class BaseQuotationFormSet(BaseFormSet):
@@ -77,11 +78,11 @@ class QuotationChoiceField(forms.ModelChoiceField):
 
 
 class SelectionForm(ActionForm):
-    quotation = QuotationChoiceField(label='Penawaran Yang Dipilih', queryset=Quotation.objects.none())
-    reason = forms.CharField(label='Alasan Pemilihan', max_length=4000, widget=forms.Textarea(attrs={'rows':3}))
-    single_source_reason = forms.CharField(label='Alasan Sumber Tunggal', max_length=4000, required=False,
+    quotation = QuotationChoiceField(label='Penawaran yang dipilih', queryset=Quotation.objects.none())
+    reason = forms.CharField(label='Alasan pemilihan', max_length=4000, widget=forms.Textarea(attrs={'rows':3}))
+    single_source_reason = forms.CharField(label='Alasan hanya satu vendor', max_length=4000, required=False,
                                            widget=forms.Textarea(attrs={'rows':3}),
-                                           help_text='Wajib jika hanya satu vendor mempunyai penawaran yang layak.')
+                                           help_text='Wajib jika hanya satu vendor memiliki penawaran yang memenuhi syarat.')
 
     def __init__(self, *args, quotations, **kwargs):
         super().__init__(*args, **kwargs)

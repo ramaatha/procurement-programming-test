@@ -30,6 +30,23 @@ def parse_money(value: str) -> int:
     return _scaled(value, 2, allow_zero=False)
 
 
+def parse_money_input(value: str) -> int:
+    """Normalize human price input; services keep their canonical decimal contract."""
+    message = 'Format harga tidak valid. Gunakan 250000 atau 250.000; untuk pecahan gunakan 1.250,50.'
+    if not isinstance(value, str) or len(value) > 32:
+        raise ValidationError(message)
+    value = value.strip()
+    if re.fullmatch(r'[1-9][0-9]{0,2}(?:\.[0-9]{3})+(?:,[0-9]{1,2})?', value):
+        canonical = value.replace('.', '').replace(',', '.')
+    elif re.fullmatch(r'[0-9]+,[0-9]{1,2}', value):
+        canonical = value.replace(',', '.')
+    elif re.fullmatch(r'[0-9]+(?:\.[0-9]{1,2})?', value):
+        canonical = value
+    else:
+        raise ValidationError(message)
+    return parse_money(canonical)
+
+
 def line_total(qty_milli: int, unit_price_minor: int) -> int:
     _integer(qty_milli, allow_zero=False)
     _integer(unit_price_minor, allow_zero=False)
@@ -52,6 +69,16 @@ def document_total(lines: Iterable[int]) -> int:
 def format_quantity(value: int) -> str:
     _integer(value)
     return f'{value // 1000}.{value % 1000:03d}'
+
+
+def format_quantity_display(value: int) -> str:
+    """Format milli-units for readers, including unbounded historical sums."""
+    if type(value) is not int or value < 0:
+        raise ValidationError('Nilai jumlah tidak valid.')
+    whole, remainder = divmod(value, 1000)
+    grouped = f'{whole:,}'.replace(',', '.')
+    fraction = f'{remainder:03d}'.rstrip('0')
+    return f'{grouped},{fraction}' if fraction else grouped
 
 
 def format_money(value: int) -> str:

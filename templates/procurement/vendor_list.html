@@ -2,11 +2,12 @@
 {% comment %}filepath: templates/procurement/vendor_list.html{% endcomment %}
 {% block title %}Vendor | Procurement{% endblock %}
 {% block content %}
-<nav aria-label="Navigasi Vendor">
-  <a href="{% url 'accounts:home' %}">Beranda</a>
-</nav>
 <h1>Kelola Vendor</h1>
-<p><a href="{% url 'procurement:vendor_create' %}">Tambah Vendor</a></p>
+<div class="page-actions">
+  <a class="button" href="{% url 'procurement:vendor_create' %}"
+    >Tambah Vendor</a
+  >
+</div>
 <p>
   Vendor nonaktif tetap tersimpan untuk riwayat dan tidak dapat digunakan pada
   penawaran baru.
@@ -23,6 +24,14 @@
       {{ vendor.contact }}
       ·
       {% if vendor.is_active %}Aktif{% else %}Nonaktif{% endif %}
+    </p>
+    <p>
+      <a
+        class="button secondary"
+        href="{% url 'procurement:vendor_edit' vendor.pk %}"
+        aria-label="Ubah Vendor {{ vendor.name }}"
+        >Ubah Vendor</a
+      >
     </p>
   </li>
   {% empty %}

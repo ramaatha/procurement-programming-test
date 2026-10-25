@@ -20,9 +20,9 @@ def work_queue(actor) -> dict:
             title = 'Permintaan Siap Diproses'
         elif current.role == Role.REQUESTER:
             queryset = queryset.filter(status__in=['DRAFT','CHANGES_REQUESTED'])
-            title = 'Draft Dan Permintaan Yang Perlu Revisi'
+            title = 'Draf dan Permintaan yang Perlu Revisi'
         else:
             queryset = queryset.none()
-            title = 'Administrasi Akun Dan Vendor'
+            title = 'Administrasi Akun dan Vendor'
         queryset = queryset.order_by('created_at','pk')
     return dict(queue=queryset[:8],queue_title=title,queue_orders=orders)

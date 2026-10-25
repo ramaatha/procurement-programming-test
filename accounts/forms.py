@@ -24,9 +24,9 @@ class LoginForm(AuthenticationForm):
 class UserForm(ActionForm):
     username = forms.CharField(label='Username', max_length=150, widget=forms.TextInput(attrs={'autocomplete':'off','autocapitalize':'none'}))
     role = forms.ChoiceField(label='Peran', choices=Role.choices)
-    is_active = forms.BooleanField(label='Akun Aktif', required=False)
-    initial_password = forms.CharField(label='Password Awal', max_length=4096, strip=False, required=False, widget=forms.PasswordInput(attrs={'autocomplete':'new-password'}), help_text=password_validators_help_text_html())
-    confirm_password = forms.CharField(label='Ulangi Password Awal', max_length=4096, strip=False, required=False, widget=forms.PasswordInput(attrs={'autocomplete':'new-password'}))
+    is_active = forms.BooleanField(label='Akun aktif', required=False)
+    initial_password = forms.CharField(label='Password awal', max_length=4096, strip=False, required=False, widget=forms.PasswordInput(attrs={'autocomplete':'new-password'}), help_text=password_validators_help_text_html())
+    confirm_password = forms.CharField(label='Ulangi password awal', max_length=4096, strip=False, required=False, widget=forms.PasswordInput(attrs={'autocomplete':'new-password'}))
 
     def __init__(self, *args, creating: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
@@ -47,8 +47,8 @@ class UserForm(ActionForm):
 
 
 class PasswordForm(ActionForm):
-    new_password = forms.CharField(label='Password Baru', max_length=4096, strip=False, widget=forms.PasswordInput(attrs={'autocomplete':'new-password'}), help_text=password_validators_help_text_html())
-    confirm_password = forms.CharField(label='Ulangi Password Baru', max_length=4096, strip=False, widget=forms.PasswordInput(attrs={'autocomplete':'new-password'}))
+    new_password = forms.CharField(label='Password baru', max_length=4096, strip=False, widget=forms.PasswordInput(attrs={'autocomplete':'new-password'}), help_text=password_validators_help_text_html())
+    confirm_password = forms.CharField(label='Ulangi password baru', max_length=4096, strip=False, widget=forms.PasswordInput(attrs={'autocomplete':'new-password'}))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

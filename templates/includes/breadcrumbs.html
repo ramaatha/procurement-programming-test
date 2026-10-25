@@ -1,0 +1,22 @@
+{% if breadcrumbs %}
+<nav class="breadcrumbs" aria-label="Jejak navigasi">
+  <ol>
+    {% for crumb in breadcrumbs %}
+    <li>
+      {% if not forloop.first %}<span
+        class="breadcrumb-separator"
+        aria-hidden="true"
+        >&#8594;</span
+      >{% endif %}
+      {% if crumb.url %}
+      <a href="{{ crumb.url }}">{{ crumb.label }}</a>
+      {% else %}
+      <span class="breadcrumb-current" aria-current="page"
+        >{{ crumb.label }}</span
+      >
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</nav>
+{% endif %}

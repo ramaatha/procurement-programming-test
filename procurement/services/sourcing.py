@@ -147,7 +147,7 @@ def select_quotation(ctx: ActionContext, *, request_id: UUID, quotation_id: UUID
         require_procurement(actor)
         target = get_object_or_404(visible_requests(actor), pk=request_id)
         reason = _text(reason, 4000, 'Alasan pemilihan', required=True)
-        single_source_reason = _text(single_source_reason, 4000, 'Alasan sumber tunggal')
+        single_source_reason = _text(single_source_reason, 4000, 'Alasan hanya satu vendor')
         digest = payload_hash(dict(quotation_id=str(quotation_id), reason=reason, single_source_reason=single_source_reason,
                                    expected_version=ctx.expected_version))
         replay = find_replay(ctx, action='quotation.select', target_type='REQUEST', target_key=str(target.pk), digest=digest)
@@ -166,7 +166,7 @@ def select_quotation(ctx: ActionContext, *, request_id: UUID, quotation_id: UUID
         eligible_vendors = {candidate.vendor_id for candidate in revision.quotations.select_related('vendor').prefetch_related('items')
                             if not quotation_issues(candidate, revision, today)}
         if len(eligible_vendors) == 1 and not single_source_reason:
-            raise ValidationError('Isi alasan sumber tunggal karena hanya satu vendor yang layak.')
+            raise ValidationError('Isi alasan karena hanya satu vendor memiliki penawaran yang memenuhi syarat.')
         _advance(target)
         target.selected_quotation = quote
         target.selection_reason = reason

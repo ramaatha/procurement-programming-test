@@ -4,9 +4,11 @@ from procurement.views import requests
 from procurement.views import sourcing
 from procurement.views import orders
 from procurement.views import receipts
+from procurement.views.ai import assist_draft
 
 app_name='procurement'
 urlpatterns=[
+    path('requests/assist/',assist_draft,name='assist_draft'),
     path('orders/<uuid:order_id>/receipts/new/',receipts.receipt_create,name='receipt_create'),
     path('receipts/<uuid:receipt_id>/',receipts.receipt_detail,name='receipt_detail'),
     path('orders/<uuid:order_id>/close/',receipts.order_close,name='order_close'),

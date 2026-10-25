@@ -70,7 +70,7 @@ def _render_detail(request,target,*,submit_form=None,cancel_form=None,review_for
     rows=_rows(target.items.all())
     from procurement.presentation import balance_rows
     balances = balance_rows(order_context['existing_order']) if order_context['existing_order'] else []
-    response=render(request,'procurement/request_detail.html',dict(target=target,rows=rows,total_minor=document_total(row['line_total_minor'] for row in rows),editable=editable,submit_form=submit_form,cancel_form=cancel_form,review_form=review_form,revision_form=revision_form,active_revision=active_revision,revisions=target.revisions.select_related('approval__actor').order_by('-number'),balances=balances,message=message,**audit_context(target,request.GET),**order_context),status=status)
+    response=render(request,'procurement/request_detail.html',dict(breadcrumb_page='request_detail',target=target,rows=rows,total_minor=document_total(row['line_total_minor'] for row in rows),editable=editable,submit_form=submit_form,cancel_form=cancel_form,review_form=review_form,revision_form=revision_form,active_revision=active_revision,revisions=target.revisions.select_related('approval__actor').order_by('-number'),balances=balances,message=message,**audit_context(target,request.GET),**order_context),status=status)
     if status==503:response['Retry-After']='1'
     return response
 
@@ -142,7 +142,7 @@ def _draft_form(request,target=None):
                 if not database_busy(error):raise
                 form.add_error(None,'Penyimpanan sedang sibuk. Coba kembali sebentar lagi.');status=503
             else:
-                messages.success(request,'Draft berhasil disimpan.')
+                messages.success(request,'Draf berhasil disimpan.')
                 response=redirect('procurement:request_detail',request_id=result.pk);response.status_code=303
                 return response
     response=render(request,'procurement/request_form.html',dict(form=form,formset=formset,target=target,reload_url=request.path),status=status)

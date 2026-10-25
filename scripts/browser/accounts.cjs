@@ -54,10 +54,29 @@ async function submit(page, button, expected = 303) {
   await page.waitForLoadState('networkidle');
   return response;
 }
+const checkedPasswordNames = new Set();
+async function checkPasswordToggle(page, inputName, description) {
+  if (checkedPasswordNames.has(inputName)) return;
+  const input = page.locator('input[name="' + inputName + '"]');
+  const button = page.locator('button.password-toggle[aria-controls="' + await input.getAttribute('id') + '"]');
+  assert.equal(await button.getAttribute('aria-label'), 'Tampilkan ' + description);
+  assert.equal(await input.getAttribute('type'), 'password');
+  assert.equal(await button.getAttribute('aria-controls'), await input.getAttribute('id'));
+  assert.equal(await button.getAttribute('title'), 'Tampilkan ' + description);
+  await button.focus();
+  await button.press('Enter');
+  assert.equal(await input.getAttribute('type'), 'text');
+  assert.equal(await button.getAttribute('aria-label'), 'Sembunyikan ' + description);
+  assert.equal(await button.getAttribute('title'), 'Sembunyikan ' + description);
+  await button.press('Enter');
+  assert.equal(await input.getAttribute('type'), 'password');
+  checkedPasswordNames.add(inputName);
+}
 async function login(page, username, password, success = true) {
   await go(page, '/login/');
   await page.getByLabel(/^Username:?$/).fill(username);
   await page.getByLabel(/^Password:?$/).fill(password);
+  await checkPasswordToggle(page, 'password', 'password');
   await submit(page, 'Masuk', success ? 303 : 400);
   if (success) {
     assert.equal(new URL(page.url()).pathname, '/');
@@ -107,21 +126,24 @@ async function createUser(page, username, role, active) {
   await page.getByRole('link', { name: 'Buat Akun', exact: true }).click();
   await page.getByLabel(/^Username:?$/).fill(username);
   await page.getByLabel(/^Peran:?$/).selectOption(role);
-  await page.getByLabel(/^Akun Aktif:?$/).setChecked(active);
-  await page.getByLabel(/^Password Awal:?$/).fill(passwordA);
-  await page.getByLabel(/^Ulangi Password Awal:?$/).fill(passwordA);
+  await page.getByLabel(/^Akun aktif:?$/).setChecked(active);
+  await page.getByLabel(/^Password awal:?$/).fill(passwordA);
+  await page.getByLabel(/^Ulangi password awal:?$/).fill(passwordA);
+  await checkPasswordToggle(page, 'initial_password', 'password awal');
+  await checkPasswordToggle(page, 'confirm_password', 'konfirmasi password');
   await submit(page, 'Buat Akun');
   assert.match(new URL(page.url()).pathname, /^\/users\/\d+\/edit\/$/);
   assert.equal(await page.getByLabel(/^Username:?$/).inputValue(), username);
   assert.equal(await page.getByLabel(/^Peran:?$/).inputValue(), role);
-  assert.equal(await page.getByLabel(/^Akun Aktif:?$/).isChecked(), active);
+  assert.equal(await page.getByLabel(/^Akun aktif:?$/).isChecked(), active);
   return new URL(page.url()).pathname;
 }
 async function resetPassword(page, editRoute, password, self = false) {
   await go(page, editRoute);
   await page.getByRole('link', { name: 'Reset Password', exact: true }).click();
-  await page.getByLabel(/^Password Baru:?$/).fill(password);
-  await page.getByLabel(/^Ulangi Password Baru:?$/).fill(password);
+  await page.getByLabel(/^Password baru:?$/).fill(password);
+  await page.getByLabel(/^Ulangi password baru:?$/).fill(password);
+  await checkPasswordToggle(page, 'new_password', 'password baru');
   await submit(page, 'Reset Password');
   assert.equal(new URL(page.url()).pathname, self ? '/login/' : editRoute);
 }
@@ -150,7 +172,7 @@ async function resetPassword(page, editRoute, password, self = false) {
     await step('Create own inactive requester and read back account fields', async () => {
       memberRoute = await createUser(adminPage, member, 'REQUESTER', false);
       await go(adminPage, memberRoute);
-      assert.equal(await adminPage.getByLabel(/^Akun Aktif:?$/).isChecked(), false);
+      assert.equal(await adminPage.getByLabel(/^Akun aktif:?$/).isChecked(), false);
       await shot(adminPage, '01-member-inactive');
     });
     await step('Inactive account login is rejected', async () => {
@@ -159,10 +181,10 @@ async function resetPassword(page, editRoute, password, self = false) {
     });
     await step('Reactivate account, read back state, and login successfully', async () => {
       await go(adminPage, memberRoute);
-      await adminPage.getByLabel(/^Akun Aktif:?$/).check();
+      await adminPage.getByLabel(/^Akun aktif:?$/).check();
       await submit(adminPage, 'Simpan Perubahan');
       await go(adminPage, memberRoute);
-      assert.equal(await adminPage.getByLabel(/^Akun Aktif:?$/).isChecked(), true);
+      assert.equal(await adminPage.getByLabel(/^Akun aktif:?$/).isChecked(), true);
       await login(memberPage, member, passwordA);
       assert.equal((await memberPage.locator('.topbar span').innerText()).trim(), 'Pemohon');
     });
@@ -210,18 +232,18 @@ async function resetPassword(page, editRoute, password, self = false) {
     await step('Create own vendor and read back persisted active fields', async () => {
       await go(adminPage, '/vendors/');
       await adminPage.getByRole('link', { name: 'Tambah Vendor', exact: true }).click();
-      await adminPage.getByLabel(/^Nama Vendor:?$/).fill(vendor);
+      await adminPage.getByLabel(/^Nama vendor:?$/).fill(vendor);
       await adminPage.getByLabel(/^Kontak:?$/).fill(`synthetic-${suffix}@example.invalid`);
-      await adminPage.getByLabel(/^Vendor Aktif:?$/).check();
+      await adminPage.getByLabel(/^Vendor aktif:?$/).check();
       await submit(adminPage, 'Simpan Vendor');
       await adminPage.getByRole('link', { name: vendor, exact: true }).click();
       vendorRoute = new URL(adminPage.url()).pathname;
-      assert.equal(await adminPage.getByLabel(/^Nama Vendor:?$/).inputValue(), vendor);
+      assert.equal(await adminPage.getByLabel(/^Nama vendor:?$/).inputValue(), vendor);
       assert.equal(await adminPage.getByLabel(/^Kontak:?$/).inputValue(), `synthetic-${suffix}@example.invalid`);
-      assert.equal(await adminPage.getByLabel(/^Vendor Aktif:?$/).isChecked(), true);
+      assert.equal(await adminPage.getByLabel(/^Vendor aktif:?$/).isChecked(), true);
     });
     await step('Edit own vendor name/contact and read back list plus form', async () => {
-      await adminPage.getByLabel(/^Nama Vendor:?$/).fill(`${vendor} Edited`);
+      await adminPage.getByLabel(/^Nama vendor:?$/).fill(`${vendor} Edited`);
       await adminPage.getByLabel(/^Kontak:?$/).fill(`edited-${suffix}@example.invalid`);
       await submit(adminPage, 'Simpan Vendor');
       const row = adminPage.locator('main li').filter({ has: adminPage.getByRole('link', { name: `${vendor} Edited`, exact: true }) });
@@ -231,15 +253,15 @@ async function resetPassword(page, editRoute, password, self = false) {
       assert.equal(await adminPage.getByLabel(/^Kontak:?$/).inputValue(), `edited-${suffix}@example.invalid`);
     });
     await step('Deactivate own vendor and read back nonactive state in list and fresh form', async () => {
-      await adminPage.getByLabel(/^Vendor Aktif:?$/).uncheck();
+      await adminPage.getByLabel(/^Vendor aktif:?$/).uncheck();
       await submit(adminPage, 'Simpan Vendor');
       const row = adminPage.locator('main li').filter({ has: adminPage.getByRole('link', { name: `${vendor} Edited`, exact: true }) });
       assert.match(await row.innerText(), /Nonaktif/);
       await shot(adminPage, '07-vendor-list-nonactive');
       await adminPage.getByRole('link', { name: `${vendor} Edited`, exact: true }).click();
       await go(adminPage, vendorRoute);
-      assert.equal(await adminPage.getByLabel(/^Vendor Aktif:?$/).isChecked(), false);
-      assert.equal(await adminPage.getByLabel(/^Nama Vendor:?$/).inputValue(), `${vendor} Edited`);
+      assert.equal(await adminPage.getByLabel(/^Vendor aktif:?$/).isChecked(), false);
+      assert.equal(await adminPage.getByLabel(/^Nama vendor:?$/).inputValue(), `${vendor} Edited`);
       assert.equal(await adminPage.getByLabel(/^Kontak:?$/).inputValue(), `edited-${suffix}@example.invalid`);
       await shot(adminPage, '08-vendor-persisted-nonactive');
     });

@@ -40,11 +40,11 @@ def issue_order(ctx: ActionContext, *, request_id: UUID) -> PurchaseOrder:
         if issues:
             raise ValidationError(issues)
         reason = _text(target.selection_reason,4000,'Alasan pemilihan',required=True)
-        source_reason = _text(target.single_source_reason,4000,'Alasan sumber tunggal')
+        source_reason = _text(target.single_source_reason,4000,'Alasan hanya satu vendor')
         eligible_vendors = {candidate.vendor_id for candidate in revision.quotations.select_related('vendor').prefetch_related('items')
                             if not quotation_issues(candidate,revision,today)}
         if len(eligible_vendors)==1 and not source_reason:
-            raise ValidationError('Kondisi sumber berubah. Pilih kembali penawaran dengan alasan sumber tunggal.')
+            raise ValidationError('Kini hanya satu vendor memenuhi syarat. Pilih kembali penawaran dan isi alasannya.')
         _advance(target)
         order = PurchaseOrder.objects.create(request=target,revision=revision,quotation=quote,vendor=quote.vendor,
                     vendor_name=quote.vendor.name,vendor_contact=quote.vendor.contact,kind=revision.kind,

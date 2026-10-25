@@ -11,7 +11,7 @@ from accounts.models import Role
 from common.actions import ActionContext, load_action_token, make_action_token
 from common.errors import ConflictError
 from common.http import database_busy, validation_errors
-from common.numbers import format_quantity
+from common.numbers import format_quantity_display
 from procurement.forms.receipts import CloseOrderForm, ReceiptForm, ReceiptLineFormSet
 from procurement.models import OrderStatus, Receipt
 from procurement.policies import active_actor, require_request_reviewer
@@ -25,6 +25,11 @@ def _scope(request,order,action):
     return dict(actor_id=request.user.pk,target_type='ORDER',target_key=str(order.pk),action=action)
 
 
+def _can_receive(actor, order) -> bool:
+    return actor.role == Role.RECEIVER and order.status in (
+        OrderStatus.ISSUED, OrderStatus.PARTIALLY_RECEIVED)
+
+
 def order_receipt_context(request,order,*,close_form=None):
     from procurement.views.tracking import audit_context
     actor = active_actor(request.user.pk)
@@ -33,7 +38,7 @@ def order_receipt_context(request,order,*,close_form=None):
     if can_close and close_form is None:
         close_form = CloseOrderForm(initial=dict(action_token=make_action_token(**_scope(request,order,'order.close')),expected_version=order.version))
     return dict(balances=balance_rows(order),receipts=order.receipts.order_by('confirmed_at','pk'),
-                can_receive=open_order and actor.role==Role.RECEIVER,close_form=close_form if can_close or close_form is not None else None,
+                can_receive=_can_receive(actor, order),close_form=close_form if can_close or close_form is not None else None,
                 **audit_context(order.request,request.GET))
 
 
@@ -93,9 +98,9 @@ def receipt_create(request,order_id):
 @require_safe
 def receipt_detail(request,receipt_id):
     receipt = get_object_or_404(Receipt.objects.select_related('order'),pk=receipt_id,order__in=visible_orders(request.user))
-    lines = [dict(item=row.order_item,accepted=format_quantity(row.accepted_milli),rejected=format_quantity(row.rejected_milli),reason=row.rejection_reason)
+    lines = [dict(item=row.order_item,accepted=format_quantity_display(row.accepted_milli),rejected=format_quantity_display(row.rejected_milli),reason=row.rejection_reason)
              for row in receipt.items.select_related('order_item').order_by('order_item__position')]
-    return render(request,'procurement/receipt_detail.html',dict(receipt=receipt,lines=lines))
+    return render(request,'procurement/receipt_detail.html',dict(receipt=receipt,lines=lines,can_receive=_can_receive(request.user, receipt.order)))
 
 
 @sensitive_post_parameters('action_token','csrfmiddlewaretoken')

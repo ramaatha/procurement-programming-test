@@ -1,6 +1,6 @@
 # filepath: procurement/templatetags/procurement_numbers.py
 from django import template
-from common.numbers import format_money,format_quantity
+from common.numbers import format_money,format_quantity_display
 
 register=template.Library()
 
@@ -15,4 +15,4 @@ def money_id(value: int) -> str:return _localized(format_money(value))
 
 
 @register.filter
-def quantity_id(value: int) -> str:return _localized(format_quantity(value))
+def quantity_id(value: int) -> str:return format_quantity_display(value)

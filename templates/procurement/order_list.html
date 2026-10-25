@@ -2,9 +2,6 @@
 {% load procurement_numbers procurement_display %}
 {% block title %}Purchase Order | Procurement{% endblock %}
 {% block content %}
-<nav aria-label="Navigasi PO">
-  <a href="{% url 'accounts:home' %}">Beranda</a>
-</nav>
 <h1>Purchase Order</h1>
 {% include 'procurement/_tracking_filters.html' %}
 {% if not filter_form.errors %}

@@ -120,7 +120,7 @@ def _render_comparison(request, target, *, selection_form=None, status=200, mess
     history = target.revisions.values_list('pk',flat=True)
     historical = Quotation.objects.filter(revision_id__in=history).exclude(revision=revision).select_related('vendor','revision').prefetch_related('items__revision_item').order_by('-created_at','pk')
     history_page = Paginator(historical,25).get_page(request.GET.get('history_page'))
-    return _retry(render(request,'procurement/quotation_list.html',dict(target=target,revision=revision,
+    return _retry(render(request,'procurement/quotation_list.html',dict(breadcrumb_page='quotation_list',target=target,revision=revision,
                          page_obj=current,history_page=history_page,editable=editable,selection_form=selection_form,
                          message=message),status=status))
 

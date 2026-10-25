@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST, require_safe
 from common.actions import ActionContext, load_action_token, make_action_token
 from common.errors import ConflictError
 from common.http import database_busy, validation_errors
+from common.numbers import format_quantity_display
 from procurement.forms.orders import IssueOrderForm
 from procurement.models import AuditEvent
 from procurement.policies import active_actor, require_procurement
@@ -49,7 +50,16 @@ def order_detail(request,order_id):
 @require_safe
 def order_print(request,order_id):
     order = get_object_or_404(visible_orders(request.user).select_related('revision').prefetch_related('items'),pk=order_id)
-    return render(request,'procurement/order_print.html',_snapshot_context(order))
+    context = _snapshot_context(order)
+    items = list(context['items'])
+    money_values = [order.total_minor]
+    for item in items:
+        money_values.extend((item.unit_price_minor,item.line_total_minor))
+    context.update(items=items,wide_numeric_columns=(
+        any(len(format_quantity_display(item.qty_milli)) > 10 for item in items)
+        or len(f'{max(money_values) // 100:,}') + 3 > 14
+    ))
+    return render(request,'procurement/order_print.html',context)
 
 
 @sensitive_variables()

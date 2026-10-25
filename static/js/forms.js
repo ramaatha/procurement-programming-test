@@ -22,7 +22,12 @@
     .forEach((input, index) => {
       if (!input.id) input.id = `password-visibility-${index}`;
       const fieldName =
-        input.labels?.[0]?.textContent.trim().replace(/:$/, "") || "password";
+        {
+          password: "password",
+          initial_password: "password awal",
+          new_password: "password baru",
+          confirm_password: "konfirmasi password",
+        }[input.name] || "password";
       const wrapper = document.createElement("span");
       wrapper.className = "password-control";
       const toggle = document.createElement("button");

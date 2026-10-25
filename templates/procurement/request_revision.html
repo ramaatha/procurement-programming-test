@@ -3,11 +3,6 @@
 {% comment %}filepath: templates/procurement/request_revision.html{% endcomment %}
 {% block title %}Revisi Pengajuan | Procurement{% endblock %}
 {% block content %}
-<nav aria-label="Navigasi Permintaan">
-  <a href="{% url 'procurement:request_detail' target.pk %}"
-    >Detail Permintaan</a
-  >
-</nav>
 <h1>
   Revisi
   {{ revision.number }}:
@@ -15,7 +10,7 @@
 </h1>
 <p>Salinan pengajuan tersimpan dan tidak dapat diedit.</p>
 <dl>
-  <dt>Nomor Permintaan</dt>
+  <dt>Nomor permintaan</dt>
   <dd>{{ target.number }}</dd>
   <dt>Jenis</dt>
   <dd>{{ revision.get_kind_display }}</dd>
@@ -23,9 +18,9 @@
   <dd>{{ revision.reason|linebreaksbr }}</dd>
   <dt>Tujuan</dt>
   <dd>{{ revision.destination }}</dd>
-  <dt>Tanggal Kebutuhan</dt>
+  <dt>Tanggal kebutuhan</dt>
   <dd>{{ revision.needed_on|date:'d M Y' }}</dd>
-  <dt>Diajukan Pada</dt>
+  <dt>Diajukan pada</dt>
   <dd>
     {{ revision.submitted_at|date:'d M Y H:i' }}
     WIB
@@ -47,17 +42,17 @@
   {% endfor %}
 </ul>
 <p>
-  Total Estimasi:
+  Total estimasi:
   <strong
     >IDR
     {{ revision.estimated_total_minor|money_id }}</strong
   >
 </p>
-<h2>Keputusan Atas Revisi Ini</h2>
+<h2>Keputusan atas Revisi Ini</h2>
 {% if revision.approval %}
 <dl>
   <dt>Keputusan</dt>
-  <dd>{{ revision.approval.get_decision_display|title }}</dd>
+  <dd>{{ revision.approval.get_decision_display }}</dd>
   <dt>Approver</dt>
   <dd>{{ revision.approval.actor.username }}</dd>
   <dt>Waktu</dt>

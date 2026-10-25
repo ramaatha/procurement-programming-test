@@ -34,7 +34,7 @@
           {{ item.total_minor|money_id }}
         </p>
         {% else %}<a href="{% url 'procurement:request_detail' item.pk %}"
-          >{{ item.title|default:'Draft Tanpa Judul' }}</a
+          >{{ item.title|default:'Draf tanpa Judul' }}</a
         >
         <p>
           {{ item.number }}
@@ -42,6 +42,22 @@
           {{ item|request_stage }}
         </p>
         {% endif %}
+        <div class="row-actions">
+          {% if queue_orders %}
+          <a
+            class="button secondary"
+            href="{% url 'procurement:order_detail' item.pk %}"
+            >Buka PO</a
+          >
+          {% else %}
+          <a
+            class="button secondary"
+            href="{% url 'procurement:request_detail' item.pk %}"
+            >{% if user.role == 'APPROVER' %}Tinjau Permintaan{% elif user.role == 'PROCUREMENT' %}Proses
+            Permintaan{% else %}Buka Permintaan{% endif %}</a
+          >
+          {% endif %}
+        </div>
       </li>
       {% empty %}
       <li class="empty">

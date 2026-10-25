@@ -1,4 +1,4 @@
-{% load static %}
+{% load static navigation %}
 <!doctype html>
 <html lang="id">
   <head>
@@ -73,7 +73,10 @@
             {% endfor %}
           </ul>
           {% endif %}
-          <div class="page-content">{% block content %}{% endblock %}</div>
+          <div class="page-content">
+            {% breadcrumbs %}
+            {% block content %}{% endblock %}
+          </div>
         </main>
       </div>
     </div>

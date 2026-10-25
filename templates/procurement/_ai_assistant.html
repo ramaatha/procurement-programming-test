@@ -1,0 +1,116 @@
+{% load static %}
+{% comment %}filepath: templates/procurement/_ai_assistant.html{% endcomment %}
+<link rel="stylesheet" href="{% static 'css/ai-assistant.css' %}" />
+<script src="{% static 'js/ai-assistant.js' %}" defer></script>
+<details
+  class="ai-assistant no-print"
+  id="ai-assistant"
+  data-endpoint="{% url 'procurement:assist_draft' %}"
+>
+  <summary>Bantu Isi dengan AI <span>(opsional)</span></summary>
+  <p>
+    Isi manual tetap tersedia. AI hanya memberi usulan; periksa sebelum
+    digunakan.
+  </p>
+  <noscript
+    ><p>
+      Bantuan AI memerlukan JavaScript. Anda tetap dapat mengisi dan menyimpan
+      draf secara manual.
+    </p></noscript
+  >
+  <div data-ai-controls hidden>
+    <fieldset class="ai-mode">
+      <legend>Sumber kebutuhan</legend>
+      <label
+        ><input type="radio" name="ai-mode" value="text" checked /> Tulis
+        Kebutuhan</label
+      >
+      <label
+        ><input type="radio" name="ai-mode" value="image" /> Gunakan
+        Gambar</label
+      >
+    </fieldset>
+    <div class="ai-workspace">
+      <section aria-labelledby="ai-source-heading">
+        <h2 id="ai-source-heading">Masukan Anda</h2>
+        <div data-ai-text-panel>
+          <label for="ai-text">Tulis kebutuhan:</label>
+          <textarea
+            id="ai-text"
+            maxlength="1500"
+            rows="5"
+            placeholder="Contoh: Butuh pemeriksaan jaringan satu paket, estimasi Rp250.000, untuk Kantor Demo."
+          ></textarea>
+          <p class="helptext">
+            Maksimal 1.500 karakter. Sertakan jumlah, satuan, dan harga jika
+            diketahui.
+          </p>
+        </div>
+        <div data-ai-image-panel hidden>
+          <label for="ai-image">Gambar kebutuhan:</label>
+          <input
+            id="ai-image"
+            type="file"
+            accept="image/jpeg,image/png"
+            aria-describedby="ai-image-help"
+          />
+          <p class="helptext" id="ai-image-help">
+            Satu JPG/PNG maksimal 2 MB dan 12 megapiksel. Gunakan foto teks yang
+            jelas.
+          </p>
+          <img
+            data-ai-image-preview
+            alt="Pratinjau gambar kebutuhan yang dipilih"
+            hidden
+          />
+          <a
+            class="ai-preview-link"
+            data-ai-preview-link
+            target="_blank"
+            rel="noopener"
+            hidden
+            >Buka Gambar Lebih Besar</a
+          >
+        </div>
+        <p>
+          Masukan diproses AI saat Anda menekan Analisis. Gunakan dokumen contoh
+          tanpa data sensitif.
+        </p>
+        <div class="row-actions">
+          <button type="button" data-ai-analyze>Analisis</button>
+          <button type="button" class="secondary" data-ai-example>
+            Gunakan Contoh
+          </button>
+          <button type="button" class="secondary" data-ai-cancel>
+            Tutup Bantuan
+          </button>
+        </div>
+      </section>
+      <section aria-labelledby="ai-result-heading">
+        <h2 id="ai-result-heading">Hasil untuk Diperiksa</h2>
+        <p data-ai-empty>
+          Hasil akan muncul setelah analisis. Belum ada perubahan pada form
+          Anda.
+        </p>
+        <div data-ai-result hidden>
+          <p>
+            Usulan belum disimpan. Periksa terutama jumlah, satuan, dan harga.
+          </p>
+          <div data-ai-values></div>
+          <ul data-ai-warnings></ul>
+          <label class="ai-confirm"
+            ><input type="checkbox" data-ai-reviewed /> Saya sudah memeriksa
+            hasilnya.</label
+          >
+          <p class="helptext">
+            Hanya kolom kosong yang diisi. Isian Anda tidak ditimpa; item baru
+            ditambahkan setelah item yang sudah terisi.
+          </p>
+          <button type="button" data-ai-apply disabled>Terapkan ke Form</button>
+        </div>
+      </section>
+    </div>
+    <p data-ai-status role="status" aria-live="polite"></p>
+    <p data-ai-error aria-live="assertive" hidden></p>
+  </div>
+</details>

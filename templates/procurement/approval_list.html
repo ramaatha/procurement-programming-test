@@ -2,10 +2,6 @@
 {% comment %}filepath: templates/procurement/approval_list.html{% endcomment %}
 {% block title %}Antrean Persetujuan | Procurement{% endblock %}
 {% block content %}
-<nav aria-label="Navigasi Persetujuan">
-  <a href="{% url 'accounts:home' %}">Beranda</a> ·
-  <a href="{% url 'procurement:request_list' %}">Semua Permintaan</a>
-</nav>
 <h1>Antrean Persetujuan</h1>
 <p>
   Permintaan yang menunggu keputusan Anda, diurutkan dari yang dibuat lebih
@@ -25,6 +21,14 @@
       {{ target.requester.username }}
       · Revisi
       {{ target.current_revision_number }}
+    </p>
+    <p>
+      <a
+        class="button secondary"
+        href="{% url 'procurement:request_detail' target.pk %}"
+        aria-label="Tinjau Permintaan {{ target.title }}"
+        >Tinjau Permintaan</a
+      >
     </p>
   </li>
   {% empty %}

@@ -32,10 +32,10 @@ async function clickLink(locator) {
 }
 async function applyFilters(route,q,kind,stage) {
   await go(route);
-  await page.getByLabel(/^Cari Nomor Atau Judul:?\s*$/).fill(q);
-  await page.getByLabel(/^Jenis Pengadaan:?\s*$/).selectOption(kind);
-  await page.getByLabel(/^Tahap Pengadaan:?\s*$/).selectOption(stage);
-  await Promise.all([page.waitForURL(url => url.searchParams.get('q') === q),page.getByRole('button',{name:'Terapkan Pencarian Dan Filter',exact:true}).click()]);
+  await page.getByLabel(/^Cari nomor atau judul:?\s*$/).fill(q);
+  await page.getByLabel(/^Jenis pengadaan:?\s*$/).selectOption(kind);
+  await page.getByLabel(/^Tahap pengadaan:?\s*$/).selectOption(stage);
+  await Promise.all([page.waitForURL(url => url.searchParams.get('q') === q),page.getByRole('button',{name:'Terapkan Pencarian dan Filter',exact:true}).click()]);
   await page.waitForLoadState('networkidle');
   for (const [key,value] of Object.entries({q,kind,stage})) assert.equal(new URL(page.url()).searchParams.get(key),value);
 }

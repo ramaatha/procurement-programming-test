@@ -111,7 +111,7 @@ class ReceiptTests(TestCase):
         self.order.refresh_from_db()
         self.post(receipt_data(self.order,'0','9223372036854775.807','Ditolak'))
         self.client.force_login(self.actor)
-        self.assertContains(self.client.get(f'/orders/{self.order.pk}/'),'18446744073709551.614')
+        self.assertContains(self.client.get(f'/orders/{self.order.pk}/'),'18.446.744.073.709.551,614')
         self.assertEqual(self.client.get(f'/orders/{self.order.pk}/receipts/new/').status_code,200)
         self.assertEqual(Receipt.objects.filter(order=self.order).count(),2)
 

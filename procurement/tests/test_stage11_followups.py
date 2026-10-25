@@ -13,7 +13,7 @@ from procurement.inputs import QuotationInput, QuoteLineInput
 from procurement.models import RequestRevision, Vendor
 from procurement.selectors import comparison_rows
 from procurement.services import orders, requests, sourcing
-from procurement.tests.factories import approved, context, user
+from procurement.tests.factories import approved, context, draft, user
 
 
 class Elements(HTMLParser):
@@ -132,11 +132,18 @@ class Stage11FollowupTests(TestCase):
         self.assertEqual(order.items.get().name, 'Item contoh')
         self.assertEqual(order.total_minor, 8000)
 
-    def test_detail_jump_target_accepts_focus_before_actions(self):
-        response = self.client.get(f'/requests/{self.target.pk}/')
+    def test_detail_action_shortcuts_accept_focus_before_forms(self):
+        target = draft(self.owner)
+        self.client.force_login(self.owner)
+        response = self.client.get(f'/requests/{target.pk}/')
         elements = Elements(response.content.decode()).elements
-        links = [attrs for tag, attrs in elements if tag == 'a' and attrs.get('href') == '#followup']
-        targets = [attrs for _, attrs in elements if attrs.get('id') == 'followup']
-        self.assertEqual(len(links), 1)
-        self.assertEqual(len(targets), 1)
-        self.assertEqual(targets[0].get('tabindex'), '-1')
+        for fragment in ('submit-heading', 'cancel-heading'):
+            with self.subTest(fragment=fragment):
+                links = [(index, attrs) for index, (tag, attrs) in enumerate(elements)
+                         if tag == 'a' and attrs.get('href') == '#' + fragment]
+                targets = [(index, attrs) for index, (_, attrs) in enumerate(elements)
+                           if attrs.get('id') == fragment]
+                self.assertEqual(len(links), 1)
+                self.assertEqual(len(targets), 1)
+                self.assertEqual(targets[0][1].get('tabindex'), '-1')
+                self.assertLess(links[0][0], targets[0][0])

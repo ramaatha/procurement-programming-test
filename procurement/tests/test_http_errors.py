@@ -29,7 +29,7 @@ class InterfaceTests(TestCase):
 
     @override_settings(DEBUG=False,SECURE_SSL_REDIRECT=False)
     def test_404_and_csrf_errors_have_recovery_and_no_internal_payload(self):
-        self.assertContains(self.client.get('/missing/'),'Kembali Ke Beranda',status_code=404)
+        self.assertContains(self.client.get('/missing/'),'Kembali ke Beranda',status_code=404)
         csrf = Client(enforce_csrf_checks=True)
         csrf.force_login(self.actor)
         response = csrf.post('/requests/new/',dict(action_token='not-a-secret'))

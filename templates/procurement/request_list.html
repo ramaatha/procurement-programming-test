@@ -2,10 +2,13 @@
 {% load procurement_display %}
 {% block title %}Permintaan | Procurement{% endblock %}
 {% block content %}
-<nav aria-label="Navigasi"><a href="{% url 'accounts:home' %}">Beranda</a></nav>
 <h1>Permintaan Pengadaan</h1>
 {% if user.role == 'REQUESTER' %}
-<p><a href="{% url 'procurement:request_create' %}">Buat Permintaan</a></p>
+<div class="page-actions">
+  <a class="button" href="{% url 'procurement:request_create' %}"
+    >Buat Permintaan</a
+  >
+</div>
 {% endif %}
 {% include 'procurement/_tracking_filters.html' %}
 {% if not filter_form.errors %}
@@ -14,7 +17,7 @@
   <li>
     <h2>
       <a href="{% url 'procurement:request_detail' item.pk %}"
-        >{{ item.title|default:'Draft Tanpa Judul' }}</a
+        >{{ item.title|default:'Draf tanpa Judul' }}</a
       >
     </h2>
     <p>

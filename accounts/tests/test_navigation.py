@@ -18,7 +18,7 @@ class NavigationTests(TestCase):
 
     def test_logout_confirmation_does_not_end_session(self):
         response = self.client.get('/logout/confirm/')
-        self.assertContains(response, 'Keluar Dari Akun?')
+        self.assertContains(response, 'Keluar dari Akun?')
         self.assertContains(response, 'Isian yang belum disimpan')
         self.assertContains(response, 'Ya, Keluar')
         self.assertIn(SESSION_KEY, self.client.session)

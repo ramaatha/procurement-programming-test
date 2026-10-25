@@ -88,9 +88,10 @@ class TrackingTests(TestCase):
         self.assertEqual(selectors.order_balances(order)[order.items.get().pk],dict(ordered_milli=10000,accepted_milli=6000,rejected_milli=2000,remaining_milli=4000))
         for url in (f'/requests/{order.request_id}/',f'/orders/{order.pk}/'):
             page = self.client.get(url)
-            self.assertContains(page,'Selesai Dengan Kekurangan')
+            self.assertContains(page,'Selesai dengan kekurangan')
             self.assertNotContains(page,'Diterima lengkap')
-            self.assertContains(page,'4.000')
+            self.assertEqual(page.context['balances'][0]['remaining'], '4')
+            self.assertNotContains(page, '4.000')
 
     def test_audit_chronology_labels_actor_and_reason_are_historical(self):
         order = issued()
@@ -100,7 +101,7 @@ class TrackingTests(TestCase):
         self.actor.save(update_fields=['username'])
         page = self.client.get(f'/requests/{order.request_id}/')
         self.assertContains(page,'Nama saat keputusan')
-        self.assertContains(page,'Sisa PO Ditutup')
+        self.assertContains(page,'Sisa PO ditutup')
         self.assertNotContains(page,'<script>rahasia</script>')
         times = [item.created_at for item in page.context['audit_page']]
         self.assertEqual(times,sorted(times))

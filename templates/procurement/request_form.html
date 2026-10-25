@@ -1,31 +1,29 @@
 {% extends "base.html" %}
 {% comment %}filepath: templates/procurement/request_form.html{% endcomment %}
-{% block title %}Draft Permintaan | Procurement{% endblock %}
+{% block title %}Draf Permintaan | Procurement{% endblock %}
 {% block content %}
-<nav aria-label="Navigasi Permintaan">
-  <a href="{% url 'procurement:request_list' %}">Daftar Permintaan</a
-  >{% if target %}
-  ·
-  <a href="{% url 'procurement:request_detail' target.pk %}"
-    >Detail Permintaan</a
-  >{% endif %}
-</nav>
-<h1>{% if target %}Ubah Draft{% else %}Buat Permintaan{% endif %}</h1>
+<h1>{% if target %}Ubah Draf{% else %}Buat Permintaan{% endif %}</h1>
 <p>
-  Draft boleh belum lengkap. Setiap item yang diisi harus lengkap. Pengajuan
-  dilakukan terpisah setelah draft disimpan.
+  Draf boleh belum lengkap. Setiap item yang diisi harus lengkap. Pengajuan
+  dilakukan terpisah setelah draf disimpan.
 </p>
-<form method="post" class="document-form">
+{% if not target %}{% include 'procurement/_ai_assistant.html' %}{% endif %}
+<form
+  method="post"
+  class="document-form"
+  data-ai-bound="{{ form.is_bound|yesno:'true,false' }}"
+>
   {% csrf_token %}
   <h2>Informasi Kebutuhan</h2>
   {{ form.as_p }}
   {% if form.errors or formset.total_error_count %}
-  <p><a href="{{ reload_url }}">Muat Ulang Data</a></p>
+  <p><a class="button secondary" href="{{ reload_url }}">Muat Ulang Data</a></p>
   {% endif %}
   <h2>Rincian Item</h2>
   <p>
-    Jumlah maksimal tiga desimal dan harga dua desimal. Gunakan titik untuk
-    input desimal. Centang Hapus untuk membuang baris.
+    Jumlah memakai titik desimal, maksimal tiga angka desimal. Harga menerima
+    format Indonesia, misalnya 250.000 atau 1.250,50. Centang Hapus untuk
+    membuang baris.
   </p>
   {{ formset.management_form }}
   {{ formset.non_form_errors }}
@@ -38,9 +36,25 @@
     {{ line.as_p }}
   </fieldset>
   {% endfor %}
-  <button type="submit" name="intent" value="add_row" formnovalidate>
-    Tambah Baris Item
-  </button>
-  <button type="submit" name="intent" value="save">Simpan Draft</button>
+  {% if not target %}
+  <template id="ai-item-template">
+    <fieldset>
+      <legend>Item baru</legend>
+      {{ formset.empty_form.as_p }}
+    </fieldset>
+  </template>
+  {% endif %}
+  <div class="form-actions">
+    <button
+      class="secondary"
+      type="submit"
+      name="intent"
+      value="add_row"
+      formnovalidate
+    >
+      Tambah Baris Item
+    </button>
+    <button type="submit" name="intent" value="save">Simpan Draf</button>
+  </div>
 </form>
 {% endblock %}

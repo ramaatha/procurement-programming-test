@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Catat Penerimaan | Procurement{% endblock %}
 {% block content %}
-<p><a href="{% url 'procurement:order_detail' order.pk %}">Kembali Ke PO</a></p>
 <h1>Catat Penerimaan</h1>
 <p>
   {{ order.number }}
@@ -20,13 +19,13 @@
   <fieldset>
     <legend>
       {% if balance %}{{ balance.item.name }}
-      ({{ balance.item.unit }}){% else %}Item Tidak Sesuai PO{% endif %}
+      ({{ balance.item.unit }}){% else %}Item tidak sesuai PO{% endif %}
     </legend>
     {% if balance %}
     <p>
       Dipesan:
       {{ balance.ordered }}
-      · Diterima Sebelumnya:
+      · Diterima sebelumnya:
       {{ balance.accepted }}
       · Sisa:
       {{ balance.remaining }}

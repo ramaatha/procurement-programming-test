@@ -1,4 +1,4 @@
-{% load procurement_numbers %}
+{% load static procurement_numbers procurement_display %}
 {% comment %}filepath: templates/procurement/order_print.html{% endcomment %}
 <!doctype html>
 <html lang="id">
@@ -6,65 +6,136 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Cetak {{ order.number }}</title>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        font:
-          12pt/1.5 system-ui,
-          sans-serif;
-        margin: 0;
-        color: #111;
-        background: white;
-      }
-      main {
-        max-width: 48rem;
-        margin: auto;
-        padding: 1.25rem;
-        overflow-wrap: anywhere;
-      }
-      dd {
-        margin-inline-start: 1rem;
-      }
-      :focus-visible {
-        outline: 3px solid currentColor;
-        outline-offset: 3px;
-      }
-      @page {
-        size: A4;
-        margin: 15mm;
-      }
-      @media print {
-        .navigation {
-          display: none;
-        }
-        main {
-          max-width: none;
-          padding: 0;
-        }
-        h2,
-        h3 {
-          break-after: avoid;
-        }
-        li {
-          break-inside: avoid;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/print.css' %}" />
+    <script src="{% static 'js/print.js' %}" defer></script>
   </head>
   <body>
-    <main>
-      <div class="navigation">
-        <a href="{% url 'procurement:order_detail' order.pk %}"
-          >Kembali Ke Detail PO</a
-        >
-        <p>
-          Gunakan menu cetak browser atau Ctrl+P. Dokumen ini tidak mengirim
-          pesanan kepada vendor.
-        </p>
+    <nav class="print-toolbar" aria-label="Tindakan cetak">
+      <a href="{% url 'procurement:order_detail' order.pk %}"
+        >Kembali ke Detail PO</a
+      >
+      <button type="button" id="print-document">Cetak PO</button>
+      <p>
+        Gunakan kertas A4, skala 100%, dan matikan header serta footer bawaan
+        browser. Anda juga dapat menekan Ctrl+P.
+      </p>
+    </nav>
+    <main
+      class="print-sheet{% if wide_numeric_columns %} print-sheet--wide-values{% endif %}"
+    >
+      <header class="print-heading">
+        <h1>Purchase Order (PO)</h1>
+        <p class="print-document-number">{{ order.number }}</p>
+      </header>
+
+      <dl class="print-metadata">
+        <div class="print-field-wide">
+          <dt>Nomor permintaan</dt>
+          <dd>{{ order.request.number }}</dd>
+        </div>
+        <div>
+          <dt>Tanggal penerbitan</dt>
+          <dd>
+            {{ order.issued_at|date:'d F Y, H:i' }}
+            WIB
+          </dd>
+        </div>
+        <div>
+          <dt>Diterbitkan oleh</dt>
+          <dd>{{ issued_actor_name }}</dd>
+        </div>
+        <div>
+          <dt>Jenis pengadaan</dt>
+          <dd>{{ order.get_kind_display }}</dd>
+        </div>
+        <div>
+          <dt>Revisi pengajuan</dt>
+          <dd>{{ order.revision.number }}</dd>
+        </div>
+        <div class="print-field-wide">
+          <dt>Status PO saat dicetak</dt>
+          <dd>{{ order.status|stage_label }}</dd>
+        </div>
+      </dl>
+
+      <div class="print-parties">
+        <section>
+          <h2>Vendor</h2>
+          <p class="print-party-name">{{ order.vendor_name }}</p>
+          <p>
+            {{ order.vendor_contact|default:'Kontak tidak dicatat.'|linebreaksbr }}
+          </p>
+        </section>
+        <section>
+          <h2>
+            {% if order.kind == 'SERVICES' %}Lokasi Layanan{% else %}Tujuan
+            Penerimaan{% endif %}
+          </h2>
+          <p>{{ order.destination|linebreaksbr }}</p>
+        </section>
       </div>
-      {% include 'procurement/_order_snapshot.html' %}
+
+      <section class="print-items" aria-labelledby="print-items-heading">
+        <h2 id="print-items-heading">
+          {% if order.kind == 'SERVICES' %}Rincian Jasa{% else %}Rincian Barang{% endif %}
+        </h2>
+        <div class="print-table-wrap">
+          <table aria-labelledby="print-items-heading">
+            <colgroup>
+              <col class="column-number" />
+              <col class="column-description" />
+              <col class="column-quantity" />
+              <col class="column-unit" />
+              <col class="column-price" />
+              <col class="column-total" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th scope="col">No.</th>
+                <th scope="col">Uraian</th>
+                <th scope="col" class="numeric">Jumlah</th>
+                <th scope="col">Satuan</th>
+                <th scope="col" class="numeric">Harga satuan (IDR)</th>
+                <th scope="col" class="numeric">Total (IDR)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in items %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.name }}</td>
+                <td class="numeric">{{ item.qty_milli|quantity_id }}</td>
+                <td>{{ item.unit }}</td>
+                <td class="numeric">{{ item.unit_price_minor|money_id }}</td>
+                <td class="numeric">{{ item.line_total_minor|money_id }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th scope="row" colspan="5">Total pesanan (IDR)</th>
+                <td class="numeric">{{ order.total_minor|money_id }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+
+      <section class="print-reasons" aria-labelledby="print-selection-heading">
+        <h2 id="print-selection-heading">Dasar Pemilihan Vendor</h2>
+        <p>
+          {{ order.selection_reason|default:'Tidak ada keterangan.'|linebreaksbr }}
+        </p>
+        {% if order.single_source_reason %}
+        <h3>Alasan Hanya Satu Vendor</h3>
+        <p>{{ order.single_source_reason|linebreaksbr }}</p>
+        {% endif %}
+      </section>
+      <footer class="print-document-note">
+        Rincian pesanan dan vendor mengikuti data saat PO diterbitkan. Status PO
+        mengikuti kondisi terkini. Dokumen ini tidak dikirim otomatis kepada
+        vendor.
+      </footer>
     </main>
   </body>
 </html>

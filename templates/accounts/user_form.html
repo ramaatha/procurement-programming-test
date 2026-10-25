@@ -3,9 +3,6 @@
 {% block title %}{% if creating %}Buat Akun{% else %}Ubah Akun{% endif %}
 | Procurement{% endblock %}
 {% block content %}
-<nav aria-label="Navigasi Akun">
-  <a href="{% url 'accounts:user_list' %}">Daftar Akun</a>
-</nav>
 <h1>
   {% if creating %}Buat Akun{% else %}Ubah Akun
   {{ target.username }}{% endif %}
@@ -17,7 +14,11 @@
 {% if not creating %}
 <p>
   Admin aktif terakhir harus tetap tersedia.
-  <a href="{% url 'accounts:user_password' target.pk %}">Reset Password</a>
+  <a
+    class="button secondary"
+    href="{% url 'accounts:user_password' target.pk %}"
+    >Reset Password</a
+  >
   dilakukan terpisah.
 </p>
 {% endif %}
@@ -25,7 +26,7 @@
   {% csrf_token %}
   {{ form.as_p }}
   {% if form.errors %}
-  <p><a href="{{ reload_url }}">Muat Ulang Data</a></p>
+  <p><a class="button secondary" href="{{ reload_url }}">Muat Ulang Data</a></p>
   {% endif %}
   <button type="submit">
     {% if creating %}Buat Akun{% else %}Simpan Perubahan{% endif %}

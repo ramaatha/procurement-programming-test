@@ -3,11 +3,6 @@
 {% comment %}filepath: templates/procurement/quotation_form.html{% endcomment %}
 {% block title %}Form Penawaran | Procurement{% endblock %}
 {% block content %}
-<nav aria-label="Navigasi Penawaran">
-  <a href="{% url 'procurement:quotation_list' target.pk %}"
-    >Daftar Penawaran</a
-  >
-</nav>
 <h1>{% if quote %}Ubah Penawaran{% else %}Tambah Penawaran{% endif %}</h1>
 <p>
   {{ target.title }}
@@ -24,7 +19,7 @@
   <h2>Harga Item</h2>
   {% for entry in entries %}
   <fieldset>
-    <legend>{{ entry.item.name|default:'Item Tidak Dikenal' }}</legend>
+    <legend>{{ entry.item.name|default:'Item tidak dikenal' }}</legend>
     {% if entry.item %}
     <p>
       {{ entry.item.qty_milli|quantity_id }}
@@ -32,10 +27,7 @@
     </p>
     {% endif %}
     {{ entry.form.revision_item_id }}{{ entry.form.revision_item_id.errors }}{{ entry.form.non_field_errors }}
-    {{ entry.form.unit_price.errors }}<label
-      for="{{ entry.form.unit_price.id_for_label }}"
-      >Harga Per Unit (IDR)</label
-    >{{ entry.form.unit_price }}
+    {{ entry.form.unit_price.errors }}{{ entry.form.unit_price.label_tag }}{{ entry.form.unit_price }}
     <p>{{ entry.form.unit_price.help_text }}</p>
   </fieldset>
   {% endfor %}

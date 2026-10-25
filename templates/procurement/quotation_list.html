@@ -3,15 +3,20 @@
 {% comment %}filepath: templates/procurement/quotation_list.html{% endcomment %}
 {% block title %}Penawaran | Procurement{% endblock %}
 {% block content %}
-<nav aria-label="Navigasi Penawaran">
-  <a href="{% url 'procurement:request_detail' target.pk %}"
-    >Detail Permintaan</a
-  >
-</nav>
 <h1>
   Penawaran:
-  {{ target.title|default:'Draft Tanpa Judul' }}
+  {{ target.title|default:'Draf tanpa Judul' }}
 </h1>
+{% if editable %}
+<div class="page-actions" aria-label="Tindakan penawaran">
+  <a class="button" href="{% url 'procurement:quotation_create' target.pk %}"
+    >Tambah Penawaran</a
+  >
+  {% if selection_form %}<a class="button secondary" href="#selection-heading"
+    >Pilih Penawaran</a
+  >{% endif %}
+</div>
+{% endif %}
 {% if message %}
 <p role="alert">{{ message }}</p>
 {% endif %}
@@ -26,16 +31,9 @@
 {% else %}
 <p>Permintaan belum mempunyai revisi pengajuan.</p>
 {% endif %}
-{% if editable %}
-<p>
-  <a href="{% url 'procurement:quotation_create' target.pk %}"
-    >Tambah Penawaran</a
-  >
-</p>
-{% endif %}
 {% if target.selected_quotation_id %}
 <p>
-  Penawaran Terpilih: <strong>{{ target.selected_quotation.reference }}</strong>
+  Penawaran terpilih: <strong>{{ target.selected_quotation.reference }}</strong>
 </p>
 <p>
   Alasan:
@@ -43,7 +41,7 @@
 </p>
 {% if target.single_source_reason %}
 <p>
-  Alasan Sumber Tunggal:
+  Alasan hanya satu vendor:
   {{ target.single_source_reason|linebreaksbr }}
 </p>
 {% endif %}{% endif %}
@@ -70,11 +68,11 @@
     <p>
       Tanggal
       {{ row.quote.quoted_on|date:'d M Y' }}
-      · Berlaku Sampai
+      · Berlaku sampai
       {{ row.quote.valid_until|date:'d M Y' }}
     </p>
     {% if row.issues %}
-    <p>Belum Layak Dipilih:</p>
+    <p>Belum layak dipilih:</p>
     <ul>
       {% for issue in row.issues %}
       <li>{{ issue }}</li>
@@ -100,7 +98,9 @@
     </ul>
     {% if editable %}
     <p>
-      <a href="{% url 'procurement:quotation_edit' target.pk row.quote.pk %}"
+      <a
+        class="button secondary"
+        href="{% url 'procurement:quotation_edit' target.pk row.quote.pk %}"
         >Ubah Penawaran
         {{ row.quote.reference }}</a
       >
@@ -131,11 +131,10 @@
 {% endif %}
 {% if selection_form %}
 <section aria-labelledby="selection-heading">
-  <h2 id="selection-heading">Pilih Penawaran</h2>
+  <h2 id="selection-heading" tabindex="-1">Pilih Penawaran</h2>
   <p>
-    Pemilihan menyimpan kandidat vendor. Penerbitan PO dilakukan terpisah.
-    Alasan sumber tunggal diperlukan jika hanya satu vendor mempunyai penawaran
-    yang memenuhi syarat.
+    Pemilihan menyimpan kandidat vendor. Penerbitan PO dilakukan terpisah. Jika
+    hanya satu vendor memenuhi syarat, jelaskan alasannya pada form.
   </p>
   <form
     method="post"

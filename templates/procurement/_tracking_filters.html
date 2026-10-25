@@ -1,7 +1,7 @@
 <form
   method="get"
   class="tracking-filters"
-  aria-label="Pencarian Dan Filter Pengadaan"
+  aria-label="Pencarian dan Filter Pengadaan"
 >
   {% for field in filter_form %}
   <div class="filter-field{% if field.name == 'q' %} filter-search{% endif %}">
@@ -10,7 +10,7 @@
   {% endfor %}
   {{ filter_form.non_field_errors }}
   <div class="filter-actions">
-    <button type="submit">Terapkan Pencarian Dan Filter</button>
+    <button type="submit">Terapkan Pencarian dan Filter</button>
     {% if has_filters %}<a href="{{ request.path }}">Hapus Filter</a
     >{% endif %}
   </div>

@@ -3,25 +3,13 @@
 {% comment %}filepath: templates/procurement/order_detail.html{% endcomment %}
 {% block title %}Detail PO | Procurement{% endblock %}
 {% block content %}
-<nav aria-label="Navigasi PO">
-  <a href="{% url 'procurement:order_list' %}">Daftar PO</a> ·
-  <a href="{% url 'procurement:request_detail' order.request_id %}"
-    >Permintaan Sumber</a
-  >
-  · <a href="{% url 'procurement:order_print' order.pk %}">Halaman Cetak</a>
-</nav>
-{% include 'procurement/_order_snapshot.html' %}
+{% include 'procurement/_order_snapshot.html' with show_actions=True %}
 <p>Rincian pesanan tersimpan saat penerbitan dan tidak dapat diedit.</p>
 <p>
-  Tahap Pengadaan:
+  Tahap pengadaan:
   {{ order.status|stage_label }}
 </p>
 {% include 'procurement/_tracking_balances.html' %}
-{% if can_receive %}
-<p>
-  <a href="{% url 'procurement:receipt_create' order.pk %}">Catat Penerimaan</a>
-</p>
-{% endif %}
 <h2>Riwayat Penerimaan</h2>
 <ul>
   {% for receipt in receipts %}
@@ -42,13 +30,13 @@
 {% if order.closed_at %}
 <h2>PO Diakhiri</h2>
 <p>
-  {{ order.get_status_display|title }}:
+  {{ order.status|stage_label }}:
   {{ order.closed_reason|linebreaksbr }}
 </p>
 {% endif %}
 {% if close_form %}
-<section>
-  <h2>Batalkan PO Atau Tutup Sisa</h2>
+<section class="no-print">
+  <h2 id="close-order-heading" tabindex="-1">Batalkan PO atau Tutup Sisa</h2>
   <p>
     PO tanpa jumlah diterima akan dibatalkan. Jika sebagian sudah diterima, sisa
     pesanan akan ditutup. Riwayat tetap tersimpan dan PO tidak dapat menerima
