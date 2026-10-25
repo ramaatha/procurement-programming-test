@@ -78,7 +78,7 @@ Bukti tahap: [TESTING](TESTING.md). Tersedia dua migrasi akun: struktur awal dan
 
 **Berkas:** buat seluruh `procurement/models/*.py`, migrasi yang diperlukan, `procurement/inputs.py`, `common/{actions,errors,numbers}.py`, `common/tests/test_numbers.py`, `procurement/tests/{factories,test_constraints,test_actions}.py`. Buat paket dan AppConfig serta daftarkan app pada settings.
 
-**Kontrak:** `parse_quantity(value: str, *, allow_zero: bool = False) -> int`, `parse_money(value: str) -> int`, `line_total(qty_milli: int, unit_price_minor: int) -> int`, `format_quantity(value: int) -> str`, `format_money(value: int) -> str`. Harga harus positif; allow_zero hanya dipakai untuk accepted/rejected. Formatter mengeluarkan desimal baku dengan tiga digit qty atau dua digit uang; presentasi Indonesia dilakukan helper template terpisah. Form angka memakai field teks dan parser yang sama, lalu menghasilkan string kanonik pada input dataclass. `make_action_token(*, actor_id: int, target_type: str, target_key: str, action: str) -> str` dan `load_action_token(token: str, *, actor_id: int, target_type: str, target_key: str, action: str) -> UUID` menggunakan signing Django dan TTL 86.400 detik. `payload_hash(payload: dict) -> str` menerima payload whitelist yang sudah dikanonisasi; password dilarang masuk helper ini.
+**Kontrak:** `parse_quantity(value: str, *, allow_zero: bool = False) -> int`, `parse_money(value: str) -> int`, `line_total(qty_milli: int, unit_price_minor: int) -> int`, `format_quantity(value: int) -> str`, `format_money(value: int) -> str`. Harga harus positif; allow_zero hanya dipakai untuk accepted/rejected. Formatter mengeluarkan desimal baku dengan tiga digit qty atau dua digit uang; presentasi Indonesia dilakukan helper template terpisah. Form angka memakai field teks; form harga menggunakan `parse_money_input(value: str) -> int` untuk menormalisasi format Indonesia sebelum menghasilkan string kanonik pada input dataclass. Parser service dan jumlah tetap memakai aturan titik desimal. `make_action_token(*, actor_id: int, target_type: str, target_key: str, action: str) -> str` dan `load_action_token(token: str, *, actor_id: int, target_type: str, target_key: str, action: str) -> UUID` menggunakan signing Django dan TTL 86.400 detik. `payload_hash(payload: dict) -> str` menerima payload whitelist yang sudah dikanonisasi; password dilarang masuk helper ini.
 
 - [x] Tulis NumbersTests TC-04 dengan assertion `parse_quantity("0.333") == 333`, `parse_money("0.05") == 5`, `line_total(333, 5) == 2`, `line_total(1, 1) == 0`, dan `line_total(500, 1) + line_total(500, 1) == 2`. Uji penolakan presisi berlebih, float, `NaN`, `Infinity`, `1e3`, negatif, dan hasil di atas int64.
 - [x] Tulis ConstraintTests untuk unique request/revision, keputusan tunggal, PO tunggal, item asing/berulang, check nilai negatif, dan FK historis PROTECT. Uji minimum baris pada service, bukan menganggap DB menjaganya.
@@ -227,25 +227,25 @@ Bukti tahap: [TESTING](TESTING.md). Tidak ada migrasi atau paket runtime baru. C
 
 Sediakan lima akun dengan identitas demo yang jelas:
 
-| Akun demo | Peran | Tujuan pengujian |
-| --- | --- | --- |
-| `demo_admin` | ADMIN | Pengelolaan akun/vendor dan pembacaan transaksi |
-| `demo_pemohon` | REQUESTER | Draft, pengajuan, revisi dan pembatalan sebelum PO |
-| `demo_approver` | APPROVER | Keputusan atas pengajuan pengguna lain dan penutupan PO |
+| Akun demo          | Peran       | Tujuan pengujian                                            |
+| ------------------ | ----------- | ----------------------------------------------------------- |
+| `demo_admin`       | ADMIN       | Pengelolaan akun/vendor dan pembacaan transaksi             |
+| `demo_pemohon`     | REQUESTER   | Draft, pengajuan, revisi dan pembatalan sebelum PO          |
+| `demo_approver`    | APPROVER    | Keputusan atas pengajuan pengguna lain dan penutupan PO     |
 | `demo_procurement` | PROCUREMENT | Penawaran, perbandingan, pemilihan vendor dan penerbitan PO |
-| `demo_penerima` | RECEIVER | Penerimaan barang/jasa serta pembacaan hasil pemenuhan |
+| `demo_penerima`    | RECEIVER    | Penerimaan barang/jasa serta pembacaan hasil pemenuhan      |
 
 Password akun baru berasal dari environment, bukan password pribadi atau nilai rahasia dalam repo. Panduan menjelaskan cara menetapkannya saat setup lokal. Bila tersedia demo online, alamat dan kredensial demo yang boleh dibagikan disampaikan oleh pemilik proyek melalui kanal pengumpulan; rencana ini tidak mengizinkan pengiriman pesan atau deployment.
 
 Gunakan database demo terpisah, misalnya melalui `DJANGO_DATA_DIR` yang menunjuk `var/demo`, dan jelaskan pemilihan database itu pada setup. Akun/transaksi kerja yang sudah ada tetap dipertahankan. Siapkan vendor serta penawaran yang diperlukan untuk lima skenario berikut:
 
-| Label skenario | Contoh | Keadaan awal yang bisa dilihat |
-| --- | --- | --- |
-| G-01 | Permintaan barang draft | Bisa diedit dan diajukan oleh pemohon |
-| J-01 | Permintaan jasa disetujui, belum ada PO | Siap dicatat penawarannya oleh procurement |
-| G-02 | PO barang terbit | Tampil di daftar PO dan siap diterima |
-| G-03 | PO barang diterima sebagian | Dipesan 10, diterima 6, ditolak 2, sisa 4; bisa dilanjutkan atau ditutup sesuai peran |
-| J-02 | PO jasa diterima lengkap | Bukti/periode jasa dan riwayat pemenuhan bisa dibaca |
+| Label skenario | Contoh                                  | Keadaan awal yang bisa dilihat                                                        |
+| -------------- | --------------------------------------- | ------------------------------------------------------------------------------------- |
+| G-01           | Permintaan barang draft                 | Bisa diedit dan diajukan oleh pemohon                                                 |
+| J-01           | Permintaan jasa disetujui, belum ada PO | Siap dicatat penawarannya oleh procurement                                            |
+| G-02           | PO barang terbit                        | Tampil di daftar PO dan siap diterima                                                 |
+| G-03           | PO barang diterima sebagian             | Dipesan 10, diterima 6, ditolak 2, sisa 4; bisa dilanjutkan atau ditutup sesuai peran |
+| J-02           | PO jasa diterima lengkap                | Bukti/periode jasa dan riwayat pemenuhan bisa dibaca                                  |
 
 Label skenario membantu panduan mengenali contoh; nomor dokumen tetap dihasilkan aplikasi. Command melaporkan akun dan nomor dokumen yang tersedia tanpa mencetak password/token. Tanggal contoh mengikuti hari WIB saat pembuatan agar skenario aktif dapat diuji. Pemanggilan ulang tidak mengubah snapshot atau mengembalikan transaksi yang telah dilanjutkan pengguna ke keadaan awal. Jelaskan bila contoh lama sudah berpindah tahap atau penawarannya kedaluwarsa; pengulangan dari awal dilakukan pada database demo baru, bukan dengan penghapusan otomatis.
 
@@ -270,32 +270,32 @@ Panduan juga menjelaskan login/logout, pemilihan database, pencarian/filter, daf
 - [x] Uji satu alur barang dan satu jasa dari awal sampai hasil pemenuhan sesuai panduan. Pastikan pergantian peran/sesi, kasus invalid, cabang revisi/penolakan dan penutupan sisa menghasilkan perilaku yang dijelaskan. Sampel siap lihat harus tetap dapat dikenali meskipun contoh lain telah dipakai untuk uji mutasi.
 - [x] Jalankan `python manage.py check`, `python manage.py makemigrations --check --dry-run`, dan `python manage.py test -v 2`. Periksa migrasi/model, seluruh suite termasuk file-backed concurrency, serta output error/warning. Jangan memakai `--parallel` untuk suite concurrency SQLite yang dirancang dua koneksi sendiri.
 - [x] Catat versi, perintah, hasil, dan batas yang belum teruji pada TESTING. Periksa setelan non-debug secara terpisah; deployment atau production tidak dinyatakan teruji tanpa pelaksanaannya.
-- [x] Cocokkan fitur aktual dengan FR/BP/GW/WBS/TC. Perbarui status fitur hanya dengan bukti. OPT-01 tetap Ditunda. Periksa PDF/XLSX, tautan repo, serta file yang akan di-stage; email dan Git tetap dilakukan pengguna.
+- [x] Cocokkan fitur aktual dengan FR/BP/GW/WBS/TC. Perbarui status fitur hanya dengan bukti. Pada snapshot Tahap 11, OPT-01 masih ditunda; implementasi berikutnya tercatat pada bagian Bantuan AI Opsional di TESTING. Periksa PDF/XLSX, tautan repo, serta file yang akan di-stage; email dan Git tetap dilakukan pengguna.
 - [x] Siapkan pengelompokan commit pengguna: kode seed/pengujian sebagai `feat: add repeatable procurement demo data`; panduan dan bukti sebagai `docs: add verified setup demo and user guide`. Laporkan daftar berkas aktual setelah implementasi; jangan memperlakukan daftar berkas rencana sebagai perubahan yang sudah tersedia.
 
 Tahap ini selesai setelah setup bersih dapat dijalankan, data demo aman untuk dibuat ulang, kedua jalur pengujian dapat diikuti, dan hasilnya tercatat. URL publik hanya dicantumkan bila deployment benar-benar tersedia dan teruji; menjalankan demo lokal tidak membuktikan deployment. Checklist ditutup berdasarkan instalasi dan suite pada salinan sumber bersih, browser lima peran, pemeriksaan cetak serta review independen. Launcher Windows Store tidak tersedia; bootstrap memakai executable Python 3.12 langsung. Pemeriksaan PDF/XLSX analisis mencakup keterbacaan struktur; diagram dan WBS tidak diubah.
 
 ## Urutan dan bukti kemajuan
 
-| Paket WBS          | Tugas / keadaan                                                          |
-| ------------------ | ------------------------------------------------------------------------ |
-| 1.1, 1.2           | BPMN/WBS sudah tersedia; pemeriksaan ulang pada tugas 11                 |
-| 1.3                | PRD/proses baseline; perbarui hanya jika kebutuhan berubah               |
-| 1.4, 1.5           | Rancangan pada tiga dokumen ini; realisasi dan pembuktian pada tugas 1-2 |
-| 1.6                | Tugas 10                                                                 |
-| 2.1                | Tugas 1 dan 3                                                            |
-| 2.2, 2.4           | Tugas 4                                                                  |
-| 2.3                | Tugas 5                                                                  |
-| 3.1, 3.2, 3.3      | Tugas 6, dengan revisi persetujuan pada tugas 5                          |
-| 3.4, 3.5           | Tugas 7                                                                  |
-| 4.1, 4.2, 4.3, 4.4 | Tugas 8; pembatalan sebelum PO pada tugas 4                              |
-| 5.1                | Tugas 9                                                                  |
-| 5.2, 5.3           | Tugas 10; HTTP/form dasar diuji pada tugas masing-masing                 |
-| 6.1, 6.2, 6.3, 6.4 | Tugas 11; keamanan dan pengujian juga melekat pada tugas 1-10            |
-| 7.1                | Ditunda, tidak menjadi bagian implementasi wajib                         |
+| Paket WBS          | Tugas / keadaan                                                               |
+| ------------------ | ----------------------------------------------------------------------------- |
+| 1.1, 1.2           | BPMN/WBS sudah tersedia; pemeriksaan ulang pada tugas 11                      |
+| 1.3                | PRD/proses baseline; perbarui hanya jika kebutuhan berubah                    |
+| 1.4, 1.5           | Rancangan pada tiga dokumen ini; realisasi dan pembuktian pada tugas 1-2      |
+| 1.6                | Tugas 10                                                                      |
+| 2.1                | Tugas 1 dan 3                                                                 |
+| 2.2, 2.4           | Tugas 4                                                                       |
+| 2.3                | Tugas 5                                                                       |
+| 3.1, 3.2, 3.3      | Tugas 6, dengan revisi persetujuan pada tugas 5                               |
+| 3.4, 3.5           | Tugas 7                                                                       |
+| 4.1, 4.2, 4.3, 4.4 | Tugas 8; pembatalan sebelum PO pada tugas 4                                   |
+| 5.1                | Tugas 9                                                                       |
+| 5.2, 5.3           | Tugas 10; HTTP/form dasar diuji pada tugas masing-masing                      |
+| 6.1, 6.2, 6.3, 6.4 | Tugas 11; keamanan dan pengujian juga melekat pada tugas 1-10                 |
+| 7.1                | Bantuan AI opsional terimplementasi lokal; uji model langsung belum dilakukan |
 
 Tugas 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11. Pengujian server mengikuti setiap tugas; pemeriksaan browser alur lengkap dan visual dilakukan pada tahap UI, lalu regresi pada setup bersih. Tidak perlu membuat seluruh schema/UI sekaligus tanpa hasil uji antara.
 
 Setelah satu tugas, laporkan perubahan, perintah/hasil pengujian, batas yang belum diuji, dan file untuk commit pengguna. Kegagalan test atau kontrak harus diselesaikan sebelum memperluas fitur. Kekurangan waktu dilaporkan; kebutuhan wajib tidak dihapus diam-diam.
 
-Tugas 1 sampai 11 mempunyai bukti implementasi dan pemeriksaan lokal pada TESTING. FR-01 sampai FR-13 teruji lokal, termasuk setup bersih dan alur demo; OPT-01 tetap Ditunda. Langkah setelah ini adalah peninjauan pengguna dan persiapan deployment bila diminta, bukan deployment otomatis.
+Tugas 1 sampai 11 mempunyai bukti implementasi dan pemeriksaan lokal pada TESTING. FR-01 sampai FR-13 teruji lokal, termasuk setup bersih dan alur demo. OPT-01 kini tersedia sebagai bantuan teks/gambar opsional dengan provider simulasi untuk pengujian lokal; AI live dan hosting belum diverifikasi. Rancangan implementasi terperinci: [rencana AI](superpowers/plans/2026-10-25-ai-input.md).

@@ -1,16 +1,78 @@
 # Pengujian Procurement
 
-Diperbarui: 23 Oktober 2026
+Diperbarui: 25 Oktober 2026
 
-## Ringkasan Status Terkini
+## Kesiapan Penyerahan: 25 Oktober 2026
 
-Ringkasan per 23 Oktober 2026 memakai hasil pengujian ulang pada tindak lanjut Tahap 11. Angka dan keterbatasan pada rekam tahap lama tetap berlaku pada tahap masing-masing.
+Instalasi bersih dilakukan pada salinan 193 berkas sumber yang tersedia saat pemeriksaan, virtualenv baru dan database sintetis terpisah. Python 3.12.14, SQLite 3.53.1/JSON1, seluruh requirements termasuk Pillow/HTTPX, pip check, migrasi, makemigrations --check --dry-run, check, seed dua kali dan collectstatic profil hosting lulus. Suite penuh menjalankan **297 tes dalam 52,576 detik**, tanpa kegagalan. Profil hosting memakai konfigurasi sintetis; check --deploy menghasilkan security.W005 dan security.W021 yang sudah didokumentasikan, tanpa warning yang disembunyikan.
 
-- **Regresi otomatis terbaru: 245 test lulus dalam 30,720 detik** pada salinan sumber terkini memakai interpreter proyek dan database tes terisolasi, termasuk concurrency SQLite berbasis file. Run ini tidak membuat virtualenv baru; bukti virtualenv bersih tetap berada pada rekam Tahap 11. Tujuh test seed dan lima test tindak lanjut melengkapi baseline 233 test sebelum Tahap 11. Subtest input/peran tidak dihitung sebagai method test tambahan.
+Pemeriksaan anonim pada hosting nyata lulus: HTTP ke HTTPS, login 200, HSTS max-age=3600, DENY, nosniff, same-origin, serta cookie CSRF Secure/SameSite=Lax. Lima route operasional mengarahkan ke login; POST login tanpa CSRF mendapat 403. Lima path privat yang diperiksa mendapat 404. Delapan aset CSS/JS/font/lisensi menghasilkan 200 dan SHA256 cocok dengan sumber lokal. Pemeriksaan ini tidak memakai kredensial atau memanggil AI.
+
+GitHub melalui connector terkonfirmasi publik dengan default branch main pada e07f7904e69183714a93bc9429a0097a9676e537; requirements remote masih empat paket dasar, belum memuat dependensi AI. Ini membuktikan akses repository, bukan kesamaan versi dengan checkout lokal/hosting.
+
+WBS v1.3 menaikkan 6.1 menjadi Terverifikasi. Ringkasan dan formula Tracking lulus pada artifact-tool serta pembukaan normal Microsoft Excel read-only: 27 paket, 24 terverifikasi, 2 dikerjakan, 1 disetujui. Rentang yang berubah ditinjau visual tanpa teks terpotong. BPMN v1.2 tetap berlaku.
+
+Pemeriksaan akhir command/configuration/file permission pada server belum dituntaskan. Input multiline melalui alat terminal web kehilangan pemisah baris; percobaan tersebut tidak menjadi bukti kelulusan. Tidak ada migrate/seed, perubahan secret, atau update sumber hosting yang dilakukan pada tugas ini. Pada console 48811681, tekan Ctrl+C untuk membatalkan baris tertahan sebelum menjalankan blok pemeriksaan di HANDOVER. Commit/push tetap dilakukan pengguna.
+
+Percobaan clean setup pertama berhenti karena penyalin salinan uji melewatkan modul common. Penyalin diperbaiki dan pengujian diulang dari direktori/virtualenv baru; hanya run kedua yang menjadi bukti kelulusan. Log terpisah disimpan pada workspace pemeriksaan di .tool-review/release-readiness-20261025/attempt-2.
+
+## Revisi BPMN dan WBS: 25 Oktober 2026
+
+BPMN v1.2 tetap lima halaman A3 landscape dengan seluruh hubungan alur semula. BP-01 menjelaskan bantuan AI opsional saat membuat draf baru; pemeriksaan pengguna dan input manual tetap berlaku. PDF dan draw.io diperiksa kesesuaiannya, dan seluruh halaman PDF ditinjau visual tanpa teks terpotong atau bertumpuk.
+
+WBS v1.2 tetap dua sheet, tujuh modul, dan 27 paket kerja. Struktur tabel, ID, batas freeze, serta 27 formula status Tracking dipertahankan. Ringkasan setelah kalkulasi: 23 terverifikasi pada lingkup tercatat, 3 dikerjakan, dan 1 disetujui. Perubahan status sementara memutakhirkan ringkasan/Tracking dan berhasil dipulihkan. Workbook juga dibuka normal melalui Microsoft Excel 16.0 tanpa mode perbaikan; pemeriksaan ini memakai read-only dan ditutup tanpa menyimpan.
+
+Dependensi paket AI 7.1 diperjelas menjadi 2.2 dan 6.2; validasi keamanan hosting tetap menjadi syarat penyerahan akhir melalui 6.3/6.4. Dependensi valid dan tidak bersiklus. Seluruh rentang isi kedua sheet ditinjau pada hasil render tanpa teks terpotong atau bertumpuk. Berkas asli tetap tersedia; README menunjuk versi revisi.
+
+Paket 6.1, 6.3, dan 6.4 tetap dikerjakan: clean install versi akhir dengan dependensi AI, pemeriksaan keamanan akhir hosting, serta finalisasi paket/akses repository belum ditutup. Tugas revisi dokumen ini tidak mengulang suite aplikasi atau mengubah hosting; angka pengujian aplikasi di bawah merupakan bukti sebelumnya.
+
+## Bantuan AI Opsional: 25 Oktober 2026
+
+Suite penuh terbaru menjalankan **297 test dan lulus dalam 35,880 detik**, memakai salinan sumber/database tes terisolasi. Delapan belas test AI mencakup autentikasi/CSRF/peran aktif, konfigurasi privat dan larangan overwrite key, gambar palsu, normalisasi/re-encode gambar, kontrak JSON/numerik/null/overflow, tidak adanya mutasi bisnis, kuota atomik/paralel, payload Qwen hemat token, no redirect/retry, deadline total pada slow stream, serta transport terpotong.
+
+Regresi browser manual kembali lulus **62 pemeriksaan terkelompok** pada `procurement-browser-20261025-093600-cdb3ee`: akun15, paginasi5, transaksi/antarmuka42. Runner memakai key kosong dan file konfigurasi AI yang tidak ada. Alur manual tanpa JavaScript tetap selesai sampai PO/penerimaan.
+
+Pengujian bantuan AI khusus pada `ai-input-20261025/browser-88ba9c` memiliki tujuh kelompok: manual/keyboard/input kosong, review eksplisit dan pelestarian isian/token/multi-item/nilai tersimpan, jenis manual setelah form POST dirender ulang, gambar melewati validasi server, error API, pembatalan respons terlambat, serta simpan manual tanpa JavaScript. Provider disimulasikan pada batas client; server Django/CSRF/validasi/gambar berjalan nyata. Tidak ada token Groq yang dipakai. Empat lebar320/390/768/1440 diperiksa; render390 dan1440 ditinjau visual.
+
+Review independen menemukan pilihan jenis pada form bound yang dapat tertimpa dan socket timeout yang bukan deadline total. Keduanya direproduksi, diperbaiki, dan diuji ulang. HTTPX async dengan wait_for membatalkan seluruh transport; respons terpotong dipetakan ke error aman. Temuan visual radio terlalu besar dan alert kosong pada render awal juga diperbaiki dengan regresi yang lulus. Pemeriksaan Django, migrasi dry-run, dependensi, Prettier dan whitespace melengkapi bukti.
+
+Semua path bukti di atas berada pada `.codex/tmp` milik pengguna, di luar repository. Hasil ini tidak membuktikan akurasi ekstraksi Qwen langsung, kuota aktual akun, maupun koneksi AI pada hosting; API key belum dikonfigurasi dan belum ada uji live. Fitur memakai mode non-thinking sebagai baseline hemat token; perbandingan akurasi none/low belum dilakukan. Alur dan batas teknis ada pada [AI_INPUT](AI_INPUT.md).
+
+## Pembaruan Input Harga Indonesia: 25 Oktober 2026
+
+Suite terbaru menjalankan **279 test Django dan lulus dalam 34,489 detik** pada salinan sumber dan database terisolasi. Enam test baru mencakup normalisasi kedua form harga, penolakan format cacat/presisi berlebih/nol/overflow, batas int64, kontrak jumlah yang tetap, penyimpanan dan edit permintaan/penawaran, replay format setara, serta penolakan tanpa mutasi. Tes awal membuktikan 16 kegagalan subtest sebelum implementasi. Fixture vendor pada tes HTTP baru sempat gagal karena pembuat belum diisi; fixture diperbaiki dan suite penuh diulang sampai lulus.
+
+Form menerima `250.000` sebagai 250000 rupiah dan `1.250,50` sebagai 1250,50 rupiah. Format angka biasa dan desimal titik lama tetap diterima. Konversi berjalan di server tanpa float maupun ketergantungan JavaScript; parser service, skala penyimpanan, pembulatan, token/replay, dan snapshot tidak diubah. Review independen tidak menemukan masalah nominal pada parser; assertion browser diperjelas agar memeriksa pesan harga baru secara spesifik.
+
+Suite browser memakai harga Indonesia pada alur barang/jasa serta alur lengkap tanpa JavaScript. Dua pemeriksaan tambahan memverifikasi pengelompokan cacat ditolak tanpa mutasi dan pecahan `1.250,50`/`1250.50` tersimpan sebagai 125050 minor units. Bukti terbaru disimpan di direktori `.codex/tmp/procurement-browser-*` milik pengguna. Hasil ini merupakan pengujian lokal; v4 belum dipasang pada hosting.
+
+## Pembaruan Cetak dan Format Jumlah — 25 Oktober 2026
+
+Suite Django pada tahap ini menjalankan **273 test dan lulus dalam 34,607 detik**, memakai salinan sumber serta database tes terisolasi. Jumlah ini mencakup perbaikan tampilan jumlah dan dua test cetak baru: struktur tabel/nilai tepat serta snapshot vendor dan jasa. Hasil tahap lama di bawah merupakan catatan historis.
+
+Cetak khusus PO menggunakan judul **Purchase Order (PO)** dan tabel berkolom jumlah, satuan, harga satuan, dan total. Pengujian Chrome mencakup lima variasi PO: barang, jasa berjumlah pecahan, 45 item panjang, jumlah maksimum, dan harga maksimum. Sembilan PDF hasil pemeriksaan memakai A4, tanpa halaman kosong; 45 item muncul masing-masing sekali, kepala tabel berulang, total akhir muncul sekali, dan nomor halaman sesuai. PO juga diperiksa tanpa JavaScript. Ctrl+P pada detail permintaan, PO, dan penerimaan menyembunyikan navigasi serta tombol tindakan.
+
+Pada lebar cetak 182 mm, sel angka tetap satu baris dan tidak meluap. Nilai sangat panjang mendapat kolom dan ukuran angka khusus; render maksimum jumlah serta harga diperiksa secara visual. Tampilan layar 390/1440 piksel dan aktivasi tombol Cetak PO lewat keyboard juga lulus. Bukti lokal berada pada `.codex/tmp/print-layout-20261025/evidence-66d480` di direktori pengguna. Pengujian ini tidak memverifikasi driver printer fisik, seluruh browser, atau hasil cetak pada hosting.
+
+## Rekam Verifikasi 24 Oktober 2026
+
+Ringkasan per 24 Oktober 2026 mencakup persiapan PythonAnywhere dan perbaikan bahasa antarmuka. Suite browser dijalankan ulang pada 24 Oktober dengan sumber terkini. Angka dan keterbatasan pada rekam tahap lama tetap berlaku pada tahap masing-masing.
+
+- **Regresi Django terakhir: 267 test lulus dalam 32,997 detik** pada salinan sumber terkini memakai interpreter proyek dan database tes terisolasi, termasuk concurrency SQLite berbasis file. Run ini tidak membuat virtualenv baru; bukti virtualenv bersih tetap berada pada rekam Tahap 11. Tujuh test seed dan lima test tindak lanjut melengkapi baseline 233 test sebelum Tahap 11. Tujuh test profil PythonAnywhere, tiga test bahasa, tujuh test navigasi, dan lima test penerimaan/aksi melengkapi suite menjadi 267 test. Subtest input/peran tidak dihitung sebagai method test tambahan.
 - **Setup bersih dan data demo tersedia serta telah diuji secara terisolasi.** Salinan sumber tanpa virtualenv/database/rahasia kerja menjalani instalasi requirements dari wheel cache, migrasi, `seed_demo` dua kali dan pemeriksaan Django. Bootstrap memakai executable Python 3.12 langsung karena launcher Windows Store tidak tersedia. [README](../README.md) memuat setup dan [Panduan Pengguna](USER_GUIDE.md) memuat lima peran, contoh serta langkah transaksi. Ini bukan pemeriksaan instalasi pada seluruh mesin atau unduhan requirements dari jaringan.
-- **Regresi browser terbaru: tiga suite lulus dengan 54 pemeriksaan terkelompok**: akun/vendor/sesi 15, filter/paginasi 5, dan transaksi/keadaan gagal 34. Satu pemeriksaan transaksi memuat 24 pemeriksaan lebar halaman; angka 54 bukan jumlah alur bisnis atau persentase coverage. Rincian assertion dan batas ada pada tindak lanjut di bawah. Angka historis 175 kombinasi halaman/peran dan 1.050 ukuran viewport juga bukan jumlah alur bisnis.
+- **Regresi browser terbaru: tiga suite lulus dengan 60 pemeriksaan terkelompok**: akun/vendor/sesi 15, filter/paginasi 5, dan transaksi dan antarmuka 40. Satu pemeriksaan transaksi memuat 24 pemeriksaan lebar halaman; angka 60 bukan jumlah alur bisnis atau persentase coverage. Run terbaru juga memeriksa tooltip serta perubahan visibilitas password lewat keyboard. Rincian assertion dan batas ada pada tindak lanjut di bawah. Angka historis 175 kombinasi halaman/peran dan 1.050 ukuran viewport juga bukan jumlah alur bisnis.
 - **Lokasi pesan bukan cakupan penuh validasi bisnis.** Pemeriksaan 17 endpoint form/aksi mengirim POST kosong untuk memeriksa respons 400 dan penempatan error di dalam form. Pemeriksaan ini tidak membuktikan seluruh validasi field, token yang valid, cabang transaksi atau perubahan data pada 17 endpoint tersebut; bukti itu berasal dari pengujian service/HTTP dan interaksi browser yang disebutkan secara terpisah.
-- **Hasil tetap lokal.** Pemeriksaan non-debug menghasilkan warning `security.W004` karena HSTS belum ditetapkan. Hosting, HTTPS nyata, perangkat fisik, pembaca layar, beban produksi serta penerimaan vendor nyata belum diverifikasi. Tidak ada klaim deployment atau kesiapan produksi.
+- **Pisahkan bukti lokal dan hosting.** Suite aplikasi dan browser sebelumnya tetap lokal; GET publik awal pada 24 Oktober memverifikasi login HTTPS serta static files saja. Pemeriksaan non-debug historis menghasilkan warning `security.W004` karena HSTS belum ditetapkan. Screenshot pengguna membuktikan login/baca daftar admin, pengajuan pemohon, persetujuan approver, serta pencatatan penawaran oleh procurement. Screenshot berikutnya membuktikan pemilihan vendor dan penerbitan PO. Penerimaan, cetak dan persistensi setelah Reload pada host belum diverifikasi. Perangkat fisik, pembaca layar, beban produksi serta penerimaan vendor nyata juga belum diverifikasi. HTTPS dan static publik dasar sudah diperiksa; ini belum membuktikan kesiapan produksi.
+
+## Persiapan Demo PythonAnywhere - 24 Oktober 2026
+
+Pengguna memilih PythonAnywhere Beginner + SQLite untuk demo tes kerja. Profil hosting terpisah membaca secret/hostname dari JSON privat di luar checkout, memaksa DEBUG=false serta var/pythonanywhere untuk database demo. Adaptor WSGI dan console memakai profil yang sama; tidak ada perubahan pada transaksi atau database kerja lokal.
+
+Tujuh test baru pada config.tests.test_pythonanywhere terlebih dahulu gagal, lalu lulus dalam 2,690 detik: configure membuat secret tanpa mencetaknya dan menolak overwrite; hostname invalid ditolak; konfigurasi hilang/invalid gagal tertutup; environment ambient tidak melemahkan profil; request WSGI HTTPS, HTTP, header proxy palsu, host asing dan POST tanpa CSRF menghasilkan 200/301/301/400/403. Mode 0600 hanya diperiksa saat platform mendukung POSIX, bukan diklaim terbukti di Windows.
+
+Suite penuh menjalankan 252 test dan lulus dalam 32,826 detik pada salinan aplikasi/database sintetis. Migrasi, seed dua kali, Django check, makemigrations --check --dry-run dan collectstatic empat file menghasilkan exit 0. Check --deploy menampilkan W005/W021: HSTS satu jam hanya hostname, tanpa includeSubDomains/preload. Tidak ada warning yang disembunyikan. Runtime lokal memakai SQLite 3.53.1 dengan JSON1; versi host belum diperiksa.
+
+Review independen source tidak menemukan P1/P2 pada penambahan hosting dan menegaskan adaptor harus dijalankan dari checkout, bukan disalin mentah ke /var/www. Review tidak menjalankan database/jaringan. Bukti berada di C:/Users/Rama Atha/.codex/tmp/pythonanywhere-20261024. Rincian dan status host ada pada [DEPLOYMENT](DEPLOYMENT.md). Belum ada bukti deployment publik, proxy host, permission Linux atau alur recruiter di hosting; 54 pemeriksaan browser sebelumnya tidak dihitung ulang sebagai pengujian hosting.
 
 ## Tindak Lanjut Tahap 11: Regresi Browser Dan Status Historis
 
@@ -191,7 +253,7 @@ Pengujian awal gagal karena service dan route belum tersedia. Regresi tambah bar
 
 Pengujian mencakup draft kosong, item lengkap/positif, tanggal hari WIB, angka kanonik dan pembulatan half-up per baris, snapshot lama setelah pengajuan ulang, replay create/edit/submit/cancel, payload berbeda, versi lama, role/akun terkini, pemilik, akses per objek dan PO terminal. Kegagalan audit membatalkan snapshot/status. Versi, nomor revisi, total dan nilai baris diperiksa terhadap batas int64. Pengujian HTTP memeriksa CSRF, escaping, pengabaian parameter pemilik/status/total, form invalid, dan redaksi token pada exception report. Pengajuan serentak memakai TransactionTestCase dan dua koneksi SQLite berbasis file.
 
-Browser memakai `var/request-browser-check`. Alur: simpan draft kosong, submit ditolak 400, lengkapi dua item, tambah baris tanpa menyimpan dan tanpa kehilangan input, simpan, ajukan, baca snapshot revisi 1, lalu batalkan dengan alasan. Dua baris masing-masing 0.5 Ã— IDR 0.01 menghasilkan IDR 0,01 per baris dan total IDR 0,02. Database akhirnya memuat satu permintaan CANCELLED, satu revisi dengan dua item, serta empat audit dan empat receipt aksi. Akun pemohon lain tidak melihat permintaan pada daftar dan mendapat 404 saat membuka URL detailnya.
+Browser memakai `var/request-browser-check`. Alur: simpan draft kosong, submit ditolak 400, lengkapi dua item, tambah baris tanpa menyimpan dan tanpa kehilangan input, simpan, ajukan, baca snapshot revisi 1, lalu batalkan dengan alasan. Dua baris masing-masing 0.5 × IDR 0.01 menghasilkan IDR 0,01 per baris dan total IDR 0,02. Database akhirnya memuat satu permintaan CANCELLED, satu revisi dengan dua item, serta empat audit dan empat receipt aksi. Akun pemohon lain tidak melihat permintaan pada daftar dan mendapat 404 saat membuka URL detailnya.
 
 Form dua item tidak melampaui viewport 390/768/1440; keyboard Tab mencapai kontrol Hapus dengan outline terlihat. Screenshot mobile diperiksa. Pemeriksaan ini memakai HTML fungsional, belum audit aksesibilitas atau UI final. Respons 400 dan 404 merupakan skenario yang sengaja diuji; tidak ada JavaScript aplikasi pada form ini. Server dihentikan setelah pemeriksaan dan data sintetis tidak masuk database kerja.
 
@@ -381,6 +443,78 @@ Nomor/URL transaksi uji dicatat pada browser-results.json; pemetaan kode G-01/J-
 
 #### Ketertelusuran Dan Batas
 
-FR-01/BP-00/WBS 2.1 mengacu pada tes akun/policy dan login lima peran. FR-02â€“FR-03/BP-01â€“03/GW-01/WBS 2.2â€“2.3 memakai regresi request/approval dan alur revisi/penolakan browser. FR-04â€“FR-07/BP-04â€“09/GW-02â€“03/WBS 3.1â€“3.4 memakai suite vendor/sourcing/orders dan browser penawaran hingga PO. FR-08â€“FR-10/BP-10â€“15/GW-04â€“06/WBS 4.1â€“4.3 memakai suite receipt/jasa/closure/concurrency dan alur pemenuhan browser. FR-11/BP-16/WBS 5.1 memakai suite tracking; FR-12/WBS 5.2 memakai regresi HTTP/form, browser responsive/keyboard dan cetak. FR-13/WBS 6.1/TC-19 memakai instalasi bersih, seed dan panduan. TC-01 sampai TC-18 tetap berjalan dalam suite penuh; OPT-01 tetap Ditunda.
+FR-01/BP-00/WBS 2.1 mengacu pada tes akun/policy dan login lima peran. FR-02–FR-03/BP-01–03/GW-01/WBS 2.2–2.3 memakai regresi request/approval dan alur revisi/penolakan browser. FR-04–FR-07/BP-04–09/GW-02–03/WBS 3.1–3.4 memakai suite vendor/sourcing/orders dan browser penawaran hingga PO. FR-08–FR-10/BP-10–15/GW-04–06/WBS 4.1–4.3 memakai suite receipt/jasa/closure/concurrency dan alur pemenuhan browser. FR-11/BP-16/WBS 5.1 memakai suite tracking; FR-12/WBS 5.2 memakai regresi HTTP/form, browser responsive/keyboard dan cetak. FR-13/WBS 6.1/TC-19 memakai instalasi bersih, seed dan panduan. TC-01 sampai TC-18 tetap berjalan dalam suite penuh. Pada snapshot Tahap 11 ini, OPT-01 masih ditunda; implementasi berikutnya tercatat pada bagian Bantuan AI Opsional di awal dokumen.
 
 PDF BPMN dapat dibaca sebagai lima halaman; workbook WBS dapat dibuka dan memuat sheet WBS/Tracking. Struktur analisis tidak diubah karena transisi bisnis tetap sama. Tautan dokumen lokal diperiksa; remote Git tetap acuan repository, bukan bukti deployment publik. Perangkat fisik, pembaca layar, beban produksi, penerimaan vendor nyata serta deployment belum diuji. Bukti mentah berada di tmp/stage11 pada workspace pemeriksaan. Beberapa percobaan harness gagal karena listener sandbox, locator form logout yang terlalu luas dan contoh penutupan yang sudah terminal; harness diperbaiki tanpa mengubah aturan aplikasi. Hasil final di atas berasal dari run yang lulus, bukan dari percobaan tersebut.
+
+## Verifikasi Publik Awal PythonAnywhere - 24 Oktober 2026
+
+Pemeriksaan GET anonim oleh agen berhasil: HTTP root dialihkan hingga HTTPS/login dan respons akhir 200; login langsung 200; CSS, JS dan font 200 dengan hash identik paket deployment. HTML menunjukkan HSTS satu jam, cookie CSRF Secure, DENY dan nosniff. Validasi sertifikat tetap aktif. Artefak: C:/Users/Rama Atha/.codex/tmp/pythonanywhere-20261024/public-smoke.json.
+
+Screenshot pengguna menjadi bukti terpisah untuk runtime host Python 3.12.8, SQLite 3.37.2 dan JSON1, migrasi, collectstatic empat file, serta seed lima akun/lima skenario. GET oleh agen tidak memverifikasi password, login/peran atau mutasi transaksi; seluruh alur terautentikasi pada host masih menunggu pengujian. Hasil 252 test dan 54 pemeriksaan browser sebelumnya tetap merupakan bukti lokal, bukan hasil suite yang dijalankan ulang di PythonAnywhere. Lihat status terbaru pada [DEPLOYMENT](DEPLOYMENT.md).
+
+## Verifikasi Admin Pada Hosting - 24 Oktober 2026
+
+Screenshot pengguna memperlihatkan demo_admin aktif sebagai Admin, daftar permintaan memuat skenario J-02/G-03 dan daftar PO memuat tiga status seed (lengkap, sebagian, terbit), vendor demo serta total IDR 900.000,00. Login dan pembacaan daftar admin pada host telah dibuktikan melalui screenshot. Empat peran operasional, mutasi transaksi, cetak serta persistensi setelah Reload pada host masih belum diverifikasi; tidak ada kredensial diterima atau digunakan agen.
+
+## Verifikasi Pemohon Pada Hosting - 24 Oktober 2026
+
+Screenshot pengguna menunjukkan login demo_pemohon, pembuatan draft UJI Hosting Barang (Monitor Uji, 10 unit, estimasi IDR 100.000,00 per unit, total IDR 1.000.000,00), serta pengajuan berhasil dengan status Diajukan. Revisi 1 dan dua riwayat (Draft Dibuat, Permintaan Diajukan) terlihat, dan permintaan tampil kembali pada daftar. Ini bukti interaksi browser pengguna pada host, bukan pengujian agen dengan kredensial.
+
+Login dan aksi Approver/Procurement/Penerima, penerbitan PO, penerimaan, cetak dan persistensi setelah Reload pada host masih menunggu pengujian.
+
+## Verifikasi Approver Pada Hosting - 24 Oktober 2026
+
+Dua screenshot pengguna menunjukkan demo_approver aktif sebagai Approver, notifikasi keputusan berhasil disimpan dan UJI Hosting Barang berubah menjadi Disetujui. Estimasi IDR 1.000.000,00 serta Revisi 1 tetap terlihat. Riwayat memuat persetujuan oleh demo_approver pada 15:13 WIB dengan alasan Kebutuhan demo sesuai, setelah draft dan pengajuan oleh demo_pemohon.
+
+Ini bukti browser pengguna untuk login dan persetujuan pada host. Penawaran/penerbitan PO oleh Procurement, penerimaan oleh Penerima, cetak dan persistensi setelah Reload pada host belum diverifikasi.
+
+## Perbaikan Bahasa Antarmuka - 24 Oktober 2026
+
+Pemeriksaan sumber mencakup 29 template HTML, teks JavaScript form, label akun, permintaan, penawaran, penerimaan dan filter Django, judul antrean, status serta riwayat. Judul/navigasi/tombol menggunakan kapitalisasi judul dengan kata tugas di tengah tetap kecil; label, metadata, pilihan status, riwayat dan tooltip deskriptif menggunakan kapital pada awal frasa. Bentuk tampilan draf mengikuti KBBI. Aturan pemilik ada pada [sistem desain](DESIGN_SYSTEM.md#penulisan-teks-antarmuka).
+
+Tiga regresi baru terlebih dahulu gagal pada salinan sebelum perbaikan label Python. Suite akhir menjalankan **255 test, seluruhnya lulus dalam 50,448 detik**. Tes baru merender detail/form permintaan, penawaran, PO dan filter untuk memeriksa keterangan, riwayat, status serta nama campuran seperti iPhone 15 Pro yang harus tetap utuh. Kode status DRAFT dan data transaksi tidak diubah. Dua ekspektasi tes lama serta label harga manual diselaraskan; label harga kini berasal dari form Django. Django check, makemigrations --check --dry-run, Prettier dan pemeriksaan sintaks JavaScript lulus; tidak diperlukan migrasi baru.
+
+Browser Chrome dijalankan pada sumber/data sintetis terisolasi: **15 pemeriksaan akun/vendor/sesi, 5 filter/paginasi, dan 34 transaksi/keadaan gagal lulus**. Pengujian mencakup form kosong/invalid, revisi dan konflik, barang/jasa sampai penerimaan, penutupan PO, cetak, alur tanpa JavaScript, serta 24 pemeriksaan overflow pada lebar 320/390/640/768/1024/1440. Ikon mata diperiksa melalui Enter, nama aksesibel, tooltip, aria-controls, dan perubahan type password/text. Seluruh suite bebas pageerror yang tercatat. Percobaan awal locator ikon mata gagal karena nama aksesibel berubah saat diklik; locator diganti menjadi target aria-controls yang stabil, lalu run terakhir lulus.
+
+Bukti akhir browser: C:/Users/Rama Atha/.codex/tmp/procurement-browser-20261024-170421-c41621/ (summary.json, source-hashes.json, log, screenshot dan PDF). Bukti Django, pemeriksaan kontras token teks dan Delivery Gate: C:/Users/Rama Atha/.codex/tmp/ui-language-20261024/. Ini bukti lokal, bukan perubahan yang telah diterapkan ke PythonAnywhere. Password manager nyata, perangkat fisik dan pembaca layar tidak diuji pada run ini.
+
+Screenshot pengguna pada percakapan terbaru juga memperlihatkan penawaran UJI-HOSTING-Q-001 pada UJI Hosting Barang, total IDR 900.000,00 dan berlaku sampai 25 Oktober 2026. Bukti tersebut menunjukkan pencatatan/penampilan penawaran pada host dengan teks versi lama; tidak membuktikan pemilihan vendor atau penerbitan PO.
+
+## Breadcrumb dan Penjelasan Vendor - 24 Oktober 2026
+
+Label Alasan hanya satu vendor menggantikan istilah sumber tunggal pada form, ringkasan penawaran/PO, pesan validasi, README dan panduan pengguna. Bantuan menjelaskan kapan alasan wajib. Nama field, payload, kriteria vendor, database dan aturan bisnis tetap sama.
+
+Breadcrumb bersama memakai hierarki Beranda, daftar, detail dan halaman turunan dengan panah kanan. Halaman induk merupakan tautan; halaman aktif nonlink memiliki aria-current=page. Pemisah aria-hidden, font 1rem, target tautan minimal 44px dan flex-wrap. Dokumen cetak dipertahankan. Konteks halaman efektif memastikan halaman perbandingan/detail yang dirender saat edit terkunci tidak mengaku sebagai form edit. Komponen memakai metadata route dan konteks yang sudah ada tanpa query ORM tambahan.
+
+Tujuh method regresi navigasi meliputi rantai permintaan/penawaran, akun/vendor, PO/penerimaan, invalid POST, halaman edit terkunci, halaman anonim/error, penanda aktif dan pemisah panah yang terdekode. Regresi mula-mula gagal sebelum implementasi. Suite final: **262 test lulus dalam 34,334 detik**, Django check tanpa isu dan makemigrations --check --dry-run tanpa perubahan. Database pengujian terisolasi dari data kerja dan hosting.
+
+Browser final: **57 pemeriksaan terkelompok lulus** (akun 15, filter/paginasi 5, transaksi/keadaan gagal/navigasi 37). Tiga pemeriksaan baru membuktikan breadcrumb lima tingkat dengan font minimal 16px, empat tautan induk yang benar-benar dibuka lewat keyboard/mouse, serta bantuan satu vendor pada form. Pemeriksaan breadcrumb mencakup 320/390/640/768/1024/1440px, tanpa overflow, label terpotong atau panah mojibake. Ini terpisah dari 24 pemeriksaan lebar pada keadaan transaksi. Alur tanpa JavaScript juga merender breadcrumb. Tidak ada pageerror yang tercatat.
+
+Percobaan awal memperlihatkan masalah encoding panah, fixture vendor tanpa pencipta, dan discovery tes dari direktori yang salah. Ketiganya diperbaiki dan tidak digunakan sebagai bukti kelulusan. Panah memakai entitas HTML; regresi memeriksa karakter hasil decoding. Review independen menemukan mismatch breadcrumb pada edit terkunci; regresi tambahan dan konteks halaman efektif menyelesaikannya.
+
+Bukti final: C:/Users/Rama Atha/.codex/tmp/navigation-20261024/django-complete.log dan C:/Users/Rama Atha/.codex/tmp/procurement-browser-20261024-212235-578ed4/summary.json. Screenshot desktop/mobile, PDF dan rincian click-through berada pada folder business-evidence run tersebut. Delivery Gate lokal ada pada C:/Users/Rama Atha/.codex/tmp/navigation-20261024/delivery-gate.md. Hasil ini belum berarti sumber terbaru diterapkan ke PythonAnywhere. Perangkat fisik, pembaca layar dan password manager nyata tidak diuji.
+
+## Notifikasi Status dan Bukti PO - 24 Oktober 2026
+
+Notifikasi status memakai width fit-content, max-width 100%, tanpa bullet dan tanpa mengubah role status pada template. Teks panjang membungkus; beberapa pesan berjarak vertikal. Daftar error form, validasi server dan aturan bisnis tidak berubah.
+
+Pemeriksaan browser baru terlebih dahulu gagal karena bullet masih tampil. Sesudah perbaikan CSS, suite final lulus **58 pemeriksaan terkelompok**: akun/vendor/sesi 15, filter/paginasi 5 dan transaksi/keadaan gagal/navigasi/notifikasi 38. Pesan PO berhasil diterbitkan diuji pada 320/390/768/1440px: lebar kotak tidak melebihi lebar teks ditambah padding/border, list marker none, tanpa overflow halaman. Fixture DOM sintetis terpisah juga memeriksa pesan panjang, referensi tanpa spasi, dan dua pesan pada lebar 320px; DOM asli dipulihkan setelah pemeriksaan. Screenshot desktop dan mobile diperiksa secara visual.
+
+Bukti final: C:/Users/Rama Atha/.codex/tmp/procurement-browser-20261024-224833-733947/summary.json dan folder business-evidence (status-notice-1440.png/status-notice-390.png). Percobaan gagal ada pada procurement-browser-20261024-224646-70ca9d/business.log. Source runtime final identik dengan hash sumber pada run yang lulus. Prettier dan git diff --check lulus. Suite Django terakhir tetap 262 test dari perubahan navigasi; tidak diulang untuk perubahan CSS ini. Ini bukti lokal, belum penerapan sumber terbaru ke PythonAnywhere.
+
+Screenshot pengguna membuktikan PO-dc46e4c2-f766-4fe7-9d5b-84bd2dce3fb1 terbit pada hosting dari UJI Hosting Barang, total IDR 900.000,00, 10 unit, oleh demo_procurement pada 22:42 WIB. Riwayat mencatat pemilihan vendor dan penerbitan PO. Jumlah diterima/ditolak masih nol dan sisa 10 unit. Pencatatan penerimaan, cetak serta persistensi sesudah Reload masih belum dikonfirmasi; lihat DEPLOYMENT untuk rekam bukti hosting.
+
+## Form Penerimaan dan Tindakan Lanjutan - 24 Oktober 2026
+
+Periode jasa tidak dirender pada form Barang. Form Jasa tetap merender dan mewajibkan kedua tanggal. Tanggal jasa yang dipaksakan melalui POST Barang ditolak sebagai error form; ReceiptInput untuk Barang tetap tanpa tanggal. Validasi service, model, skala jumlah/harga dan transaksi tidak diubah.
+
+Tindakan proses pada permintaan, persetujuan, penawaran, PO, penerimaan, akun, vendor dan antrean kerja menggunakan tombol utama/sekunder sesuai fungsinya. Catat Penerimaan berada dekat judul sebelum metadata PO. Shortcut atas menuju form pengajuan/review/penerbitan memakai fragment yang dapat difokuskan; transaksi tetap membutuhkan POST terpisah. Detail penerimaan menampilkan Catat Penerimaan Berikutnya hanya bagi Penerima saat PO masih terbuka. Link dokumen, riwayat dan breadcrumb tidak diubah menjadi tombol proses. Kelompok tombol membungkus dan disembunyikan saat mencetak.
+
+Lima regresi baru pada test_receipt_http meliputi field Barang tanpa periode dan POST sukses, penolakan tanggal yang dipaksakan tanpa menampilkan input tersebut, periode wajib/sukses untuk Jasa, posisi serta peran tombol masuk penerimaan, dan kelanjutan berdasarkan sisa/peran. Empat awalnya gagal sebelum implementasi; regresi Jasa menjaga perilaku existing. Tes fokus lama diselaraskan dari shortcut panel umum ke target form yang kini dipakai, tetap memeriksa satu target, tabindex dan urutan. Suite akhir **267 test lulus dalam 32,997 detik**; Django check dan pemeriksaan migrasi lulus tanpa perubahan schema.
+
+Browser akhir **60 pemeriksaan terkelompok lulus**: akun 15, filter/paginasi 5, transaksi/antarmuka 40. Alur kini benar-benar menekan tombol Buat Permintaan, Tinjau Pengajuan, Penawaran dan Pemilihan Vendor, Tambah/Pilih Penawaran, shortcut penerbitan, Catat Penerimaan, dan penerimaan berikutnya melalui Enter sebelum mengirim form. Barang tidak memiliki input tanggal jasa; kedua jenis bukti Jasa tetap memiliki tanggal wajib dan berhasil disimpan. Alur tanpa JavaScript juga lulus.
+
+Tombol masuk penerimaan diperiksa sebelum metadata pada enam lebar 320/390/640/768/1024/1440. Lima konteks halaman (daftar/detail permintaan, PO, akun dan vendor) diperiksa pada enam lebar: 30 pemeriksaan layout tambahan, tanpa overflow dan target tombol minimal 44px. Angka ini bukan jumlah alur bisnis. Screenshot receipt-action-390.png dan receipt-action-1440.png diperiksa secara visual. Review independen source tidak menemukan masalah yang dapat dibuktikan; review tersebut tidak menjalankan tes.
+
+Bukti: C:/Users/Rama Atha/.codex/tmp/action-ui-20261024/django-verified.log dan C:/Users/Rama Atha/.codex/tmp/procurement-browser-20261024-231800-d6ac0f/summary.json beserta business-evidence. Percobaan suite pertama gagal pada ekspektasi shortcut lama; tidak digunakan sebagai bukti kelulusan. Hash kode runtime final cocok dengan run browser yang lulus; perubahan tes fokus setelah run browser diverifikasi melalui suite Django akhir. Seluruhnya lokal, bukan penerapan ke PythonAnywhere. Perangkat fisik, pembaca layar dan password manager nyata belum diuji.

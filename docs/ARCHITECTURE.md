@@ -217,6 +217,12 @@ Pemformatan frontend memakai Prettier lokal dengan plugin yang mempertahankan to
 
 Peningkatan form menandai submit berlangsung dan menahan pengiriman berikutnya pada halaman yang sama, tanpa menonaktifkan submitter yang membawa intent. Peristiwa pageshow memulihkan keadaan setelah browser Back. Token, versi dan transaksi server tetap menjadi penjaga replay ketika JavaScript mati. Perbandingan membangun rincian setelah paginasi; detail PO dan form penerimaan memuat item secara prefetch. Snapshot revisi diprefetch sekali pada perbandingan dan pemilihan kandidat; penerbitan PO juga memakai snapshot yang diprefetch. Kedua paginator penawaran mempertahankan parameter satu sama lain. Tautan tindakan pada detail mobile memindahkan focus native ke panel tindakan yang dapat difokuskan.
 
+## Bantuan AI Opsional
+
+Endpoint POST `/requests/assist/` hanya melayani Pemohon aktif dengan CSRF. Modul `procurement/ai` memisahkan konfigurasi privat, normalisasi gambar, kontrak JSON, kuota dan client Groq. Hasil hanya menjadi usulan pada browser; simpan/ajukan draf tetap melalui form dan service yang ada. Tidak ada tool execution atau akses model ke database bisnis.
+
+Kuota atomik memakai SQLite terpisah di DATA_DIR/ai, dengan hitungan metadata saja. Transaksi kuota selesai sebelum panggilan jaringan; lock database bisnis tidak ditahan. HTTPX async dibungkus deadline total20detik di view sinkron, tanpa retry/redirect; kegagalan dipetakan ke JSON aman. Konfigurasi ai.json independen dari secret hosting. Pillow memvalidasi serta re-encode JPG/PNG. Ketentuan dan batas ada pada [AI_INPUT](AI_INPUT.md).
+
 ## Setup Demo
 
 Command `seed_demo` memvalidasi password dari environment sebelum mutasi. Satu transaksi membentuk akun, vendor dan lima skenario lewat service bisnis yang sama dengan UI. Bootstrap admin memakai pembuatan akun normal dengan validator; akun lainnya melalui service admin. Model `DemoSetup` mencatat identitas hasil seed, sehingga pemanggilan berikutnya hanya melaporkan data yang sudah dimiliki. Benturan, identitas yang hilang dan perubahan username ditolak tanpa mengambil alih data. Password, peran serta kemajuan transaksi tidak dipulihkan otomatis. Database demo dipilih melalui `DJANGO_DATA_DIR`; data kerja tidak digunakan untuk pengujian.

@@ -2,9 +2,9 @@
 
 Aplikasi web internal untuk mengelola pengadaan barang dan jasa dari pengajuan kebutuhan sampai penerimaan pesanan.
 
-Pemohon membuat draft dan mengajukan kebutuhan. Approver memutuskan revisi aktif; procurement mencatat penawaran, memilih vendor, dan menerbitkan PO. Penerima mencatat hasil barang atau jasa secara bertahap. Approver selain pemohon dapat membatalkan PO atau menutup sisanya. Snapshot, jumlah pemenuhan, serta riwayat keputusan tetap dapat ditelusuri.
+Pemohon membuat draf dan mengajukan kebutuhan. Approver memutuskan revisi aktif; procurement mencatat penawaran, memilih vendor, dan menerbitkan PO. Penerima mencatat hasil barang atau jasa secara bertahap. Approver selain pemohon dapat membatalkan PO atau menutup sisanya. Snapshot, jumlah pemenuhan, serta riwayat keputusan tetap dapat ditelusuri.
 
-Antarmuka memakai antrean kerja sesuai peran, navigasi responsif, dan rincian dokumen dengan tindakan yang diizinkan. Admin mengelola akun dan vendor. Validasi berjalan di server dengan pesan dalam form yang terkait; form inti tetap dapat dipakai tanpa JavaScript. Keluar memerlukan konfirmasi. Data demo lima peran dan panduan pengujian tersedia. Hasil verifikasi lokal ada pada [TESTING](docs/TESTING.md); deployment belum diverifikasi.
+Antarmuka memakai antrean kerja sesuai peran, navigasi responsif, dan rincian dokumen dengan tindakan yang diizinkan. Admin mengelola akun dan vendor. Validasi berjalan di server dengan pesan dalam form yang terkait; form inti tetap dapat dipakai tanpa JavaScript. Keluar memerlukan konfirmasi. Data demo lima peran dan panduan pengujian tersedia. Hasil verifikasi ada pada [TESTING](docs/TESTING.md). Bukti hosting mencakup alur barang/jasa dan bantuan AI sampai draf melalui browser pengguna. Pemeriksaan publik terbaru mencakup HTTPS, header, CSRF, proteksi route/file privat dan kecocokan aset. Batas verifikasi konfigurasi server dijelaskan pada [penyerahan](docs/HANDOVER.md).
 
 ## Environment
 
@@ -50,7 +50,7 @@ Pada environment kerja yang telah disiapkan, Python tersedia melalui `.venv`. Ke
 & $python manage.py createsuperuser --role ADMIN
 ```
 
-Isi username dan password saat diminta. Akun ini memakai peran aplikasi ADMIN. Route `/admin/` tidak diaktifkan, dan status superuser tidak memberi pengecualian pada aturan bisnis. Pembuatan akun pertama memakai command line. Setelah login sebagai ADMIN, gunakan tautan Kelola akun pada beranda atau buka `/users/` untuk mengelola akun berikutnya. Admin aktif terakhir tidak dapat dinonaktifkan atau diubah perannya.
+Isi username dan password saat diminta. Akun ini memakai peran aplikasi ADMIN. Route `/admin/` tidak diaktifkan, dan status superuser tidak memberi pengecualian pada aturan bisnis. Pembuatan akun pertama memakai command line. Setelah login sebagai ADMIN, gunakan tautan Kelola Akun pada beranda atau buka `/users/` untuk mengelola akun berikutnya. Admin aktif terakhir tidak dapat dinonaktifkan atau diubah perannya.
 
 Jangan memakai password produksi untuk pengujian. Untuk melihat contoh seluruh alur, gunakan database demo terpisah pada bagian berikut; tidak perlu membuat akun pertama lagi pada database demo kosong.
 
@@ -77,7 +77,7 @@ Login menggunakan `demo_admin`, `demo_pemohon`, `demo_approver`, `demo_procureme
 
 `seed_demo` membuat lima contoh berlabel G-01/J-01/G-02/G-03/J-02 dan mencetak nomor PR/PO-nya. Registry database mencatat kepemilikan data seed. Command bersifat atomik, menolak benturan identitas, dan tidak mereset password, peran atau kemajuan transaksi saat dijalankan ulang. Jika identitas yang tercatat hilang/berubah, command berhenti tanpa mengambil alih data lain. Penawaran contoh berlaku tujuh hari sejak dibuat; pemanggilan ulang tidak memperpanjangnya. Untuk mengulang dari keadaan awal, pilih folder baru seperti `var/demo-baru`, lalu migrate dan seed; jangan menghapus data lama.
 
-Ikuti [Panduan Pengguna](docs/USER_GUIDE.md) untuk melihat contoh sebagai recruiter atau mencoba barang/jasa dari awal, termasuk pergantian peran, revisi, penolakan dan penutupan sisa. Terminal dan server harus memakai `DJANGO_DATA_DIR` yang sama. Hentikan server lama sebelum mengganti folder data. File `.env` tidak dibaca otomatis.
+Ikuti [Panduan Pengguna](docs/USER_GUIDE.md) untuk melihat contoh atau mencoba barang/jasa dari awal, termasuk pergantian peran, revisi, penolakan dan penutupan sisa. Terminal dan server harus memakai `DJANGO_DATA_DIR` yang sama. Hentikan server lama sebelum mengganti folder data. File `.env` tidak dibaca otomatis.
 
 ## Menjalankan aplikasi secara lokal
 
@@ -87,19 +87,23 @@ Ikuti [Panduan Pengguna](docs/USER_GUIDE.md) untuk melihat contoh sebagai recrui
 
 - **Login dan logout:** buka [halaman login lokal](http://127.0.0.1:8000/login/). Setelah login, periksa username dan peran akun. Pilih Keluar, lalu konfirmasikan untuk mengakhiri sesi.
 - **Pengelolaan akun:** admin dapat membuka daftar akun, membuat akun, mengubah peran/status aktif, dan mereset password. Reset password mencabut sesi lama akun terkait; reset password sendiri mengakhiri sesi saat ini.
-- **Draft permintaan:** buka Permintaan Pengadaan dari beranda untuk melihat data sesuai peran. Pemohon dapat membuat draft melalui `/requests/new/`. Draft boleh belum lengkap, tetapi setiap baris yang diisi harus lengkap dengan jumlah dan harga positif.
-- **Pengajuan dan pembatalan:** simpan draft sebelum mengajukan. Pengajuan memerlukan header lengkap, tanggal kebutuhan hari ini atau setelahnya dalam WIB, serta minimal satu item. Setiap pengajuan menyimpan revisi yang tidak dapat diedit. Pembatalan memerlukan alasan dan hanya tersedia bagi pemilik sebelum ada PO.
+- **Draf permintaan:** buka Permintaan Pengadaan dari beranda untuk melihat data sesuai peran. Pemohon dapat membuat draf melalui `/requests/new/`. Draf boleh belum lengkap, tetapi setiap baris yang diisi harus lengkap dengan jumlah dan harga positif.
+- **Pengajuan dan pembatalan:** simpan draf sebelum mengajukan. Pengajuan memerlukan header lengkap, tanggal kebutuhan hari ini atau setelahnya dalam WIB, serta minimal satu item. Setiap pengajuan menyimpan revisi yang tidak dapat diedit. Pembatalan memerlukan alasan dan hanya tersedia bagi pemilik sebelum ada PO.
 - **Review approver:** buka Antrean Persetujuan pada `/approvals/`. Permintaan sendiri tidak masuk antrean dan tidak boleh diputuskan sendiri setelah berganti peran. Review berlaku untuk revisi pengajuan aktif beserta plafonnya; alasan wajib untuk meminta revisi atau menolak.
-- **Revisi kebutuhan:** procurement dapat mengembalikan permintaan APPROVED sebelum ada PO dengan alasan. Pemohon kemudian mengubah draft dan mengajukan revisi berikutnya. Keputusan dan snapshot sebelumnya tetap dapat dibaca pada halaman revisi.
-- **Vendor dan penawaran:** kelola vendor melalui `/vendors/`. Buka Penawaran Dan Pemilihan Vendor pada detail permintaan untuk membandingkan harga serta waktu pemenuhan. Penawaran hanya ditulis untuk revisi aktif APPROVED sebelum PO; jumlah dan satuan mengikuti snapshot.
-- **Pemilihan penawaran:** penawaran di luar tanggal berlaku atau plafon tetap dapat dicatat, tetapi tidak dapat dipilih. Pemilihan memerlukan alasan; jika hanya satu vendor yang layak, isi Alasan Sumber Tunggal. Mengedit penawaran terpilih menghapus pilihan dan alasannya.
+- **Revisi kebutuhan:** procurement dapat mengembalikan permintaan APPROVED sebelum ada PO dengan alasan. Pemohon kemudian mengubah draf dan mengajukan revisi berikutnya. Keputusan dan snapshot sebelumnya tetap dapat dibaca pada halaman revisi.
+- **Vendor dan penawaran:** kelola vendor melalui `/vendors/`. Buka Penawaran dan Pemilihan Vendor pada detail permintaan untuk membandingkan harga serta waktu pemenuhan. Penawaran hanya ditulis untuk revisi aktif APPROVED sebelum PO; jumlah dan satuan mengikuti snapshot.
+- **Pemilihan penawaran:** penawaran di luar tanggal berlaku atau plafon tetap dapat dicatat, tetapi tidak dapat dipilih. Pemilihan memerlukan alasan; jika hanya satu vendor yang layak, isi Alasan hanya satu vendor. Mengedit penawaran terpilih menghapus pilihan dan alasannya.
 - **Penerbitan PO:** terbitkan PO melalui detail permintaan setelah pilihan penawaran diperiksa. Server memeriksa ulang revisi, vendor, tanggal, rincian, plafon, dan sumber tunggal. Setiap permintaan hanya boleh memiliki satu PO sepanjang riwayatnya.
 - **Detail dan cetak PO:** buka `/orders/` untuk daftar PO, detail, dan halaman cetak. Gunakan menu cetak browser atau Ctrl+P; aplikasi tidak mengirim dokumen ke vendor. Data vendor/item pesanan disimpan saat penerbitan. Request tetap APPROVED, PO mulai ISSUED, dan permintaan tidak dapat direvisi atau dibatalkan melalui jalur sebelum PO.
 - **Menghentikan server:** tekan Ctrl+C pada terminal yang menjalankan server.
 
 Untuk langkah uji barang, jasa, penerimaan, dan penutupan sisa, ikuti [Panduan Pengguna](docs/USER_GUIDE.md).
 
-Server pengembangan hanya untuk penggunaan lokal. Mode `DEBUG=false` mewajibkan hostname eksplisit dan mengaktifkan HTTPS redirect serta Secure cookie. Deployment dan HTTPS pada lingkungan hosting belum diuji.
+Server pengembangan hanya untuk penggunaan lokal. Mode `DEBUG=false` mewajibkan hostname eksplisit dan mengaktifkan HTTPS redirect serta Secure cookie. Cakupan verifikasi lokal dan hosting tersedia pada [catatan pengujian](docs/TESTING.md).
+
+## Demo Online di PythonAnywhere
+
+Target hosting demo adalah PythonAnywhere Beginner + SQLite. Profil hosting, pembuatan konfigurasi privat, WSGI, static files, backup dan verifikasi URL publik dijelaskan pada [panduan deployment](docs/DEPLOYMENT.md). Persiapan lokal sudah diuji. [URL demo](https://ramaatha.pythonanywhere.com/) berhasil diakses melalui HTTPS beserta static files. Screenshot pengguna membuktikan login lintas peran, alur barang/jasa, cetak PO, serta AI teks/gambar sampai draf. Pemeriksaan publik terbaru juga lulus. Pemeriksaan konfigurasi/izin file server masih terbuka; hasil lokal tidak menggantikannya.
 
 ## Menjalankan pemeriksaan
 
@@ -118,7 +122,7 @@ Regresi browser yang dapat diulang tersedia melalui `scripts/browser/run.py`. Ru
 
 ## Scope produk
 
-Versi awal dirancang untuk satu tingkat approval, satu vendor dan maksimal satu PO per permintaan, penerimaan barang/jasa bertahap, serta riwayat keputusan dan perubahan. Stok gudang, invoice, dan pembayaran tidak termasuk. Bantuan input AI/Computer Vision tetap ditunda.
+Versi awal dirancang untuk satu tingkat approval, satu vendor dan maksimal satu PO per permintaan, penerimaan barang/jasa bertahap, serta riwayat keputusan dan perubahan. Stok gudang, invoice, dan pembayaran tidak termasuk. Bantuan input AI dari teks/gambar tersedia secara opsional saat membuat draf baru. Input manual tetap tersedia; hasil AI harus diperiksa sebelum diterapkan.
 
 | Dokumen                                             | Isi                                       |
 | --------------------------------------------------- | ----------------------------------------- |
@@ -132,11 +136,13 @@ Versi awal dirancang untuk satu tingkat approval, satu vendor dan maksimal satu 
 
 ## Hasil analisis
 
-- [Diagram BPMN](outputs/Procurement_BPMN.pdf).
-- [Diagram yang dapat diedit](outputs/Procurement_BPMN.drawio).
-- [WBS](outputs/Procurement_WBS.xlsx), dengan tujuh modul dan 27 paket pekerjaan.
+- [Diagram BPMN](outputs/Procurement_BPMN_v1.2.pdf).
+- [Diagram yang dapat diedit](outputs/Procurement_BPMN_v1.2.drawio).
+- [WBS](outputs/Procurement_WBS_v1.3.xlsx), dengan tujuh modul dan 27 paket pekerjaan.
 
-Status penerimaan FR-01 sampai FR-13 sudah diperbarui menjadi teruji lokal pada matriks PRD, dengan batas pemeriksaan di TESTING. BPMN/WBS tetap menjadi acuan proses; aktivitas vendor dan penyampaian PO di luar aplikasi bersifat manual. OPT-01 tetap Ditunda.
+Status penerimaan FR-01 sampai FR-13 mengacu pada matriks PRD dan batas pengujian di TESTING. BPMN v1.2 mempertahankan alur pengadaan dan menambahkan keterangan bantuan AI opsional pada pembuatan draf baru (BP-01/OPT-01). Aktivitas vendor dan penyampaian PO di luar aplikasi tetap manual.
+
+WBS v1.3 memuat 24 paket terverifikasi sesuai lingkup bukti, 2 dikerjakan, dan 1 baseline disetujui. Instalasi bersih versi akhir dengan dependensi AI dan 297 tes sudah lulus. Pemeriksaan konfigurasi/izin file server serta commit/push penyerahan masih terbuka. Rincian bukti tersedia pada sheet Tracking, [TESTING](docs/TESTING.md), dan [panduan penyerahan](docs/HANDOVER.md).
 
 ## Struktur repository
 
@@ -156,7 +162,7 @@ Buka folder repo langsung melalui Open Folder. [Pedoman perubahan](docs/COMMIT_G
 
 ## Penerimaan dan penutupan PO
 
-Penerima mencatat barang atau jasa melalui tautan Catat penerimaan pada detail PO terbuka. Form memuat referensi, catatan, jumlah diterima/ditolak per item, dan alasan penolakan. Jasa memerlukan bukti serta periode pelaksanaan yang tidak melewati hari konfirmasi WIB. Penerimaan yang sudah tersimpan hanya dapat dibaca.
+Penerima mencatat barang atau jasa melalui tautan Catat Penerimaan pada detail PO terbuka. Form memuat referensi, catatan, jumlah diterima/ditolak per item, dan alasan penolakan. Jasa memerlukan bukti serta periode pelaksanaan yang tidak melewati hari konfirmasi WIB. Penerimaan yang sudah tersimpan hanya dapat dibaca.
 
 Approver selain pemohon dapat mengakhiri PO melalui form pada detail: tanpa accepted menjadi Dibatalkan; sesudah diterima sebagian menjadi Selesai dengan kekurangan. Jumlah historis tetap tersimpan. Versi data dan token aksi mencegah posting ganda maupun perubahan yang menimpa aksi bersamaan. Penerimaan lengkap menutup PO untuk pencatatan berikutnya.
 

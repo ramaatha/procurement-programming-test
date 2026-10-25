@@ -1,6 +1,6 @@
 # Pedoman kualitas Procurement
 
-Diperbarui: 22 Oktober 2026
+Diperbarui: 24 Oktober 2026
 
 ## Kode dan struktur
 
@@ -39,7 +39,7 @@ Angka pada tabel rata kanan dengan presisi yang konsisten. Ringkasan harus beras
 
 ## Bahasa dan dokumentasi
 
-Tulis dalam bahasa Indonesia yang langsung menjelaskan aktor, tindakan, dan hasil. Pertahankan istilah teknis yang membantu ketepatan. Hindari pembuka berulang, jargon pemasaran, dan klaim yang lebih kuat daripada buktinya.
+Ikuti [aturan penulisan teks antarmuka](DESIGN_SYSTEM.md#penulisan-teks-antarmuka) untuk judul, kata tugas, label, status, dan riwayat. Tulis dalam bahasa Indonesia yang langsung menjelaskan aktor, tindakan, dan hasil. Pertahankan istilah teknis yang membantu ketepatan. Hindari pembuka berulang, jargon pemasaran, dan klaim yang lebih kuat daripada buktinya.
 
 Dokumentasi membahas produk, keputusan teknis, prosedur kerja, dan hasil verifikasi. Setiap aturan mempunyai satu dokumen pemilik; dokumen lain menautkannya tanpa menyalin seluruh isinya. Pertahankan ID kebutuhan, skenario pengujian, nama field, status, dan kontrak saat menyunting bahasa.
 
